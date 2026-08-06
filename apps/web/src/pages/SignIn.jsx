@@ -1,5 +1,5 @@
-function Explore() {
+function SignIn() {
     return <h1>SignIn Page</h1>;
   }
   
-  export default Explore;
+  export default SignIn;

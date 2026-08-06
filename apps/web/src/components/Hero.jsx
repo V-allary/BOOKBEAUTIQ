@@ -126,3 +126,75 @@ function Hero() {
 }
 
 export default Hero;
+{/* Search Section */}
+
+<section className="mx-auto -mt-10 max-w-7xl px-6 relative z-10">
+
+<div className="rounded-3xl bg-white p-4 shadow-xl border border-pink-100">
+
+  <div className="grid gap-4 lg:grid-cols-[2fr_1.5fr_1.2fr_auto]">
+
+    {/* Service */}
+
+    <div className="rounded-2xl border border-pink-100 px-5 py-4">
+
+      <p className="text-xs font-semibold uppercase text-gray-400">
+        Service
+      </p>
+
+      <input
+        type="text"
+        placeholder="Hair, Nails, Spa..."
+        className="mt-2 w-full bg-transparent outline-none text-[#1F2937]"
+      />
+
+    </div>
+
+    {/* Location */}
+
+    <div className="rounded-2xl border border-pink-100 px-5 py-4">
+
+      <p className="text-xs font-semibold uppercase text-gray-400">
+        Location
+      </p>
+
+      <input
+        type="text"
+        placeholder="Current Location"
+        className="mt-2 w-full bg-transparent outline-none text-[#1F2937]"
+      />
+
+    </div>
+
+    {/* Category */}
+
+    <div className="rounded-2xl border border-pink-100 px-5 py-4">
+
+      <p className="text-xs font-semibold uppercase text-gray-400">
+        Category
+      </p>
+
+      <select className="mt-2 w-full bg-transparent outline-none text-[#1F2937]">
+
+        <option>All</option>
+        <option>Hair</option>
+        <option>Nails</option>
+        <option>Spa</option>
+        <option>Barber</option>
+        <option>Makeup</option>
+
+      </select>
+
+    </div>
+
+    {/* Search Button */}
+
+    <button className="rounded-2xl bg-[#D97CA5] px-10 py-4 font-semibold text-white transition hover:bg-[#C86894]">
+      Search
+    </button>
+
+  </div>
+
+</div>
+
+</section>

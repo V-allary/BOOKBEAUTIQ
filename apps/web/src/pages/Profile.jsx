@@ -1,5 +1,5 @@
-function Explore() {
+function Profile() {
     return <h1>Profile Page</h1>;
   }
   
-  export default Explore;
+  export default Profile;

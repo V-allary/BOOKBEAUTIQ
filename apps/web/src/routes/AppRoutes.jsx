@@ -1,16 +1,15 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Home from "../Pages/Home";
+import Home from "../pages/Home";
 import Explore from "../pages/Explore";
 import BusinessDetails from "../pages/BusinessDetails";
+import ForBusinesses from "../pages/ForBusinesses";
 import SignIn from "../pages/SignIn";
 import SignUp from "../pages/SignUp";
-import ForBusinesses from "../pages/ForBusinesses";
 import Dashboard from "../pages/Dashboard";
 import Bookings from "../pages/Bookings";
 import Profile from "../pages/Profile";
 import NotFound from "../pages/NotFound";
-
 function AppRoutes() {
   return (
     <BrowserRouter>
