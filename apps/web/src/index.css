@@ -1,10 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #222222;
-  --color-accent: #C7A86D;
-  --color-background: #FAFAFA;
+  /* BookBeautiq Brand */
+  --color-primary: #242424;
+  --color-accent: #B96882;
+
+  /* Backgrounds */
+  --color-background: #F7F7F6;
   --color-surface: #FFFFFF;
-  --color-soft: #F5EFE6;
+  --color-soft: #F7EEF1;
+
+  /* Text */
   --color-text-secondary: #6B7280;
 }

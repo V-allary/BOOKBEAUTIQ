@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-function SignUp() {
+function Register() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -13,8 +13,8 @@ function SignUp() {
     role: "customer",
   });
 
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({
@@ -31,7 +31,7 @@ function SignUp() {
 
     try {
       const response = await fetch(
-        "http://localhost:5001/api/users/register",
+        "http://localhost:50001/api/users/register",
         {
           method: "POST",
           headers: {
@@ -49,18 +49,9 @@ function SignUp() {
         );
       }
 
-      // Auto-login: store the token/user returned on registration
-      localStorage.setItem("token", data.token);
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user)
-      );
+      alert("Account created successfully!");
 
-      if (formData.role === "business") {
-        navigate("/verify-account");
-      } else {
-        navigate("/dashboard");
-      }
+      navigate("/login");
     } catch (error) {
       console.error(error);
       setError(error.message);
@@ -70,7 +61,7 @@ function SignUp() {
   };
 
   const inputClass =
-    "w-full rounded-xl border border-[#E5E2DF] bg-[#FAFAF9] px-4 py-3.5 text-sm text-[#242424] outline-none transition placeholder:text-[#999] focus:border-[#C9859D] focus:bg-white focus:ring-4 focus:ring-[#D97CA5]/10";
+    "w-full rounded-xl border border-[#E5E2DF] bg-[#FAFAF9] px-4 py-3.5 text-sm text-[#242424] outline-none transition placeholder:text-[#999] focus:border-[#B96882] focus:bg-white focus:ring-4 focus:ring-[#B96882]/10";
 
   return (
     <div className="min-h-screen bg-[#F7F7F6] px-5 py-10 sm:px-8 sm:py-14">
@@ -88,13 +79,13 @@ function SignUp() {
             className="inline-block text-2xl font-bold tracking-tight text-[#242424]"
           >
             Book
-            <span className="text-[#9D536D]">
+            <span className="text-[#B96882]">
               Beautiq
             </span>
           </Link>
 
           <p className="mt-2 text-sm text-gray-500">
-            Your beauty, your way.
+            Discover beauty. Book with confidence.
           </p>
 
         </div>
@@ -109,7 +100,7 @@ function SignUp() {
 
           <div className="mb-7">
 
-            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#F2E8EC] text-lg text-[#9D536D]">
+            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#F7EEF1] text-lg text-[#B96882]">
               ✦
             </div>
 
@@ -227,7 +218,7 @@ function SignUp() {
                 id="phone"
                 type="tel"
                 name="phone"
-                placeholder="+254 700 000 000"
+                placeholder="Phone number"
                 value={formData.phone}
                 onChange={handleChange}
                 className={inputClass}
@@ -259,7 +250,7 @@ function SignUp() {
               />
 
               <p className="mt-2 text-xs text-gray-400">
-                Password must be at least 6 characters.
+                Must be at least 6 characters.
               </p>
 
             </div>
@@ -280,7 +271,7 @@ function SignUp() {
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className={`${inputClass} cursor-pointer`}
+                className={inputClass}
               >
 
                 <option value="customer">
@@ -295,40 +286,12 @@ function SignUp() {
 
             </div>
 
-            {/* BUSINESS NOTICE */}
-
-            {formData.role === "business" && (
-              <div className="rounded-2xl border border-[#E8D4DC] bg-[#F8EEF2] p-4">
-
-                <div className="flex gap-3">
-
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F2E8EC] text-sm text-[#9D536D]">
-                    ✓
-                  </div>
-
-                  <div>
-
-                    <p className="text-sm font-semibold text-[#7E4057]">
-                      Business verification required
-                    </p>
-
-                    <p className="mt-1 text-xs leading-5 text-[#9D536D]">
-                      Business accounts require identity and business verification before you can list any services.
-                    </p>
-
-                  </div>
-
-                </div>
-
-              </div>
-            )}
-
             {/* SUBMIT */}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-[#242424] py-4 text-sm font-bold text-white shadow-sm transition hover:bg-[#9D536D] disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-xl bg-[#B96882] py-4 text-sm font-bold text-white shadow-sm transition hover:bg-[#A95772] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading
                 ? "Creating Account..."
@@ -337,19 +300,21 @@ function SignUp() {
 
           </form>
 
-          {/* SIGN IN */}
+          {/* LOGIN */}
 
           <div className="mt-7 border-t border-[#ECE9E6] pt-6 text-center">
 
             <p className="text-sm text-gray-500">
+
               Already have an account?{" "}
 
               <Link
-                to="/signin"
-                className="font-bold text-[#9D536D] transition hover:text-[#7E4057] hover:underline"
+                to="/login"
+                className="font-bold text-[#B96882] transition hover:text-[#A95772] hover:underline"
               >
-                Sign In
+                Login
               </Link>
+
             </p>
 
           </div>
@@ -359,7 +324,7 @@ function SignUp() {
         {/* FOOTER NOTE */}
 
         <p className="mt-6 text-center text-xs leading-5 text-gray-400">
-          By creating an account, you'll be able to manage your BookBeautiq bookings and appointments.
+          By creating an account, you can discover and book beauty services through BookBeautiq.
         </p>
 
       </div>
@@ -368,4 +333,4 @@ function SignUp() {
   );
 }
 
-export default SignUp;
+export default Register;
