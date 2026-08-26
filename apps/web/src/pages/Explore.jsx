@@ -1,22 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BusinessCard from "../components/BusinessCard";
 
 function Explore() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [location, setLocation] = useState("");
-  const [category, setCategory] = useState("All");
+
+  const urlCategory = searchParams.get("category");
+
+  const [category, setCategory] = useState(
+    urlCategory || "All"
+  );
 
   const [activeSearch, setActiveSearch] = useState({
     searchTerm: "",
     location: "",
-    category: "All",
+    category: urlCategory || "All",
   });
+
+  const businessesRef = useRef(null);
 
   // ==========================================
   // FETCH APPROVED BUSINESSES
@@ -37,10 +47,18 @@ function Explore() {
           );
         }
 
-        setBusinesses(data);
+        setBusinesses(
+          Array.isArray(data) ? data : []
+        );
       } catch (error) {
-        console.error("Error fetching businesses:", error);
-        setError("Unable to load businesses right now.");
+        console.error(
+          "Error fetching businesses:",
+          error
+        );
+
+        setError(
+          "Unable to load businesses right now."
+        );
       } finally {
         setLoading(false);
       }
@@ -50,22 +68,53 @@ function Explore() {
   }, []);
 
   // ==========================================
+  // SYNC URL CATEGORY
+  // ==========================================
+
+  useEffect(() => {
+    const selectedCategory =
+      urlCategory || "All";
+
+    setCategory(selectedCategory);
+
+    setActiveSearch((current) => ({
+      ...current,
+      category: selectedCategory,
+    }));
+  }, [urlCategory]);
+
+  // ==========================================
   // SEARCH
   // ==========================================
 
   const handleSearch = () => {
+    const selectedCategory = category || "All";
+
     setActiveSearch({
       searchTerm: searchTerm.trim(),
       location: location.trim(),
-      category,
+      category: selectedCategory,
     });
+
+    if (selectedCategory === "All") {
+      searchParams.delete("category");
+    } else {
+      searchParams.set(
+        "category",
+        selectedCategory
+      );
+    }
+
+    setSearchParams(searchParams);
   };
 
   // ==========================================
   // CATEGORY FILTER
   // ==========================================
 
-  const handleCategoryClick = (selectedCategory) => {
+  const handleCategoryClick = (
+    selectedCategory
+  ) => {
     setCategory(selectedCategory);
 
     setActiveSearch({
@@ -73,44 +122,64 @@ function Explore() {
       location: location.trim(),
       category: selectedCategory,
     });
+
+    if (selectedCategory === "All") {
+      searchParams.delete("category");
+    } else {
+      searchParams.set(
+        "category",
+        selectedCategory
+      );
+    }
+
+    setSearchParams(searchParams);
   };
 
   // ==========================================
   // FILTER BUSINESSES
   // ==========================================
 
-  const filteredBusinesses = businesses.filter((business) => {
-    const searchValue =
-      activeSearch.searchTerm.toLowerCase();
+  const filteredBusinesses =
+    businesses.filter((business) => {
+      const searchValue =
+        activeSearch.searchTerm.toLowerCase();
 
-    const locationValue =
-      activeSearch.location.toLowerCase();
+      const locationValue =
+        activeSearch.location.toLowerCase();
 
-    const categoryValue =
-      activeSearch.category.toLowerCase();
+      const categoryValue =
+        activeSearch.category.toLowerCase();
 
-    const matchesSearch =
-      !searchValue ||
-      business.name?.toLowerCase().includes(searchValue) ||
-      business.category?.toLowerCase().includes(searchValue) ||
-      business.description?.toLowerCase().includes(searchValue);
+      const matchesSearch =
+        !searchValue ||
+        business.name
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        business.category
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        business.description
+          ?.toLowerCase()
+          .includes(searchValue);
 
-    const matchesLocation =
-      !locationValue ||
-      business.location?.toLowerCase().includes(locationValue);
+      const matchesLocation =
+        !locationValue ||
+        business.location
+          ?.toLowerCase()
+          .includes(locationValue);
 
-    const matchesCategory =
-      activeSearch.category === "All" ||
-      business.category
-        ?.toLowerCase()
-        .includes(categoryValue);
+      const matchesCategory =
+        activeSearch.category === "All" ||
+        business.category
+          ?.toLowerCase()
+          .includes(categoryValue);
 
-    return (
-      matchesSearch &&
-      matchesLocation &&
-      matchesCategory
-    );
-  });
+      return (
+        matchesSearch &&
+        matchesLocation &&
+        matchesCategory
+      );
+    });
 
   // ==========================================
   // CATEGORIES
@@ -125,29 +194,47 @@ function Explore() {
     { name: "Spa", label: "Spa" },
   ];
 
+  // ==========================================
+  // HORIZONTAL BUSINESS SCROLL
+  // ==========================================
+
+  const scrollBusinesses = (direction) => {
+    if (!businessesRef.current) return;
+
+    const amount =
+      businessesRef.current.clientWidth *
+      0.85;
+
+    businessesRef.current.scrollBy({
+      left:
+        direction === "next"
+          ? amount
+          : -amount,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-[#F7F7F6]">
+      <main className="min-h-screen bg-[#FAFAF9]">
 
         {/* ==========================================
             EXPLORE HERO
         ========================================== */}
 
-        <section className="relative overflow-hidden border-b border-[#E5E2DF] bg-[#F7F7F6]">
+        <section className="relative overflow-hidden border-b border-[#ECE9E6] bg-gradient-to-br from-[#FFF9FB] via-[#F8EEF2] to-[#FAFAF9]">
 
-          {/* Soft muted rose decoration */}
+          <div className="pointer-events-none absolute -left-40 -top-40 h-[420px] w-[420px] rounded-full bg-[#E8C5D0]/30 blur-3xl" />
 
-          <div className="pointer-events-none absolute -left-40 -top-40 h-[420px] w-[420px] rounded-full bg-[#F2E8EC]/70 blur-3xl" />
-
-          <div className="pointer-events-none absolute -bottom-40 -right-40 h-[420px] w-[420px] rounded-full bg-[#E8D8DE]/60 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-40 -right-40 h-[420px] w-[420px] rounded-full bg-[#F2DDE4]/40 blur-3xl" />
 
           <div className="relative mx-auto max-w-7xl px-5 pb-28 pt-14 sm:px-6 lg:px-8">
 
             <div className="max-w-3xl">
 
-              <p className="text-xs font-bold uppercase tracking-[3px] text-[#9D536D]">
+              <p className="text-xs font-bold uppercase tracking-[3px] text-[#B96882]">
                 Explore BookBeautiq
               </p>
 
@@ -155,15 +242,16 @@ function Explore() {
 
                 Find your next
 
-                <span className="block text-[#9D536D]">
+                <span className="block text-[#B96882]">
                   beauty experience.
                 </span>
 
               </h1>
 
               <p className="mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
-                Discover verified salons, spas, barbers, nail artists,
-                makeup artists and beauty professionals near you.
+                Discover verified salons, spas, barbers,
+                nail artists, makeup artists and beauty
+                professionals near you.
               </p>
 
             </div>
@@ -171,7 +259,6 @@ function Explore() {
           </div>
 
         </section>
-
 
         {/* ==========================================
             SEARCH PANEL
@@ -185,7 +272,7 @@ function Explore() {
 
               {/* SERVICE */}
 
-              <div className="rounded-2xl bg-[#F7F6F5] px-5 py-4 transition focus-within:bg-white focus-within:ring-1 focus-within:ring-[#9D536D]">
+              <div className="rounded-2xl bg-[#F7F6F5] px-5 py-4 transition focus-within:bg-white focus-within:ring-1 focus-within:ring-[#B96882]">
 
                 <p className="text-[10px] font-bold uppercase tracking-[1.5px] text-gray-400">
                   Service
@@ -196,7 +283,9 @@ function Explore() {
                   placeholder="Hair, nails, spa..."
                   value={searchTerm}
                   onChange={(e) =>
-                    setSearchTerm(e.target.value)
+                    setSearchTerm(
+                      e.target.value
+                    )
                   }
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -208,10 +297,9 @@ function Explore() {
 
               </div>
 
-
               {/* LOCATION */}
 
-              <div className="rounded-2xl bg-[#F7F6F5] px-5 py-4 transition focus-within:bg-white focus-within:ring-1 focus-within:ring-[#9D536D]">
+              <div className="rounded-2xl bg-[#F7F6F5] px-5 py-4 transition focus-within:bg-white focus-within:ring-1 focus-within:ring-[#B96882]">
 
                 <p className="text-[10px] font-bold uppercase tracking-[1.5px] text-gray-400">
                   Location
@@ -222,7 +310,9 @@ function Explore() {
                   placeholder="City or area"
                   value={location}
                   onChange={(e) =>
-                    setLocation(e.target.value)
+                    setLocation(
+                      e.target.value
+                    )
                   }
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -234,10 +324,9 @@ function Explore() {
 
               </div>
 
-
               {/* CATEGORY */}
 
-              <div className="rounded-2xl bg-[#F7F6F5] px-5 py-4 transition focus-within:bg-white focus-within:ring-1 focus-within:ring-[#9D536D]">
+              <div className="rounded-2xl bg-[#F7F6F5] px-5 py-4 transition focus-within:bg-white focus-within:ring-1 focus-within:ring-[#B96882]">
 
                 <p className="text-[10px] font-bold uppercase tracking-[1.5px] text-gray-400">
                   Category
@@ -245,9 +334,12 @@ function Explore() {
 
                 <select
                   value={category}
-                  onChange={(e) =>
-                    setCategory(e.target.value)
-                  }
+                  onChange={(e) => {
+                    const selected =
+                      e.target.value;
+
+                    setCategory(selected);
+                  }}
                   className="mt-1.5 w-full cursor-pointer bg-transparent text-sm font-medium text-[#242424] outline-none"
                 >
 
@@ -279,13 +371,12 @@ function Explore() {
 
               </div>
 
-
               {/* SEARCH BUTTON */}
 
               <button
                 type="button"
                 onClick={handleSearch}
-                className="min-h-[58px] rounded-2xl bg-[#9D536D] px-8 text-sm font-semibold text-white shadow-sm transition hover:bg-[#85445B] hover:shadow-md active:scale-[0.98]"
+                className="min-h-[58px] rounded-2xl bg-[#B96882] px-8 text-sm font-semibold text-white shadow-sm transition hover:bg-[#A65370] hover:shadow-md active:scale-[0.98]"
               >
                 Search
               </button>
@@ -296,7 +387,6 @@ function Explore() {
 
         </section>
 
-
         {/* ==========================================
             CATEGORY FILTERS
         ========================================== */}
@@ -305,7 +395,7 @@ function Explore() {
 
           <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
 
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 
               {categories.map((item) => (
 
@@ -313,12 +403,14 @@ function Explore() {
                   key={item.name}
                   type="button"
                   onClick={() =>
-                    handleCategoryClick(item.name)
+                    handleCategoryClick(
+                      item.name
+                    )
                   }
                   className={`whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold transition ${
                     category === item.name
                       ? "bg-[#242424] text-white shadow-sm"
-                      : "border border-[#E5E2DF] bg-white text-gray-600 hover:border-[#9D536D] hover:text-[#9D536D]"
+                      : "border border-[#E5E2DF] bg-white text-gray-600 hover:border-[#B96882] hover:text-[#B96882]"
                   }`}
                 >
                   {item.label}
@@ -332,18 +424,19 @@ function Explore() {
 
         </section>
 
-
         {/* ==========================================
             RESULTS
         ========================================== */}
 
         <section className="mx-auto max-w-7xl px-5 pb-20 pt-12 sm:px-6 sm:pt-16 lg:px-8">
 
-          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          {/* HEADER */}
+
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 
             <div>
 
-              <p className="text-xs font-bold uppercase tracking-[3px] text-[#9D536D]">
+              <p className="text-xs font-bold uppercase tracking-[3px] text-[#B96882]">
                 Discover
               </p>
 
@@ -352,15 +445,15 @@ function Explore() {
               </h2>
 
               <p className="mt-2 text-sm text-gray-500 sm:text-base">
-                Explore verified businesses available on BookBeautiq.
+                Explore verified businesses available
+                on BookBeautiq.
               </p>
 
             </div>
 
-
             {!loading && !error && (
 
-              <div className="rounded-full bg-white px-4 py-2 text-sm font-medium text-gray-500 shadow-sm ring-1 ring-[#E5E2DF]">
+              <div className="self-start rounded-full bg-white px-4 py-2 text-sm font-medium text-gray-500 shadow-sm ring-1 ring-[#E5E2DF] sm:self-auto">
 
                 {filteredBusinesses.length}{" "}
 
@@ -374,14 +467,13 @@ function Explore() {
 
           </div>
 
-
           {/* ==========================================
               LOADING
           ========================================== */}
 
           {loading && (
 
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
 
               {[1, 2, 3, 4].map((item) => (
 
@@ -412,12 +504,11 @@ function Explore() {
 
           )}
 
-
           {/* ==========================================
               ERROR
           ========================================== */}
 
-          {error && (
+          {!loading && error && (
 
             <div className="rounded-[28px] border border-red-100 bg-white p-12 text-center shadow-sm">
 
@@ -437,7 +528,6 @@ function Explore() {
 
           )}
 
-
           {/* ==========================================
               NO BUSINESSES
           ========================================== */}
@@ -448,7 +538,7 @@ function Explore() {
 
               <div className="rounded-[28px] border border-[#E5E2DF] bg-white p-14 text-center shadow-sm">
 
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#F2E8EC] text-xl text-[#9D536D]">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#F2E8EC] text-xl text-[#B96882]">
                   ✦
                 </div>
 
@@ -457,14 +547,14 @@ function Explore() {
                 </h3>
 
                 <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">
-                  There are no approved businesses available yet.
-                  Check back soon as more professionals join BookBeautiq.
+                  There are no approved businesses
+                  available yet. Check back soon as
+                  more professionals join BookBeautiq.
                 </p>
 
               </div>
 
             )}
-
 
           {/* ==========================================
               NO SEARCH RESULTS
@@ -477,7 +567,7 @@ function Explore() {
 
               <div className="rounded-[28px] border border-[#E5E2DF] bg-white p-14 text-center shadow-sm">
 
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#F2E8EC] text-xl text-[#9D536D]">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#F2E8EC] text-xl text-[#B96882]">
                   ⌕
                 </div>
 
@@ -486,8 +576,9 @@ function Explore() {
                 </h3>
 
                 <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">
-                  We couldn't find a professional matching your
-                  search. Try another location, service or category.
+                  We couldn't find a professional
+                  matching your search. Try another
+                  location, service or category.
                 </p>
 
                 <button
@@ -502,8 +593,16 @@ function Explore() {
                       location: "",
                       category: "All",
                     });
+
+                    searchParams.delete(
+                      "category"
+                    );
+
+                    setSearchParams(
+                      searchParams
+                    );
                   }}
-                  className="mt-6 rounded-xl bg-[#242424] px-7 py-3 text-sm font-semibold text-white transition hover:bg-[#9D536D]"
+                  className="mt-6 rounded-full bg-[#242424] px-7 py-3 text-sm font-semibold text-white transition hover:bg-[#B96882]"
                 >
                   Clear filters
                 </button>
@@ -512,28 +611,96 @@ function Explore() {
 
             )}
 
-
           {/* ==========================================
-              BUSINESS GRID
+              BUSINESS SLIDER
           ========================================== */}
 
           {!loading &&
             !error &&
             filteredBusinesses.length > 0 && (
 
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="relative">
 
-                {filteredBusinesses.map((business) => (
+                {/* Desktop arrows */}
 
-                  <BusinessCard
-                    key={business._id}
-                    business={{
-                      ...business,
-                      id: business._id,
-                    }}
-                  />
+                {filteredBusinesses.length > 4 && (
 
-                ))}
+                  <div className="mb-4 hidden justify-end gap-2 sm:flex">
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        scrollBusinesses(
+                          "prev"
+                        )
+                      }
+                      aria-label="Previous businesses"
+                      className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DED9DE] bg-white text-lg text-[#333] transition hover:border-[#B96882] hover:text-[#B96882]"
+                    >
+                      ←
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        scrollBusinesses(
+                          "next"
+                        )
+                      }
+                      aria-label="Next businesses"
+                      className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DED9DE] bg-white text-lg text-[#333] transition hover:border-[#B96882] hover:text-[#B96882]"
+                    >
+                      →
+                    </button>
+
+                  </div>
+
+                )}
+
+                {/* Slider */}
+
+                <div
+                  ref={businessesRef}
+                  className="flex gap-6 overflow-x-auto scroll-smooth pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+
+                  {filteredBusinesses.map(
+                    (business) => (
+
+                      <div
+                        key={business._id}
+                        className="min-w-[82%] sm:min-w-[48%] lg:min-w-[calc(25%-18px)]"
+                      >
+
+                        <BusinessCard
+                          business={{
+                            ...business,
+                            id: business._id,
+                          }}
+                        />
+
+                      </div>
+
+                    )
+                  )}
+
+                </div>
+
+                {/* Mobile swipe indicator */}
+
+                {filteredBusinesses.length > 1 && (
+
+                  <div className="mt-2 flex items-center justify-center gap-2 text-xs text-gray-400 sm:hidden">
+                    <span>
+                      Swipe to explore
+                    </span>
+
+                    <span className="text-[#B96882]">
+                      →
+                    </span>
+                  </div>
+
+                )}
 
               </div>
 

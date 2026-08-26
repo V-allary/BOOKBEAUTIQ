@@ -23,6 +23,7 @@ import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
 import PaymentCallback from "../pages/PaymentCallback";
 import LeaveReview from "../pages/LeaveReview";
+import Categories from "../pages/Categories";
 
 
 function AppRoutes() {
@@ -33,6 +34,7 @@ function AppRoutes() {
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/explore" element={<Explore />} />
+        <Route path="/categories" element={<Categories/>} />
         <Route path="/business/:id" element={<BusinessDetails />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />

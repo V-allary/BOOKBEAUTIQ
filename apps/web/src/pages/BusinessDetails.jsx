@@ -25,6 +25,7 @@ function BusinessDetails() {
   const [selectedTime, setSelectedTime] = useState(null);
 
   const [reviews, setReviews] = useState([]);
+  const [socialOpen, setSocialOpen] = useState(null);
 
   const getImageUrl = (path) => {
     if (!path) return "";
@@ -114,9 +115,8 @@ function BusinessDetails() {
     );
   }
 
-  const coverUrl = business.image
-    ? getImageUrl(business.image)
-    : "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1600";
+  const coverUrl = business.image ? getImageUrl(business.image) : "";
+
 
   const galleryUrls = Array.isArray(business.gallery) ? business.gallery.map(getImageUrl) : [];
 
@@ -130,12 +130,19 @@ function BusinessDetails() {
 
       <main className="min-h-screen bg-[#F7F7F6]">
 
-        {/* Cover Image */}
+                 {/* Cover Image */}
         <section className="mx-auto max-w-7xl px-6 pt-10">
           <div className="h-[420px] overflow-hidden rounded-2xl bg-[#F1EFED]">
-            <img src={coverUrl} alt={business.name} className="h-full w-full object-cover" />
+            {coverUrl ? (
+              <img src={coverUrl} alt={business.name} className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-6xl font-bold text-[#D8D4D1]">
+                {business.name?.charAt(0)?.toUpperCase() || "B"}
+              </div>
+            )}
           </div>
         </section>
+
 
         {/* Business Info */}
         <section className="mx-auto max-w-7xl px-6 py-10">
@@ -220,36 +227,294 @@ function BusinessDetails() {
     setSelectedTime={setSelectedTime}
   />
 </div>
+        {/* 3. SEE OUR WORK */}
+{hasSocial && (
+  <div className="mt-8 overflow-hidden rounded-2xl border border-[#E5E2DF] bg-white shadow-sm">
 
-            {/* 3. Social Media */}
-            {hasSocial && (
-              <div className="mt-8 rounded-2xl border border-[#E5E2DF] bg-white p-8 shadow-sm">
-                <h2 className="mb-5 text-2xl font-bold text-[#242424]">Follow Us</h2>
-                <div className="flex flex-wrap gap-3">
-                  {business.instagramUrl && (
-                    <a
-                      href={business.instagramUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-2 rounded-xl border border-[#E5E2DF] px-5 py-3 text-sm font-semibold text-[#242424] transition hover:border-[#B96882] hover:text-[#B96882]"
-                    >
-                      Instagram
-                    </a>
-                  )}
-                  {business.tiktokUrl && (
-                    <a
-                      href={business.tiktokUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-2 rounded-xl border border-[#E5E2DF] px-5 py-3 text-sm font-semibold text-[#242424] transition hover:border-[#B96882] hover:text-[#B96882]"
-                    >
-                      TikTok
-                    </a>
-                  )}
+    {/* Header */}
+    <div className="border-b border-[#E5E2DF] px-8 py-6">
+
+      <p className="text-xs font-bold uppercase tracking-[2px] text-[#B96882]">
+        See Our Work
+      </p>
+
+      <h2 className="mt-2 text-2xl font-bold text-[#242424]">
+        Follow their latest work
+      </h2>
+
+      <p className="mt-2 max-w-xl text-sm leading-6 text-gray-500">
+        Explore their work and get a feel for their style before
+        booking your appointment.
+      </p>
+
+    </div>
+
+    {/* Social buttons */}
+    <div className="grid gap-4 p-6 sm:grid-cols-2">
+
+      {/* Instagram */}
+      {business.instagramUrl && (
+        <button
+          type="button"
+          onClick={() => setSocialOpen("instagram")}
+          className="group flex items-center justify-between rounded-2xl border border-[#E5E2DF] bg-[#FAFAF9] p-5 text-left transition duration-300 hover:-translate-y-0.5 hover:border-[#B96882] hover:bg-white hover:shadow-md"
+        >
+
+          <div className="flex items-center gap-4">
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F2E8EC] text-xl text-[#9D536D]">
+              ◎
+            </div>
+
+            <div>
+              <p className="font-semibold text-[#242424]">
+                Instagram
+              </p>
+
+              <p className="mt-1 text-xs text-gray-500">
+                View their work
+              </p>
+            </div>
+
+          </div>
+
+          <span className="text-xl text-gray-400 transition group-hover:translate-x-1 group-hover:text-[#B96882]">
+            →
+          </span>
+
+        </button>
+      )}
+
+      {/* TikTok */}
+      {business.tiktokUrl && (
+        <button
+          type="button"
+          onClick={() => setSocialOpen("tiktok")}
+          className="group flex items-center justify-between rounded-2xl border border-[#E5E2DF] bg-[#FAF9F8] p-5 text-left transition duration-300 hover:-translate-y-0.5 hover:border-[#B96882] hover:bg-white hover:shadow-md"
+        >
+
+          <div className="flex items-center gap-4">
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F3F1EF] text-xl text-[#242424]">
+              ♪
+            </div>
+
+            <div>
+              <p className="font-semibold text-[#242424]">
+                TikTok
+              </p>
+
+              <p className="mt-1 text-xs text-gray-500">
+                View their videos
+              </p>
+            </div>
+
+          </div>
+
+          <span className="text-xl text-gray-400 transition group-hover:translate-x-1 group-hover:text-[#B96882]">
+            →
+          </span>
+
+        </button>
+      )}
+
+    </div>
+
+    {/* In-site Social Modal */}
+    {socialOpen && (
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-5 backdrop-blur-sm"
+        onClick={() => setSocialOpen(null)}
+      >
+
+        <div
+          className="relative max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-[28px] bg-white shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+
+          {/* Modal Header */}
+          <div className="flex items-center justify-between border-b border-[#E5E2DF] px-6 py-5">
+
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[2px] text-[#B96882]">
+                {socialOpen === "instagram"
+                  ? "Instagram"
+                  : "TikTok"}
+              </p>
+
+              <h3 className="mt-1 text-xl font-bold text-[#242424]">
+                {business.name}
+              </h3>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSocialOpen(null)}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F5F4F2] text-lg text-[#555] transition hover:bg-[#F2E8EC] hover:text-[#9D536D]"
+              aria-label="Close"
+            >
+              ×
+            </button>
+
+          </div>
+
+          {/* Content */}
+          <div className="max-h-[calc(90vh-90px)] overflow-y-auto p-6">
+
+            {/* Instagram */}
+            {socialOpen === "instagram" && (
+              <div>
+
+                <div className="rounded-2xl border border-[#E5E2DF] bg-[#FAFAF9] p-6 text-center">
+
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F2E8EC] text-2xl text-[#9D536D]">
+                    ◎
+                  </div>
+
+                  <h4 className="mt-5 text-lg font-bold text-[#242424]">
+                    {business.name} on Instagram
+                  </h4>
+
+                  <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">
+                    Explore their latest work through the portfolio
+                    they've shared with BookBeautiq.
+                  </p>
+
                 </div>
+
+                {/* BookBeautiq Gallery */}
+                {galleryUrls.length > 0 ? (
+                  <div className="mt-6">
+
+                    <div className="mb-4 flex items-end justify-between">
+
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[2px] text-[#B96882]">
+                          Their work
+                        </p>
+
+                        <h4 className="mt-1 text-xl font-bold text-[#242424]">
+                          Latest portfolio
+                        </h4>
+                      </div>
+
+                      <span className="text-xs text-gray-400">
+                        {galleryUrls.length} photos
+                      </span>
+
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+
+                      {galleryUrls.map((url, index) => (
+                        <div
+                          key={`${url}-${index}`}
+                          className="aspect-square overflow-hidden rounded-2xl bg-[#F1EFED]"
+                        >
+                          <img
+                            src={url}
+                            alt={`${business.name} work ${index + 1}`}
+                            className="h-full w-full object-cover transition duration-500 hover:scale-105"
+                          />
+                        </div>
+                      ))}
+
+                    </div>
+
+                  </div>
+                ) : (
+                  <div className="mt-6 rounded-2xl border border-[#E5E2DF] bg-white p-8 text-center">
+
+                    <p className="text-sm text-gray-500">
+                      This business hasn't added portfolio images
+                      to BookBeautiq yet.
+                    </p>
+
+                  </div>
+                )}
+
               </div>
             )}
 
+            {/* TikTok */}
+            {socialOpen === "tiktok" && (
+              <div>
+
+                <div className="rounded-2xl border border-[#E5E2DF] bg-[#FAFAF9] p-6 text-center">
+
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F3F1EF] text-2xl text-[#242424]">
+                    ♪
+                  </div>
+
+                  <h4 className="mt-5 text-lg font-bold text-[#242424]">
+                    {business.name} on TikTok
+                  </h4>
+
+                  <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">
+                    See more of this professional's work through
+                    their BookBeautiq portfolio.
+                  </p>
+
+                </div>
+
+                {/* BookBeautiq Gallery */}
+                {galleryUrls.length > 0 ? (
+                  <div className="mt-6">
+
+                    <div className="mb-4">
+
+                      <p className="text-xs font-bold uppercase tracking-[2px] text-[#B96882]">
+                        Their work
+                      </p>
+
+                      <h4 className="mt-1 text-xl font-bold text-[#242424]">
+                        Latest portfolio
+                      </h4>
+
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+
+                      {galleryUrls.map((url, index) => (
+                        <div
+                          key={`${url}-${index}`}
+                          className="aspect-square overflow-hidden rounded-2xl bg-[#F1EFED]"
+                        >
+                          <img
+                            src={url}
+                            alt={`${business.name} work ${index + 1}`}
+                            className="h-full w-full object-cover transition duration-500 hover:scale-105"
+                          />
+                        </div>
+                      ))}
+
+                    </div>
+
+                  </div>
+                ) : (
+                  <div className="mt-6 rounded-2xl border border-[#E5E2DF] bg-white p-8 text-center">
+
+                    <p className="text-sm text-gray-500">
+                      This business hasn't added portfolio images
+                      to BookBeautiq yet.
+                    </p>
+
+                  </div>
+                )}
+
+              </div>
+            )}
+
+          </div>
+
+        </div>
+
+      </div>
+    )}
+
+  </div>
+)}
+ 
             {/* 4. Gallery */}
             {galleryUrls.length > 0 && (
               <div className="mt-8 rounded-2xl border border-[#E5E2DF] bg-white p-8 shadow-sm">

@@ -5,7 +5,6 @@ import Hero from "../components/Hero";
 import Testimonials from "../components/Testimonials";
 import DownloadApp from "../components/DownloadApp";
 import PopularCities from "../components/PopularCities";
-import Categories from "../components/Categories";
 import Footer from "../components/Footer";
 
 function Home() {
@@ -14,7 +13,6 @@ function Home() {
       <Navbar />
       <Hero />
       <FeaturedProfessionals/>
-      <Categories />
       <WhyChooseUs/>
       <Testimonials/>
       <DownloadApp/>
