@@ -20,7 +20,7 @@ function ServiceSelector({ services = [], selectedService, setSelectedService, l
               <h3 className="font-semibold">{service.name}</h3>
               <p className="text-sm text-gray-500">{service.duration} mins</p>
             </div>
-            <span className="font-bold text-[#D97CA5]">AED {service.price}</span>
+            <span className="font-bold text-[#D97CA5]">KSH {service.price}</span>
           </button>
         ))}
       </div>

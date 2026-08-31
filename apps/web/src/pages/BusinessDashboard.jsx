@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import ServiceManager from "../components/admin/ServiceManager";
 import StaffManager from "../components/admin/StaffManager";
 import BusinessChatWidget from "../components/BusinessChatWidget";
+import SubscriptionCard from "../components/SubscriptionCard";
+
 
 function BusinessDashboard() {
   const navigate = useNavigate();
@@ -683,6 +685,8 @@ const handleCopyLink = () => {
   // NAVIGATION
   // ==========================================
 
+  const isTeamPlan = business.subscriptionPlan === "team";
+
   const navigation = [
     {
       id: "overview",
@@ -710,11 +714,15 @@ const handleCopyLink = () => {
       label: "Services",
       icon: "✦",
     },
-    {
-      id: "staff",
-      label: "Staff",
-      icon: "♙",
-    },
+    ...(isTeamPlan
+      ? [
+          {
+            id: "staff",
+            label: "Staff",
+            icon: "♙",
+          },
+        ]
+      : []),
     {
       id: "payouts",
       label: "Payouts",
@@ -1013,6 +1021,9 @@ const handleCopyLink = () => {
 </div>
 
 </div>
+            {/* Subscription */}
+<SubscriptionCard business={business} token={token} />
+
 
 
                 {/* Total */}
@@ -1319,31 +1330,33 @@ const handleCopyLink = () => {
 
                     {/* Staff */}
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setActiveSection("staff")
-                      }
-                      className="flex w-full items-center gap-4 rounded-xl border border-[#E5E2DF] p-4 text-left transition hover:border-[#C9C3C0] hover:bg-[#F8F7F6]"
-                    >
+                    {isTeamPlan && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setActiveSection("staff")
+                        }
+                        className="flex w-full items-center gap-4 rounded-xl border border-[#E5E2DF] p-4 text-left transition hover:border-[#C9C3C0] hover:bg-[#F8F7F6]"
+                      >
 
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F3F1EF] text-[#242424]">
-                        ♙
-                      </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F3F1EF] text-[#242424]">
+                          ♙
+                        </span>
 
-                      <div>
+                        <div>
 
-                        <p className="text-sm font-semibold text-[#242424]">
-                          Manage Staff
-                        </p>
+                          <p className="text-sm font-semibold text-[#242424]">
+                            Manage Staff
+                          </p>
 
-                        <p className="text-xs text-gray-400">
-                          Manage your team
-                        </p>
+                          <p className="text-xs text-gray-400">
+                            Manage your team
+                          </p>
 
-                      </div>
+                        </div>
 
-                    </button>
+                      </button>
+                    )}
 
                     {/* Payout */}
 
@@ -2281,7 +2294,7 @@ const handleCopyLink = () => {
               STAFF
           ================================== */}
 
-          {activeSection === "staff" && (
+          {activeSection === "staff" && isTeamPlan && (
             <div>
               <StaffManager
                 businesses={[business]}

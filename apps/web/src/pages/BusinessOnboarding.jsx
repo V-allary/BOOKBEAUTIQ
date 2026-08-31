@@ -9,6 +9,8 @@ function BusinessOnboarding() {
   const [businessId, setBusinessId] = useState(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("independent");
+
 
   // ==========================================
   // BUSINESS
@@ -150,7 +152,10 @@ function BusinessOnboarding() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(businessData),
+          body: JSON.stringify({
+            ...businessData,
+            subscriptionPlan: selectedPlan,
+          }),
         }
       );
 
@@ -176,7 +181,7 @@ function BusinessOnboarding() {
         const profileResponse = await fetch(
           "http://localhost:5001/api/users/profile",
           {
-        
+
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
@@ -415,7 +420,11 @@ function BusinessOnboarding() {
         }
       }
 
-      setStep(4);
+      if (selectedPlan === "team") {
+        setStep(4);
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -540,16 +549,15 @@ function BusinessOnboarding() {
     }
   };
 
+
+
   // ==========================================
   // STEPS
   // ==========================================
 
-  const steps = [
-    "Business Info",
-    "Photos",
-    "Services",
-    "Team",
-  ];
+  const steps = selectedPlan === "team"
+    ? ["Business Info", "Photos", "Services", "Team"]
+    : ["Business Info", "Photos", "Services"];
 
   return (
     <div className="min-h-screen bg-[#F5F5F4] px-4 py-8 text-[#202124] sm:px-6 sm:py-12">
@@ -747,6 +755,36 @@ function BusinessOnboarding() {
 
               <div className="space-y-4">
 
+              <div className="mb-2">
+  <p className="mb-3 text-sm font-semibold text-[#242424]">Choose your plan</p>
+  <div className="grid gap-3 sm:grid-cols-2">
+    {[
+      { id: "independent", label: "Independent", price: "KES 1,500/mo" },
+      { id: "team", label: "Team", price: "KES 2,500/mo" },
+    ].map((plan) => (
+      <button
+        key={plan.id}
+        type="button"
+        onClick={() => setSelectedPlan(plan.id)}
+        className={`rounded-2xl border p-4 text-left transition ${
+          selectedPlan === plan.id
+            ? "border-[#242424] bg-[#242424] text-white"
+            : "border-[#DDDAD7] bg-[#FAFAF9] text-[#242424] hover:border-[#B96882]"
+        }`}
+      >
+        <p className="font-bold">{plan.label}</p>
+        <p className={`mt-1 text-sm ${selectedPlan === plan.id ? "text-white/70" : "text-gray-500"}`}>
+          {plan.price}
+        </p>
+        <p className={`mt-2 text-xs ${selectedPlan === plan.id ? "text-white/60" : "text-gray-400"}`}>
+          7 days free, then billed monthly
+        </p>
+      </button>
+    ))}
+  </div>
+</div>
+
+
                 <input
                   placeholder="Business Name"
                   value={businessData.name}
@@ -804,7 +842,7 @@ function BusinessOnboarding() {
                 />
 
                 <input
-                  placeholder="Starting Price (e.g. AED 100)"
+                  placeholder="Starting Price (e.g. KSH 2000)"
                   value={businessData.price}
                   onChange={(e) =>
                     setBusinessData({
@@ -1142,7 +1180,7 @@ function BusinessOnboarding() {
 
                 <button
                   type="button"
-                  onClick={() => setStep(4)}
+                  onClick={() => (selectedPlan === "team" ? setStep(4) : navigate("/dashboard"))}
                   className="flex-1 rounded-xl border border-[#D9D5D2] py-4 font-semibold text-[#666]"
                 >
                   Skip for now
@@ -1158,7 +1196,9 @@ function BusinessOnboarding() {
                 >
                   {submitting
                     ? "Saving..."
-                    : "Continue"}
+                    : selectedPlan === "team"
+                    ? "Continue"
+                    : "Finish Setup"}
                 </button>
 
               </div>
@@ -1170,7 +1210,7 @@ function BusinessOnboarding() {
               STEP 4 — TEAM
           ====================================== */}
 
-          {step === 4 && (
+          {step === 4 && selectedPlan === "team" && (
             <div className="space-y-6">
 
               <div className="rounded-2xl bg-[#F5F4F3] p-4">

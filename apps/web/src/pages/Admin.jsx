@@ -1022,7 +1022,7 @@ function Admin() {
                       <input
                         type="text"
                         name="price"
-                        placeholder="Starting Price (e.g. AED 120)"
+                        placeholder="Starting Price (e.g. KSH 2000)"
                         value={formData.price}
                         onChange={handleChange}
                         className={inputClass}

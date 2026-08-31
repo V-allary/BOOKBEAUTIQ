@@ -48,6 +48,26 @@ function BookingSummary({
         </div>
       </div>
 
+      {/* Deposit Notice */}
+<div className="mt-5 rounded-xl border border-[#F0D8E2] bg-[#FFF7FA] p-4">
+  <div className="flex gap-3">
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F2E8EC] text-sm font-bold text-[#B96882]">
+      i
+    </div>
+
+    <div>
+      <p className="text-sm font-semibold text-[#242424]">
+        Your deposit is redeemable
+      </p>
+
+      <p className="mt-1 text-sm leading-6 text-gray-600">
+        The deposit you pay today will be deducted from the total cost
+        of your service when you attend your appointment.
+      </p>
+    </div>
+  </div>
+</div>
+
       <button
         onClick={onContinue}
         className="mt-7 w-full rounded-xl bg-[#242424] py-4 text-sm font-bold text-white transition hover:bg-[#B96882]"

@@ -59,50 +59,65 @@ function ForBusinesses() {
         "Collect reviews and create a professional online presence customers can trust.",
     },
   ];
-
   const pricingPlans = [
     {
-      name: "Starter",
-      price: "Free",
-      description: "Perfect for independent beauty professionals getting started.",
+      name: "Independent",
+      price: "KES 1,500",
+      period: "/ month",
+      trial: "7 days free",
+      description:
+        "Perfect for independent beauty professionals ready to grow their business and get discovered.",
       features: [
         "Business profile",
         "Service listings",
         "Online bookings",
         "Customer messages",
+        "Business dashboard",
+        "Customer reviews",
+        "Secure payments",
+        "BookBeautiq marketplace",
       ],
-      button: "Get Started",
+      button: "Start 7-Day Free Trial",
       featured: false,
     },
     {
-      name: "Professional",
-      price: "Coming Soon",
-      description: "Powerful tools for growing beauty businesses and teams.",
+      name: "Team",
+      price: "KES 2,500",
+      period: "/ month",
+      trial: "7 days free",
+      description:
+        "Built for salons, spas and beauty businesses managing multiple professionals.",
       features: [
-        "Everything in Starter",
-        "Team management",
+        "Everything in Independent",
+        "Multiple staff profiles",
+        "Team scheduling",
+        "Staff availability",
         "Advanced booking tools",
         "Business insights",
-        "Priority support",
+        "Customer management",
+        "BookBeautiq marketplace",
       ],
-      button: "Join the Waitlist",
+      button: "Start 7-Day Free Trial",
       featured: true,
     },
     {
       name: "Enterprise",
       price: "Custom",
-      description: "Flexible solutions for larger beauty and wellness brands.",
+      trial: null,
+      description:
+        "Flexible solutions for established beauty brands and businesses with multiple locations.",
       features: [
-        "Everything in Professional",
+        "Everything in Team",
         "Multiple locations",
         "Advanced management",
+        "Custom integrations",
+        "Custom onboarding",
         "Dedicated support",
       ],
-      button: "Contact Us",
+      button: "Contact Sales",
       featured: false,
     },
   ];
-
   const toggleMenu = (menu) => {
     setOpenMenu(openMenu === menu ? null : menu);
   };
@@ -366,8 +381,8 @@ function ForBusinesses() {
               </h1>
 
               <p className="mt-7 max-w-xl text-lg leading-8 text-gray-600">
-                BookBeautiq gives beauty professionals the tools to get
-                discovered, manage bookings, connect with customers and
+               Join BookBeautiq, showcase your business and get
+                discovered, manage bookings, connect with customers looking for your services and
                 build a business people love.
               </p>
 
@@ -377,7 +392,7 @@ function ForBusinesses() {
                   to="/signup"
                   className="rounded-full bg-[#1F2937] px-8 py-4 text-center font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#111827] hover:shadow-xl"
                 >
-                  Get started free →
+                  Get started free 7-days trial →
                 </Link>
 
                 <a
@@ -726,8 +741,9 @@ function ForBusinesses() {
 
       </section>
 
+ 
 
-      {/* =====================================================
+              {/* =====================================================
           PRICING
       ====================================================== */}
 
@@ -738,34 +754,43 @@ function ForBusinesses() {
 
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
 
+          {/* Pricing Header */}
+
           <div className="text-center">
 
-            <p className="text-sm font-semibold uppercase tracking-wider text-[#B96882]">
-              Simple pricing
-            </p>
+            <div className="inline-flex items-center rounded-full border border-[#F0D8E2] bg-white px-4 py-2 text-sm font-semibold text-[#B96882] shadow-sm">
+              7 days free · No long-term commitment
+            </div>
 
-            <h2 className="mt-3 text-4xl font-bold md:text-5xl">
-              Choose what works for you.
+            <h2 className="mt-5 text-4xl font-bold tracking-tight md:text-5xl">
+              Simple pricing for growing businesses.
             </h2>
 
-            <p className="mx-auto mt-5 max-w-2xl text-lg text-gray-500">
-              Start building your presence on BookBeautiq and scale
-              as your business grows.
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-gray-500">
+              Start with a 7-day free trial and experience everything
+              BookBeautiq has to offer. Choose the plan that fits your
+              business when your trial ends.
             </p>
 
           </div>
 
-          <div className="mt-14 grid gap-5 lg:grid-cols-3">
+
+          {/* Pricing Cards */}
+
+          <div className="mt-14 grid gap-6 lg:grid-cols-3">
 
             {pricingPlans.map((plan) => (
+
               <div
                 key={plan.name}
-                className={`relative rounded-[2rem] border p-8 ${
+                className={`relative flex flex-col rounded-[2rem] border p-8 transition duration-300 hover:-translate-y-1 ${
                   plan.featured
-                    ? "border-[#B96882] bg-white shadow-[0_25px_70px_rgba(217,124,165,0.16)]"
-                    : "border-[#EEE7EA] bg-white"
+                    ? "border-[#B96882] bg-white shadow-[0_25px_70px_rgba(185,104,130,0.16)]"
+                    : "border-[#EEE7EA] bg-white shadow-sm"
                 }`}
               >
+
+                {/* Recommended Badge */}
 
                 {plan.featured && (
                   <div className="absolute right-6 top-6 rounded-full bg-[#FFF1F6] px-3 py-1 text-xs font-bold text-[#B96882]">
@@ -773,76 +798,146 @@ function ForBusinesses() {
                   </div>
                 )}
 
-                <h3 className="text-xl font-bold">
-                  {plan.name}
-                </h3>
 
-                <p className="mt-3 min-h-[48px] text-sm leading-6 text-gray-500">
-                  {plan.description}
-                </p>
+                {/* Plan Name */}
+
+                <div className="pr-24">
+
+                  <h3 className="text-xl font-bold text-[#1F2937]">
+                    {plan.name}
+                  </h3>
+
+                  <p className="mt-3 min-h-[72px] text-sm leading-6 text-gray-500">
+                    {plan.description}
+                  </p>
+
+                </div>
+
+
+                {/* Price */}
 
                 <div className="mt-7">
 
-                  <p className="text-3xl font-bold">
-                    {plan.price}
-                  </p>
+                  <div className="flex items-baseline gap-1">
 
-                  {plan.name === "Starter" && (
-                    <p className="mt-1 text-sm text-gray-400">
-                      No monthly commitment
+                    <p className="text-3xl font-bold tracking-tight text-[#1F2937]">
+                      {plan.price}
+                    </p>
+
+                    {plan.period && (
+                      <span className="text-sm text-gray-400">
+                        {plan.period}
+                      </span>
+                    )}
+
+                  </div>
+
+
+                  {/* Trial */}
+
+                  {plan.trial && (
+                    <div className="mt-2 inline-flex items-center rounded-full bg-[#FFF1F6] px-3 py-1 text-xs font-semibold text-[#B96882]">
+                      ✓ {plan.trial}
+                    </div>
+                  )}
+
+                  {plan.name === "Enterprise" && (
+                    <p className="mt-2 text-sm text-gray-400">
+                      Tailored to your business
                     </p>
                   )}
 
                 </div>
 
+
+                {/* Divider */}
+
                 <div className="my-7 border-t border-[#EEE7EA]" />
 
+
+                {/* Features */}
+
                 <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                  Includes
+                  Everything included
                 </p>
 
-                <ul className="mt-5 space-y-3">
+                <ul className="mt-5 flex-1 space-y-3">
 
                   {plan.features.map((feature) => (
+
                     <li
                       key={feature}
-                      className="flex items-center gap-3 text-sm text-gray-600"
+                      className="flex items-start gap-3 text-sm text-gray-600"
                     >
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#FFF1F6] text-xs font-bold text-[#B96882]">
+
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#FFF1F6] text-xs font-bold text-[#B96882]">
                         ✓
                       </span>
 
-                      {feature}
+                      <span>
+                        {feature}
+                      </span>
+
                     </li>
+
                   ))}
 
                 </ul>
 
-                {plan.name === "Starter" ? (
-                  <Link
-                    to="/signup"
-                    className="mt-8 block rounded-full bg-[#1F2937] py-3.5 text-center text-sm font-semibold text-white transition hover:bg-[#111827]"
-                  >
-                    {plan.button}
-                  </Link>
-                ) : (
+
+                {/* CTA */}
+
+                {plan.name === "Enterprise" ? (
+
                   <a
-                    href="mailto:hello@bookbeautiq.com"
+                    href="mailto:hello@bookbeautiq.com?subject=BookBeautiq%20Enterprise%20Enquiry"
                     className="mt-8 block rounded-full border border-[#DCD3D7] py-3.5 text-center text-sm font-semibold text-[#1F2937] transition hover:border-[#B96882] hover:text-[#B96882]"
                   >
                     {plan.button}
                   </a>
+
+                ) : (
+
+                  <Link
+                    to="/signup"
+                    className={`mt-8 block rounded-full py-3.5 text-center text-sm font-semibold transition ${
+                      plan.featured
+                        ? "bg-[#B96882] text-white shadow-md hover:bg-[#A95770] hover:shadow-lg"
+                        : "bg-[#1F2937] text-white hover:bg-[#111827]"
+                    }`}
+                  >
+                    {plan.button} →
+                  </Link>
+
                 )}
 
               </div>
+
             ))}
+
+          </div>
+
+
+          {/* Pricing Note */}
+
+          <div className="mx-auto mt-8 max-w-3xl text-center">
+
+            <p className="text-sm leading-6 text-gray-500">
+              Your 7-day trial gives you full access to your selected plan.
+              After the trial, your chosen monthly subscription will apply.
+              You can cancel before the trial ends to avoid being charged.
+            </p>
+
+            <p className="mt-2 text-xs text-gray-400">
+              Payment processing and applicable marketplace fees are separate
+              from your monthly subscription.
+            </p>
 
           </div>
 
         </div>
 
       </section>
-
 
       {/* =====================================================
           FINAL CTA

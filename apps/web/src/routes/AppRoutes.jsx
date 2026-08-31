@@ -24,6 +24,7 @@ import ResetPassword from "../pages/ResetPassword";
 import PaymentCallback from "../pages/PaymentCallback";
 import LeaveReview from "../pages/LeaveReview";
 import Categories from "../pages/Categories";
+import SubscriptionCallback from "../pages/SubscriptionCallback";
 
 
 function AppRoutes() {
@@ -42,6 +43,7 @@ function AppRoutes() {
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/payment/callback" element={<PaymentCallback />} />
         <Route path="/review/:token" element={<LeaveReview />} />
+        <Route path="/subscription/callback" element={<SubscriptionCallback />} />
 
 
         <Route path="/businesses" element={<ForBusinesses />} />
