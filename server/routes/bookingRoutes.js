@@ -7,6 +7,7 @@ import {
   getMyBookings,
   getBusinessBookings,
   cancelBooking,
+  getAvailability,
   markBookingCompleted,
 } from "../controllers/bookingController.js";
 
