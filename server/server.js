@@ -21,6 +21,14 @@ import reviewRoutes from "./routes/reviewRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import subscriptionRoutes from"./routes/subscriptionRoutes.js";
 import checkSubscriptions from "./utils/checkSubscriptions.js";
+import checkReminders from "./utils/checkReminders.js";
+import autoChargeSubscriptions from "./utils/autoChargeSubscriptions.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
+import savedBusinessRoutes from "./routes/savedBusinessRoutes.js";
+
+
+cron.schedule("0 9 * * *", checkReminders); 
+cron.schedule("0 1 * * *", autoChargeSubscriptions);
 
 
 dotenv.config();
@@ -36,10 +44,8 @@ app.use(
   "/uploads",
   express.static(path.join(__dirname, "uploads"))
 );
-
-
 app.use(cors({
-  origin: ["http://localhost:5173"], // your Vite dev URL — add your real domain when you deploy
+  origin: ["http://localhost:5173", "https://v-allary.github.io", "https://bookbeautiq.com", "https://www.bookbeautiq.com"],
   credentials: true,
 }));
 
@@ -86,6 +92,8 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/saved-businesses", savedBusinessRoutes);
 
 app.get("/api/protected", authMiddleware, (req, res) => {
   res.json({
