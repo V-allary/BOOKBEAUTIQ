@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import notify from "../utils/notify.js";
 
 // Business owner submits identity + business verification together
 export const submitVerification = async (req, res) => {
@@ -72,6 +73,7 @@ export const getPendingVerifications = async (req, res) => {
 };
 
 // Admin — approve
+ 
 export const approveVerification = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -87,12 +89,26 @@ export const approveVerification = async (req, res) => {
 
     await user.save();
 
+    await notify({
+      userId: user._id,
+      type: "business_approved",
+      title: "You're verified!",
+      message: "Your identity and business have been verified. You can now finish setting up your business.",
+      email: user.email,
+      link: "/onboarding",
+      emailHtml: `
+        <p>Hi ${user.firstName},</p>
+        <p>Great news — your identity and business documents have been verified.</p>
+        <p>You can now continue setting up your business on BookBeautiq.</p>
+        <p><a href="${process.env.CLIENT_URL}/onboarding">Continue Setting Up Your Business</a></p>
+      `,
+    });
+
     res.status(200).json({ message: "Account verified successfully.", user });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
 // Admin — reject
 export const rejectVerification = async (req, res) => {
   try {

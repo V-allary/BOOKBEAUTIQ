@@ -1,54 +1,54 @@
+import { useNavigate } from "react-router-dom";
+
 function PopularCities() {
+  const navigate = useNavigate();
+
   const cities = [
-    {
-      name: "Dubai",
-      country: "UAE",
-      image:
-        "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800",
-    },
-    {
-      name: "Abu Dhabi",
-      country: "UAE",
-      image:
-        "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=800",
-    },
     {
       name: "Nairobi",
       country: "Kenya",
-      image:
-        "https://images.unsplash.com/photo-1611348524140-53c9a25263d6?w=800",
+      image: "https://source.unsplash.com/800x800/?nairobi,kenya,city",
     },
     {
       name: "Mombasa",
       country: "Kenya",
-      image:
-        "https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?w=800",
+      image: "https://source.unsplash.com/800x800/?mombasa,kenya,coast",
+    },
+    {
+      name: "Kisumu",
+      country: "Kenya",
+      image: "https://source.unsplash.com/800x800/?kisumu,kenya,lakevictoria",
+    },
+    {
+      name: "Nakuru",
+      country: "Kenya",
+      image: "https://source.unsplash.com/800x800/?nakuru,kenya",
+    },
+    {
+      name: "Eldoret",
+      country: "Kenya",
+      image: "https://source.unsplash.com/800x800/?eldoret,kenya",
     },
     {
       name: "Kampala",
       country: "Uganda",
-      image:
-        "https://images.unsplash.com/photo-1589395937772-f67057e233b8?w=800",
+      image: "https://source.unsplash.com/800x800/?kampala,uganda,city",
     },
     {
       name: "Kigali",
       country: "Rwanda",
-      image:
-        "https://images.unsplash.com/photo-1618828665011-0abd973f7bb8?w=800",
+      image: "https://source.unsplash.com/800x800/?kigali,rwanda,city",
     },
     {
       name: "Dar es Salaam",
       country: "Tanzania",
-      image:
-        "https://images.unsplash.com/photo-1589395937772-f67057e233b8?w=800",
-    },
-    {
-      name: "Johannesburg",
-      country: "South Africa",
-      image:
-        "https://images.unsplash.com/photo-1576485290814-1c72aa4bbb8e?w=800",
+      image: "https://source.unsplash.com/800x800/?daressalaam,tanzania,city",
     },
   ];
+
+  const handleCityClick = (cityName) => {
+    navigate(`/explore?location=${encodeURIComponent(cityName)}`);
+  };
 
   return (
     <section className="bg-white py-16 sm:py-20 lg:py-24">
@@ -63,7 +63,7 @@ function PopularCities() {
 
           <div>
 
-            <p className="text-xs font-bold uppercase tracking-[3px] text-[#D97CA5]">
+            <p className="text-xs font-bold uppercase tracking-[3px] text-[#B96882]">
               Explore Africa
             </p>
 
@@ -80,7 +80,8 @@ function PopularCities() {
 
           <button
             type="button"
-            className="hidden rounded-full border border-[#DED9DE] px-5 py-2.5 text-sm font-semibold text-[#333] transition hover:border-[#D97CA5] hover:text-[#D97CA5] sm:block"
+            onClick={() => navigate("/explore")}
+            className="hidden rounded-full border border-[#DED9DE] px-5 py-2.5 text-sm font-semibold text-[#333] transition hover:border-[#B96882] hover:text-[#B96882] sm:block"
           >
             Explore all cities
           </button>
@@ -98,6 +99,7 @@ function PopularCities() {
             <button
               key={city.name}
               type="button"
+              onClick={() => handleCityClick(city.name)}
               className="group relative min-w-[210px] overflow-hidden rounded-[24px] text-left sm:min-w-0"
             >
 
@@ -149,7 +151,8 @@ function PopularCities() {
 
           <button
             type="button"
-            className="rounded-full border border-[#DED9DE] px-7 py-3 text-sm font-semibold text-[#333] transition hover:border-[#D97CA5] hover:text-[#D97CA5]"
+            onClick={() => navigate("/explore")}
+            className="rounded-full border border-[#DED9DE] px-7 py-3 text-sm font-semibold text-[#333] transition hover:border-[#B96882] hover:text-[#B96882]"
           >
             Explore all cities
           </button>

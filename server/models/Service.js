@@ -37,6 +37,26 @@ const serviceSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    discountPrice: {
+      type: Number,
+      default: null,
+    },
+
+    discountLabel: {
+      type: String,
+      default: "",
+    },
+
+    discountStartDate: {
+      type: Date,
+      default: null,
+    },
+
+    discountEndDate: {
+      type: Date,
+      default: null,
+    },
+
   },
   {
     timestamps: true,

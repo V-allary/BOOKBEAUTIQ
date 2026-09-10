@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../../config";
 
 function OwnerVerifications() {
   const [pending, setPending] = useState([]);
@@ -9,7 +10,7 @@ function OwnerVerifications() {
 
   const fetchPending = async () => {
     try {
-      const response = await fetch("http://localhost:5001/api/verification/pending", {
+      const response = await fetch(`${API_URL}/api/verification/pending`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -29,7 +30,7 @@ function OwnerVerifications() {
   const handleApprove = async (userId) => {
     try {
       setProcessingId(userId);
-      const response = await fetch(`http://localhost:5001/api/verification/${userId}/approve`, {
+      const response = await fetch(`${API_URL}/api/verification/${userId}/approve`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -50,7 +51,7 @@ function OwnerVerifications() {
 
     try {
       setProcessingId(userId);
-      const response = await fetch(`http://localhost:5001/api/verification/${userId}/reject`, {
+      const response = await fetch(`${API_URL}/api/verification/${userId}/reject`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -70,7 +71,7 @@ function OwnerVerifications() {
   };
 
   const documentUrl = (doc) =>
-    doc?.startsWith("/uploads/") ? `http://localhost:5001${doc}` : doc;
+    doc?.startsWith("/uploads/") ? `${API_URL}${doc}` : doc;
 
   if (loading) {
     return (
@@ -84,7 +85,7 @@ function OwnerVerifications() {
     <div className="mt-12 rounded-3xl bg-white p-8 shadow-lg">
 
       <div className="mb-8">
-        <p className="text-sm font-semibold uppercase tracking-wide text-[#D8431F]">
+        <p className="text-sm font-semibold uppercase tracking-wide text-[#B96882]">
           Account Verification
         </p>
         <h2 className="mt-2 text-3xl font-bold text-[#14171A]">
@@ -114,7 +115,7 @@ function OwnerVerifications() {
                   <p className="mt-1 text-gray-500">{user.email}</p>
                   <p className="mt-1 text-gray-500">{user.phone}</p>
                 </div>
-                <span className="w-fit rounded-full bg-orange-100 px-4 py-2 text-sm font-semibold text-[#D8431F]">
+                <span className="w-fit rounded-full bg-[#F2E8EC] px-4 py-2 text-sm font-semibold text-[#9D536D]">
                   Under Review
                 </span>
               </div>
@@ -158,7 +159,7 @@ function OwnerVerifications() {
                         href={documentUrl(user.identityDocument)}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-1 block break-all text-sm font-semibold text-[#F2542D] underline"
+                        className="mt-1 block break-all text-sm font-semibold text-[#B96882] underline"
                       >
                         View document
                       </a>
@@ -174,7 +175,7 @@ function OwnerVerifications() {
                         href={documentUrl(user.businessDocument)}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-1 block break-all text-sm font-semibold text-[#F2542D] underline"
+                        className="mt-1 block break-all text-sm font-semibold text-[#B96882] underline"
                       >
                         View document
                       </a>

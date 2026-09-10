@@ -25,11 +25,14 @@ import PaymentCallback from "../pages/PaymentCallback";
 import LeaveReview from "../pages/LeaveReview";
 import Categories from "../pages/Categories";
 import SubscriptionCallback from "../pages/SubscriptionCallback";
+import HelpCenter from "../pages/HelpCenter";
+import PrivacyPolicy from "../pages/PrivacyPolicy";
 
 
 function AppRoutes() {
   return (
     <BrowserRouter>
+
       <Routes>
 
         {/* Public Routes */}
@@ -44,6 +47,8 @@ function AppRoutes() {
         <Route path="/payment/callback" element={<PaymentCallback />} />
         <Route path="/review/:token" element={<LeaveReview />} />
         <Route path="/subscription/callback" element={<SubscriptionCallback />} />
+        <Route path="/help" element={<HelpCenter />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
 
 
         <Route path="/businesses" element={<ForBusinesses />} />

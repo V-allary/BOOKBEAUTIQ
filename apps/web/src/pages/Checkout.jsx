@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { API_URL } from "../config";
 
 function Checkout() {
   const location = useLocation();
@@ -53,12 +54,12 @@ function Checkout() {
 
   // ==========================================
   // VALIDATE BOOKING DATA
+  // Staff is optional — independent businesses have none
   // ==========================================
 
   if (
     !business ||
     !selectedService ||
-    !selectedStaff ||
     !selectedDate ||
     !selectedTime
   ) {
@@ -102,11 +103,23 @@ function Checkout() {
   }
 
   // ==========================================
-  // DEPOSIT
+  // DISCOUNT / OFFER CHECK
+  // ==========================================
+
+  const now = new Date();
+  const onOffer =
+    selectedService.discountPrice &&
+    (!selectedService.discountStartDate || new Date(selectedService.discountStartDate) <= now) &&
+    (!selectedService.discountEndDate || new Date(selectedService.discountEndDate) >= now);
+
+  const effectivePrice = onOffer ? selectedService.discountPrice : selectedService.price;
+
+  // ==========================================
+  // DEPOSIT — based on the effective (discounted, if active) price
   // ==========================================
 
   const depositAmount = Math.round(
-    selectedService.price * 0.3
+    effectivePrice * 0.3
   );
 
   // ==========================================
@@ -141,7 +154,7 @@ function Checkout() {
       // ======================================
 
       const bookingResponse = await fetch(
-        "http://localhost:5001/api/bookings",
+        `${API_URL}/api/bookings`,
         {
           method: "POST",
 
@@ -161,7 +174,7 @@ function Checkout() {
 
             service: selectedService.name,
 
-            staff: selectedStaff.name,
+            staff: selectedStaff?.name || "Not specified",
 
             date: `${selectedDate.day} ${selectedDate.date}`,
 
@@ -190,7 +203,7 @@ function Checkout() {
 
       const paymentResponse =
         await fetch(
-          "http://localhost:5001/api/payments/initialize",
+          `${API_URL}/api/payments/initialize`,
           {
             method: "POST",
 
@@ -323,35 +336,51 @@ function Checkout() {
                   <div className="flex items-start justify-between gap-6 py-4">
 
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                        Service
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                          Service
+                        </p>
+
+                        {onOffer && (
+                          <span className="rounded-full bg-[#F2E8EC] px-2.5 py-0.5 text-[10px] font-bold text-[#9D536D]">
+                            {selectedService.discountLabel || "Special Offer"}
+                          </span>
+                        )}
+                      </div>
 
                       <p className="mt-1 font-semibold text-[#242424]">
                         {selectedService.name}
                       </p>
                     </div>
 
-                    <span className="shrink-0 font-bold text-[#B96882]">
-                      KES{" "}
-                      {selectedService.price}
+                    <span className="shrink-0 text-right">
+                      {onOffer && (
+                        <span className="block text-xs text-gray-400 line-through">
+                          KES {selectedService.price}
+                        </span>
+                      )}
+                      <span className="font-bold text-[#B96882]">
+                        KES {effectivePrice}
+                      </span>
                     </span>
 
                   </div>
 
-                  <div className="flex items-start justify-between gap-6 py-4">
+                  {selectedStaff && (
+                    <div className="flex items-start justify-between gap-6 py-4">
 
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                        Professional
-                      </p>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                          Professional
+                        </p>
 
-                      <p className="mt-1 font-semibold text-[#242424]">
-                        {selectedStaff.name}
-                      </p>
+                        <p className="mt-1 font-semibold text-[#242424]">
+                          {selectedStaff.name}
+                        </p>
+                      </div>
+
                     </div>
-
-                  </div>
+                  )}
 
                   <div className="grid gap-4 py-4 sm:grid-cols-2">
 
@@ -540,9 +569,13 @@ function Checkout() {
                       Service price
                     </span>
 
-                    <span className="text-sm font-semibold text-[#242424]">
-                      KES{" "}
-                      {selectedService.price}
+                    <span className="flex items-center gap-2 text-sm font-semibold text-[#242424]">
+                      {onOffer && (
+                        <span className="text-gray-400 line-through">
+                          KES {selectedService.price}
+                        </span>
+                      )}
+                      KES {effectivePrice}
                     </span>
 
                   </div>

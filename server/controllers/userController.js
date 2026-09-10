@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import User from "../models/User.js";
 import sendEmail from "../utils/sendEmail.js";
-import authhMiddleware from "../middleware/authMiddleware.js";
+
 
 // ==========================================
 // REGISTER USER

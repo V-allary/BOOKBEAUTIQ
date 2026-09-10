@@ -1,6 +1,9 @@
- import Message from "../models/Message.js";
+import Message from "../models/Message.js";
 import Booking from "../models/Bookings.js";
 import Business from "../models/Business.js";
+import notify from "../utils/notify.js";
+import User from "../models/User.js";
+
 
 // Confirm the requester (customer side) has actually booked this business
 const customerCanMessage = async (businessId, userId, email) => {
@@ -38,6 +41,22 @@ export const sendCustomerMessage = async (req, res) => {
       text: text.trim(),
     });
 
+    const business = await Business.findById(businessId);
+    if (business) {
+      const owner = await User.findById(business.owner);
+      if (owner) {
+        await notify({
+          userId: owner._id,
+          type: "new_message",
+          title: "New customer message",
+          message: `${email} sent you a message.`,
+          email: owner.email,
+          link: "/dashboard",
+        });
+      }
+    }
+
+
     res.status(201).json(message);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -68,6 +87,16 @@ export const sendBusinessMessage = async (req, res) => {
       sender: "business",
       text: text.trim(),
     });
+    const customer = await User.findOne({ email: customerEmail });
+    await notify({
+      userId: customer?._id || null,
+      type: "new_message",
+      title: "New message from business",
+      message: `${business.name} sent you a message.`,
+      email: customerEmail,
+      link: "/dashboard",
+    });
+
 
     res.status(201).json(message);
   } catch (error) {

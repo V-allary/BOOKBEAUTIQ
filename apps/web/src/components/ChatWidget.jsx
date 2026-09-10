@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { API_URL } from "../config";
 
 function ChatWidget({ businessId, customerEmail }) {
   const [messages, setMessages] = useState([]);
@@ -9,7 +10,7 @@ function ChatWidget({ businessId, customerEmail }) {
 
   const fetchMessages = async () => {
     try {
-      const url = `http://localhost:5001/api/messages/customer/${businessId}?email=${encodeURIComponent(customerEmail)}`;
+      const url = `${API_URL}/api/messages/customer/${businessId}?email=${encodeURIComponent(customerEmail)}`;
       const response = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -37,7 +38,7 @@ function ChatWidget({ businessId, customerEmail }) {
 
     try {
       const response = await fetch(
-        "http://localhost:5001/api/messages/customer",
+        `${API_URL}/api/messages/customer`,
         {
           method: "POST",
           headers: {

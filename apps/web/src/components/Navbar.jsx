@@ -78,7 +78,7 @@ function Navbar() {
 
           <Link
             to="/signin"
-            className="rounded-full bg-[#1F2937] px-6 py-3 text-sm font-semibold text-white shadow-md transition duration-300 hover:-translate-y-0.5 hover:bg-[#111827] hover:shadow-lg"
+            className="rounded-full bg-[#242424] px-6 py-3 text-sm font-semibold text-white shadow-md transition duration-300 hover:-translate-y-0.5 hover:bg-[#B96882] hover:shadow-lg"
             >
             Sign In
           </Link>
@@ -173,7 +173,7 @@ function Navbar() {
               <Link
                 to="/signin"
                 onClick={closeMenu}
-                className="rounded-full bg-[#D97CA5] px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-[#CC6C98]"
+                className="rounded-full bg-[#242424] px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-[#B96882]"
               >
                 Sign In
               </Link>

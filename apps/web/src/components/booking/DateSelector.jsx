@@ -13,7 +13,7 @@ function DateSelector({ selectedDate, setSelectedDate }) {
         day: d.toLocaleDateString("en-US", { weekday: "short" }),
         date: d.getDate().toString(),
         month: d.toLocaleDateString("en-US", { month: "short" }),
-        fullDate: d.toISOString().split("T")[0],
+        iso: d.toISOString().split("T")[0],
       });
     }
 
@@ -28,19 +28,20 @@ function DateSelector({ selectedDate, setSelectedDate }) {
       <div className="flex gap-3 overflow-x-auto pb-2">
         {dates.map((item) => (
           <button
-            key={item.fullDate}
+            key={item.iso}
+            type="button"
             onClick={() => setSelectedDate(item)}
             className={`flex min-w-[76px] shrink-0 flex-col items-center rounded-xl border px-4 py-3 transition ${
-              selectedDate?.fullDate === item.fullDate
+              selectedDate?.iso === item.iso
                 ? "border-[#242424] bg-[#242424] text-white"
                 : "border-[#E5E2DF] bg-[#FAFAF9] text-[#242424] hover:border-[#B96882]"
             }`}
           >
-            <span className={`text-xs font-semibold ${selectedDate?.fullDate === item.fullDate ? "text-white/70" : "text-gray-400"}`}>
+            <span className={`text-xs font-semibold ${selectedDate?.iso === item.iso ? "text-white/70" : "text-gray-400"}`}>
               {item.month}
             </span>
             <span className="mt-1 text-xl font-bold">{item.date}</span>
-            <span className={`mt-0.5 text-xs ${selectedDate?.fullDate === item.fullDate ? "text-white/70" : "text-gray-400"}`}>
+            <span className={`mt-0.5 text-xs ${selectedDate?.iso === item.iso ? "text-white/70" : "text-gray-400"}`}>
               {item.day}
             </span>
           </button>

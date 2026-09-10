@@ -4,6 +4,7 @@ import ServiceManager from "../components/admin/ServiceManager";
 import StaffManager from "../components/admin/StaffManager";
 import BusinessChatWidget from "../components/BusinessChatWidget";
 import SubscriptionCard from "../components/SubscriptionCard";
+import { API_URL } from "../config";
 
 
 function BusinessDashboard() {
@@ -12,9 +13,9 @@ function BusinessDashboard() {
 
   const getImageUrl = (path) => {
     if (!path) return "";
-    return path.startsWith("/uploads/") ? `http://localhost:5001${path}` : path;
+    return path.startsWith("/uploads/") ? `${API_URL}${path}` : path;
   };
-  
+
 
   const [business, setBusiness] = useState(null);
   const [bookings, setBookings] = useState([]);
@@ -23,6 +24,8 @@ function BusinessDashboard() {
   const [conversations, setConversations] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [analytics, setAnalytics] = useState(null);
+
 
 
   // Active dashboard section
@@ -40,10 +43,34 @@ function BusinessDashboard() {
     price: "",
     phone: "",
     email: "",
-    openingHours: "",
+    openingTime: "09:00",
+    closingTime: "18:00",
+    closedDays: [],
     instagramUrl: "",
     tiktokUrl: "",
   });
+
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const formatTimeLabel = (time24) => {
+    const [h, m] = time24.split(":").map(Number);
+    const period = h >= 12 ? "PM" : "AM";
+    const displayHour = h > 12 ? h - 12 : h === 0 ? 12 : h;
+    return `${displayHour}:${m === 0 ? "00" : m} ${period}`;
+  };
+
+  const toggleClosedDay = (day) => {
+    setProfileForm((current) => {
+      const isClosed = current.closedDays.includes(day);
+      return {
+        ...current,
+        closedDays: isClosed
+          ? current.closedDays.filter((d) => d !== day)
+          : [...current.closedDays, day],
+      };
+    });
+  };
+
 
 
   const [coverFile, setCoverFile] = useState(null);
@@ -70,6 +97,24 @@ function BusinessDashboard() {
   const [payoutSubmitting, setPayoutSubmitting] = useState(false);
   const [payoutMessage, setPayoutMessage] = useState("");
 
+
+  // ==========================================
+  // FETCH ANALYTICS
+  // ==========================================
+
+  const fetchAnalytics = async (businessId) => {
+    try {
+      const response = await fetch(`${API_URL}/api/analytics/${businessId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (response.ok) setAnalytics(data);
+    } catch (error) {
+      console.error("Error loading analytics:", error);
+    }
+  };
+
+
   // ==========================================
   // FETCH CONVERSATIONS
   // ==========================================
@@ -77,7 +122,7 @@ function BusinessDashboard() {
   const fetchConversations = async (businessId) => {
     try {
       const response = await fetch(
-        `http://localhost:5001/api/messages/business/${businessId}`,
+        `${API_URL}/api/messages/business/${businessId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -102,7 +147,7 @@ function BusinessDashboard() {
   const fetchBusiness = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5001/api/businesses/owner",
+        `${API_URL}/api/businesses/owner`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -127,7 +172,7 @@ function BusinessDashboard() {
   const fetchBookings = async (businessId) => {
     try {
       const response = await fetch(
-        `http://localhost:5001/api/bookings/business/${businessId}`,
+        `${API_URL}/api/bookings/business/${businessId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -152,7 +197,7 @@ function BusinessDashboard() {
   const fetchBanks = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5001/api/payouts/banks",
+        `${API_URL}/api/payouts/banks`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -192,6 +237,7 @@ function BusinessDashboard() {
     if (business?._id) {
       fetchBookings(business._id);
       fetchConversations(business._id);
+      fetchAnalytics(business._id);
     }
   }, [business]);
 
@@ -209,7 +255,9 @@ function BusinessDashboard() {
       price: business.price || "",
       phone: business.phone || "",
       email: business.email || "",
-      openingHours: business.openingHours || "",
+      openingTime: business.openingTime || "09:00",
+      closingTime: business.closingTime || "18:00",
+      closedDays: business.closedDays || [],
       instagramUrl: business.instagramUrl || "",
       tiktokUrl: business.tiktokUrl || "",
     });
@@ -221,8 +269,8 @@ function BusinessDashboard() {
         ? business.gallery.map(getImageUrl)
         : []
     );
-    
-    
+
+
 
     setGalleryFiles([]);
     setCoverFile(null);
@@ -238,7 +286,7 @@ function BusinessDashboard() {
       setProcessingId(bookingId);
 
       const response = await fetch(
-        `http://localhost:5001/api/bookings/${bookingId}/complete`,
+        `${API_URL}/api/bookings/${bookingId}/complete`,
         {
           method: "PATCH",
           headers: {
@@ -286,7 +334,7 @@ const handleCopyLink = () => {
     imageData.append("image", file);
 
     const response = await fetch(
-      "http://localhost:5001/api/uploads",
+      `${API_URL}/api/uploads`,
       {
         method: "POST",
         headers: {
@@ -471,7 +519,7 @@ const handleCopyLink = () => {
       ].slice(0, 5);
 
       const response = await fetch(
-        `http://localhost:5001/api/businesses/${business._id}`,
+        `${API_URL}/api/businesses/${business._id}`,
         {
           method: "PUT",
           headers: {
@@ -480,6 +528,9 @@ const handleCopyLink = () => {
           },
           body: JSON.stringify({
             ...profileForm,
+            openingHours: `${formatTimeLabel(profileForm.openingTime)} - ${formatTimeLabel(profileForm.closingTime)}${
+              profileForm.closedDays.length > 0 ? ` (Closed ${profileForm.closedDays.join(", ")})` : ""
+            }`,
             image: coverUrl,
             gallery: updatedGallery,
           }),
@@ -520,7 +571,7 @@ const handleCopyLink = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:5001/api/payouts/verify-account",
+        `${API_URL}/api/payouts/verify-account`,
         {
           method: "POST",
           headers: {
@@ -560,7 +611,7 @@ const handleCopyLink = () => {
       );
 
       const response = await fetch(
-        "http://localhost:5001/api/payouts/setup",
+        `${API_URL}/api/payouts/setup`,
         {
           method: "POST",
           headers: {
@@ -692,6 +743,11 @@ const handleCopyLink = () => {
       id: "overview",
       label: "Overview",
       icon: "⌂",
+    },
+    {
+      id: "analytics",
+      label: "Analytics",
+      icon: "▲",
     },
     {
       id: "profile",
@@ -1022,7 +1078,8 @@ const handleCopyLink = () => {
 
 </div>
             {/* Subscription */}
-<SubscriptionCard business={business} token={token} />
+            <SubscriptionCard business={business} token={token} onUpdated={fetchBusiness} />
+
 
 
 
@@ -1427,6 +1484,123 @@ const handleCopyLink = () => {
           )}
 
           {/* ==================================
+              ANALYTICS
+          ================================== */}
+
+          {activeSection === "analytics" && (
+            <div className="space-y-6">
+
+              {!analytics ? (
+                <div className="rounded-2xl border border-[#E5E2DF] bg-white p-10 text-center text-sm text-gray-500 shadow-sm">
+                  Loading analytics...
+                </div>
+              ) : (
+                <>
+                  {/* Totals */}
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+                    <div className="rounded-2xl border border-[#E5E2DF] bg-white p-5 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-gray-500">Total Bookings</p>
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F3F1EF] text-[#242424]">▣</span>
+                      </div>
+                      <p className="mt-4 text-3xl font-bold text-[#242424]">{analytics.totals.bookings}</p>
+                    </div>
+
+                    <div className="rounded-2xl border border-[#E5E2DF] bg-white p-5 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-gray-500">Revenue</p>
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F2E8EC] text-[#9D536D]">◆</span>
+                      </div>
+                      <p className="mt-4 text-3xl font-bold text-[#242424]">KES {analytics.totals.revenue.toLocaleString()}</p>
+                      <p className="mt-1 text-xs text-gray-400">Deposits collected via BookBeautiq</p>
+                    </div>
+
+                    <div className="rounded-2xl border border-[#E5E2DF] bg-white p-5 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-gray-500">Customers</p>
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50 text-green-600">◎</span>
+                      </div>
+                      <p className="mt-4 text-3xl font-bold text-[#242424]">{analytics.totals.customers}</p>
+                    </div>
+
+                    <div className="rounded-2xl border border-[#E5E2DF] bg-white p-5 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-gray-500">Profile Views</p>
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-yellow-50 text-yellow-600">✦</span>
+                      </div>
+                      <p className="mt-4 text-3xl font-bold text-[#242424]">{analytics.profileViews}</p>
+                    </div>
+
+                  </div>
+
+                  {/* Monthly + Popular Services */}
+                  <div className="grid gap-6 xl:grid-cols-[1.7fr_1fr]">
+
+                    <div className="rounded-2xl border border-[#E5E2DF] bg-white shadow-sm">
+                      <div className="border-b border-[#E5E2DF] px-6 py-5">
+                        <h2 className="font-bold text-[#242424]">Monthly Overview</h2>
+                        <p className="mt-1 text-xs text-gray-400">Bookings and revenue since you joined</p>
+                      </div>
+
+                      <div className="p-5">
+                        {analytics.monthly.length === 0 ? (
+                          <div className="py-10 text-center text-sm text-gray-500">No booking data yet.</div>
+                        ) : (
+                          <div className="space-y-3">
+                            {analytics.monthly.map((m) => {
+                              const monthName = new Date(m.year, m.month - 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+                              return (
+                                <div key={`${m.year}-${m.month}`} className="flex items-center justify-between rounded-xl border border-[#E5E2DF] p-4">
+                                  <span className="text-sm font-semibold text-[#242424]">{monthName}</span>
+                                  <div className="flex gap-6 text-sm text-gray-500">
+                                    <span>{m.bookings} bookings</span>
+                                    <span>{m.customers} customers</span>
+                                    <span className="font-semibold text-[#9D536D]">KES {m.revenue.toLocaleString()}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-[#E5E2DF] bg-white p-6 shadow-sm">
+                      <h2 className="font-bold text-[#242424]">Popular Services</h2>
+                      <p className="mt-1 text-xs text-gray-400">Your most booked services</p>
+
+                      <div className="mt-5 space-y-3">
+                        {analytics.popularServices.length === 0 ? (
+                          <p className="text-sm text-gray-400">No bookings yet.</p>
+                        ) : (
+                          analytics.popularServices.map((s, i) => (
+                            <div key={s.service} className="flex items-center gap-3 rounded-xl border border-[#E5E2DF] p-3">
+                              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#F3F1EF] text-xs font-bold text-[#242424]">
+                                {i + 1}
+                              </span>
+                              <span className="flex-1 text-sm font-semibold text-[#242424]">{s.service}</span>
+                              <span className="text-xs text-gray-400">{s.count} bookings</span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+
+                      <div className="mt-5 border-t border-[#ECE9E6] pt-5">
+                        <p className="text-sm text-gray-500">
+                          Saved by <span className="font-semibold text-[#242424]">{analytics.savedByCustomers}</span> customers
+                        </p>
+                      </div>
+                    </div>
+
+                  </div>
+                </>
+              )}
+
+            </div>
+          )}
+
+          {/* ==================================
               BUSINESS PROFILE
           ================================== */}
 
@@ -1747,23 +1921,75 @@ const handleCopyLink = () => {
 
                       {/* Opening Hours */}
 
-                      <div className="sm:col-span-2">
+                      <div className="sm:col-span-2 rounded-2xl border border-[#E5E2DF] bg-[#FAFAF9] p-5">
 
-                        <label className="mb-2 block text-sm font-semibold text-[#242424]">
-                          Opening Hours
-                        </label>
+                        <p className="mb-4 text-sm font-semibold text-[#242424]">
+                          Business Hours
+                        </p>
 
-                        <input
-                          value={profileForm.openingHours}
-                          onChange={(e) =>
-                            setProfileForm({
-                              ...profileForm,
-                              openingHours:
-                                e.target.value,
-                            })
-                          }
-                          className="w-full rounded-xl border border-[#DDDAD7] bg-[#FAFAF9] p-3.5 text-sm outline-none transition focus:border-[#777]"
-                        />
+                        <p className="mb-4 text-xs text-gray-500">
+                          This drives the exact times customers can book — accurate hours matter, since bookings won't overlap into services that take longer than usual.
+                        </p>
+
+                        <div className="grid gap-4 sm:grid-cols-2">
+
+                          <div>
+                            <label className="mb-2 block text-xs font-semibold text-gray-500">
+                              Opens at
+                            </label>
+                            <input
+                              type="time"
+                              value={profileForm.openingTime}
+                              onChange={(e) =>
+                                setProfileForm({
+                                  ...profileForm,
+                                  openingTime: e.target.value,
+                                })
+                              }
+                              className="w-full rounded-xl border border-[#DDDAD7] bg-white p-3.5 text-sm outline-none transition focus:border-[#B96882]"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="mb-2 block text-xs font-semibold text-gray-500">
+                              Closes at
+                            </label>
+                            <input
+                              type="time"
+                              value={profileForm.closingTime}
+                              onChange={(e) =>
+                                setProfileForm({
+                                  ...profileForm,
+                                  closingTime: e.target.value,
+                                })
+                              }
+                              className="w-full rounded-xl border border-[#DDDAD7] bg-white p-3.5 text-sm outline-none transition focus:border-[#B96882]"
+                            />
+                          </div>
+
+                        </div>
+
+                        <div className="mt-4">
+                          <label className="mb-2 block text-xs font-semibold text-gray-500">
+                            Closed on
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {weekDays.map((day) => (
+                              <button
+                                key={day}
+                                type="button"
+                                onClick={() => toggleClosedDay(day)}
+                                className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+                                  profileForm.closedDays.includes(day)
+                                    ? "bg-[#242424] text-white"
+                                    : "border border-[#DDDAD7] bg-white text-[#242424] hover:border-[#B96882]"
+                                }`}
+                              >
+                                {day}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
 
                       </div>
 

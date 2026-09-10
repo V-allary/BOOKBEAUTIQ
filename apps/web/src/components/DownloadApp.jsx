@@ -7,9 +7,9 @@ function DownloadApp() {
 
           {/* Background glow */}
 
-          <div className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-[#D97CA5]/20 blur-3xl" />
+          <div className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-[#B96882]/20 blur-3xl" />
 
-          <div className="absolute -bottom-40 left-1/3 h-80 w-80 rounded-full bg-[#D97CA5]/10 blur-3xl" />
+          <div className="absolute -bottom-40 left-1/3 h-80 w-80 rounded-full bg-[#B96882]/10 blur-3xl" />
 
           <div className="relative grid items-center gap-12 lg:grid-cols-[1.2fr_0.8fr]">
 
@@ -19,7 +19,7 @@ function DownloadApp() {
 
             <div className="max-w-2xl">
 
-              <p className="text-xs font-bold uppercase tracking-[3px] text-[#D97CA5]">
+              <p className="text-xs font-bold uppercase tracking-[3px] text-[#B96882]">
                 BookBeautiq app
               </p>
 
@@ -43,7 +43,7 @@ function DownloadApp() {
                   type="button"
                   className="flex items-center justify-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#171717] transition hover:bg-[#F5F5F5]"
                 >
-                  <span className="text-lg"></span>
+                  <span className="text-lg"></span>
                   Download for iPhone
                 </button>
 
@@ -114,7 +114,7 @@ function DownloadApp() {
 
                   <div className="mt-auto flex justify-around border-t border-[#EEE] bg-white py-3">
                     <span className="text-[9px]">Home</span>
-                    <span className="text-[9px] text-[#D97CA5]">Explore</span>
+                    <span className="text-[9px] text-[#B96882]">Explore</span>
                     <span className="text-[9px]">Bookings</span>
                   </div>
 

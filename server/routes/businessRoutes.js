@@ -6,6 +6,7 @@ import requireVerifiedOwner from "../middleware/requireVerifiedOwner.js";
 import {
   getBusinesses,
   getApprovedBusinesses,
+  searchBusinesses,
   getBusinessById,
   getBusinessForOwner,
   createBusiness,
@@ -28,6 +29,11 @@ router.get("/", getBusinesses);
 // Approved + owner-verified businesses
 // Used by Explore
 router.get("/approved", getApprovedBusinesses);
+
+// Search + filter businesses
+// Used by Home hero search + Explore filters
+// Must come BEFORE "/:id" or Express will treat "search" as an ID
+router.get("/search", searchBusinesses);
 
 router.get(
   "/owner",

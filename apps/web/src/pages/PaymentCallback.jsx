@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { API_URL } from "../config";
 
 function PaymentCallback() {
   const [searchParams] = useSearchParams();
@@ -22,7 +23,7 @@ function PaymentCallback() {
     const verify = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5001/api/payments/verify/${reference}`
+          `${API_URL}/api/payments/verify/${reference}`
         );
 
         const data = await response.json();

@@ -11,9 +11,13 @@ function ForBusinesses() {
     "Nail Artists",
     "Spas",
     "Makeup Artists",
-    "Lash Artists",
+    "Lash & Brows Artists",
     "Massage",
-    "Wellness",
+    "Spa & Wellness",
+    "Laser Spa Studio",
+    "Tattoo & Piercing",
+    "Teeth Whitening",
+    "Waxing",
   ];
 
   const features = [

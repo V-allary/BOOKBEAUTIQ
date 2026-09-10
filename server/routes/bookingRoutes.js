@@ -45,6 +45,9 @@ router.get(
 
 router.patch("/:id/cancel", authMiddleware, cancelBooking);
 
+router.get("/availability", getAvailability);
+
+
 // ==========================================
 // BUSINESS OWNER — MARK BOOKING COMPLETED
 // Triggers the review email

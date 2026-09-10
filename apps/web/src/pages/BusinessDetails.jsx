@@ -6,6 +6,7 @@ import Footer from "../components/Footer";
 
 import BookingCard from "../components/booking/BookingCard";
 import BookingSummary from "../components/booking/BookingSummary";
+import { API_URL } from "../config";
 
 function BusinessDetails() {
   const { id } = useParams();
@@ -31,7 +32,7 @@ function BusinessDetails() {
     if (!path) return "";
 
     return path.startsWith("/uploads/")
-      ? `http://localhost:5001${path}`
+      ? `${API_URL}${path}`
       : path;
   };
 
@@ -43,7 +44,7 @@ function BusinessDetails() {
     const fetchBusiness = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5001/api/businesses/${id}`
+          `${API_URL}/api/businesses/${id}`
         );
 
         const data = await response.json();
@@ -83,10 +84,10 @@ function BusinessDetails() {
       try {
         const [servicesRes, staffRes] = await Promise.all([
           fetch(
-            `http://localhost:5001/api/services?businessId=${id}`
+            `${API_URL}/api/services?businessId=${id}`
           ),
           fetch(
-            `http://localhost:5001/api/staff?businessId=${id}`
+            `${API_URL}/api/staff?businessId=${id}`
           ),
         ]);
 
@@ -113,7 +114,7 @@ function BusinessDetails() {
     if (!id) return;
 
     fetch(
-      `http://localhost:5001/api/reviews/business/${id}`
+      `${API_URL}/api/reviews/business/${id}`
     )
       .then((res) => res.json())
       .then(setReviews)
@@ -128,16 +129,19 @@ function BusinessDetails() {
   /* =====================================================
       CHECKOUT
   ===================================================== */
-
   const handleContinueToCheckout = () => {
+    const staffRequired = staff.length > 0;
+
     if (
       !selectedService ||
-      !selectedStaff ||
+      (staffRequired && !selectedStaff) ||
       !selectedDate ||
       !selectedTime
     ) {
       alert(
-        "Please select a service, professional, date, and time."
+        staffRequired
+          ? "Please select a service, professional, date, and time."
+          : "Please select a service, date, and time."
       );
 
       return;
@@ -253,6 +257,8 @@ function BusinessDetails() {
     `${business.name} ${business.location}`
   );
 
+  const rating = Number(business.avgRating || 0);
+
   return (
     <>
       <Navbar />
@@ -307,7 +313,7 @@ function BusinessDetails() {
               <div className="mt-5 flex flex-wrap items-center gap-3 sm:gap-4">
 
                 <span className="rounded-full bg-[#F2E8EC] px-4 py-2 text-sm font-semibold text-[#9D536D]">
-                  ⭐ {business.rating || 5}
+                  ⭐ {rating > 0 ? rating.toFixed(1) : "New"}
                 </span>
 
                 <span className="text-sm text-gray-500 sm:text-base">
@@ -425,33 +431,54 @@ function BusinessDetails() {
               <h2 className="mb-6 text-2xl font-bold text-[#242424]">
                 Services
               </h2>
-
               {services.length > 0 ? (
 
-                <div className="space-y-4">
+<div className="space-y-4">
 
-                  {services.map((s) => (
+  {services.map((s) => {
+    const now = new Date();
+    const onOffer =
+      s.discountPrice &&
+      (!s.discountStartDate || new Date(s.discountStartDate) <= now) &&
+      (!s.discountEndDate || new Date(s.discountEndDate) >= now);
 
-                    <div
-                      key={s._id}
-                      className="flex items-center justify-between gap-4 border-b border-[#E5E2DF] pb-4 last:border-b-0"
-                    >
+    return (
+      <div
+        key={s._id}
+        className="flex items-center justify-between gap-4 border-b border-[#E5E2DF] pb-4 last:border-b-0"
+      >
 
-                      <span className="font-semibold text-[#242424]">
-                        {s.name}
-                      </span>
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-[#242424]">
+            {s.name}
+          </span>
 
-                      <span className="whitespace-nowrap text-gray-500">
-                        KES {s.price}
-                      </span>
+          {onOffer && (
+            <span className="rounded-full bg-[#F2E8EC] px-3 py-1 text-xs font-bold text-[#9D536D]">
+              {s.discountLabel || "Special Offer"}
+            </span>
+          )}
+        </div>
 
-                    </div>
+        {onOffer ? (
+          <span className="flex items-center gap-2 whitespace-nowrap">
+            <span className="text-gray-400 line-through">KES {s.price}</span>
+            <span className="font-bold text-[#B96882]">KES {s.discountPrice}</span>
+          </span>
+        ) : (
+          <span className="whitespace-nowrap text-gray-500">
+            KES {s.price}
+          </span>
+        )}
 
-                  ))}
+      </div>
+    );
+  })}
 
-                </div>
+</div>
 
-              ) : (
+) : (
+
 
                 <p className="text-gray-500">
                   Services will be available soon.
@@ -474,8 +501,10 @@ function BusinessDetails() {
               {/* Booking Card */}
 
               <BookingCard
+                businessId={id}
                 services={services}
                 staff={staff}
+
                 selectorsLoading={selectorsLoading}
                 selectedService={selectedService}
                 setSelectedService={setSelectedService}

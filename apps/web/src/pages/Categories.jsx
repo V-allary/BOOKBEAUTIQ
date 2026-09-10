@@ -6,43 +6,51 @@ function Categories() {
   const categories = [
     {
       name: "Hair",
-      image:
-        "https://images.unsplash.com/photo-1562322140-8baeececf3df?w=900",
-    },
-    {
-      name: "Nails",
-      image:
-        "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=900",
+      image: "https://source.unsplash.com/900x900/?african,braids,hairsalon",
     },
     {
       name: "Barber",
-      image:
-        "https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=900",
+      image: "https://source.unsplash.com/900x900/?african,barber,fade",
     },
     {
-      name: "Spa",
-      image:
-        "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=900",
+      name: "Nails",
+      image: "https://source.unsplash.com/900x900/?african,manicure,nails",
     },
     {
       name: "Makeup",
-      image:
-        "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=900",
+      image: "https://source.unsplash.com/900x900/?african,makeup,beauty",
     },
     {
-      name: "Lashes",
-      image:
-        "https://images.unsplash.com/photo-1583001931096-959e9a1a6223?w=900",
+      name: "Lashes & Brows",
+      image: "https://source.unsplash.com/900x900/?african,eyelash,extensions",
     },
     {
       name: "Skincare",
-      image:
-        "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=900",
+      image: "https://source.unsplash.com/900x900/?african,facial,skincare",
+    },
+    {
+      name: "Spa & Wellness",
+      image: "https://source.unsplash.com/900x900/?african,massage,spa",
     },
     {
       name: "Bridal",
-      image:
-        "https://images.unsplash.com/photo-1519741497674-611481863552?w=900",
+      image: "https://source.unsplash.com/900x900/?african,bride,wedding",
+    },
+    {
+      name: "Laser",
+      image: "https://source.unsplash.com/900x900/?laser,skin,treatment",
+    },
+    {
+      name: "Tattoo & Piercing",
+      image: "https://source.unsplash.com/900x900/?tattoo,piercing,studio",
+    },
+    {
+      name: "Teeth Whitening",
+      image: "https://source.unsplash.com/900x900/?african,smile,teeth",
+    },
+    {
+      name: "Waxing",
+      image: "https://source.unsplash.com/900x900/?waxing,beautysalon",
     },
   ];
 

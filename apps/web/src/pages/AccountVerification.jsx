@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 
 function AccountVerification() {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ function AccountVerification() {
     const data = new FormData();
     data.append("image", file);
 
-    const response = await fetch("http://localhost:5001/api/uploads", {
+    const response = await fetch(`${API_URL}/api/uploads`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: data,
@@ -74,7 +75,7 @@ function AccountVerification() {
       const businessDocument = await uploadFile(businessDocFile);
 
       const response = await fetch(
-        "http://localhost:5001/api/verification/submit",
+        `${API_URL}/api/verification/submit`,
         {
           method: "PATCH",
           headers: {

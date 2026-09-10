@@ -33,7 +33,7 @@ function WhyChooseUs() {
 
         <div className="max-w-2xl">
 
-          <p className="text-xs font-bold uppercase tracking-[3px] text-[#D97CA5]">
+          <p className="text-xs font-bold uppercase tracking-[3px] text-[#B96882]">
             The BookBeautiq difference
           </p>
 
@@ -78,7 +78,7 @@ function WhyChooseUs() {
                   {item.number}
                 </span>
 
-                <span className="h-px w-10 bg-white/10 transition-all duration-300 group-hover:w-16 group-hover:bg-[#D97CA5]" />
+                <span className="h-px w-10 bg-white/10 transition-all duration-300 group-hover:w-16 group-hover:bg-[#B96882]" />
 
               </div>
 
@@ -96,7 +96,7 @@ function WhyChooseUs() {
 
               {/* Accent */}
 
-              <div className="mt-7 h-1 w-8 rounded-full bg-[#D97CA5] transition-all duration-300 group-hover:w-14" />
+              <div className="mt-7 h-1 w-8 rounded-full bg-[#B96882] transition-all duration-300 group-hover:w-14" />
 
             </div>
 

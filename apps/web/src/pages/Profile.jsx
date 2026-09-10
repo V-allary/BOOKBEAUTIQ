@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { API_URL } from "../config";
 
 function Profile() {
   const storedUser = JSON.parse(localStorage.getItem("user") || "null");
@@ -25,7 +26,7 @@ function Profile() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:5001/api/users/profile", {
+      const response = await fetch(`${API_URL}/api/users/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -52,7 +53,7 @@ function Profile() {
     <div className="min-h-screen bg-[#FFFBF8] px-6 py-12">
       <div className="mx-auto max-w-2xl">
 
-        <Link to="/dashboard" className="text-sm font-semibold text-[#F2542D] hover:underline">
+        <Link to="/dashboard" className="text-sm font-semibold text-[#B96882] hover:underline">
           ← Back to Dashboard
         </Link>
 
@@ -84,7 +85,7 @@ function Profile() {
                 placeholder="First Name"
                 value={formData.firstName}
                 onChange={handleChange}
-                className="w-full rounded-xl border p-4 outline-none focus:border-[#F2542D]"
+                className="w-full rounded-xl border p-4 outline-none focus:border-[#B96882]"
                 required
               />
               <input
@@ -93,7 +94,7 @@ function Profile() {
                 placeholder="Last Name"
                 value={formData.lastName}
                 onChange={handleChange}
-                className="w-full rounded-xl border p-4 outline-none focus:border-[#F2542D]"
+                className="w-full rounded-xl border p-4 outline-none focus:border-[#B96882]"
                 required
               />
             </div>
@@ -104,13 +105,13 @@ function Profile() {
               placeholder="Phone Number"
               value={formData.phone}
               onChange={handleChange}
-              className="w-full rounded-xl border p-4 outline-none focus:border-[#F2542D]"
+              className="w-full rounded-xl border p-4 outline-none focus:border-[#B96882]"
             />
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-xl bg-[#F2542D] py-4 font-semibold text-white transition hover:bg-[#D8431F] disabled:opacity-60"
+              className="w-full rounded-xl bg-[#242424] py-4 font-semibold text-white transition hover:bg-[#B96882] disabled:opacity-60"
             >
               {submitting ? "Saving..." : "Save Changes"}
             </button>

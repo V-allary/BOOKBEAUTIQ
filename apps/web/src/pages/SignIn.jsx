@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 
 function SignIn() {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ function SignIn() {
 
     try {
       const response = await fetch(
-        "http://localhost:5001/api/users/login",
+        `${API_URL}/api/users/login`,
         {
           method: "POST",
           headers: {
@@ -54,8 +55,6 @@ function SignIn() {
       } else {
         navigate("/dashboard");
       }
-
-      navigate("/dashboard");
     } catch (error) {
       console.error(error);
       setError(error.message);
@@ -65,7 +64,7 @@ function SignIn() {
   };
 
   const inputClass =
-    "w-full rounded-xl border border-[#E5E2DF] bg-[#FAFAF9] px-4 py-3.5 text-sm text-[#242424] outline-none transition placeholder:text-[#999] focus:border-[#C9859D] focus:bg-white focus:ring-4 focus:ring-[#D97CA5]/10";
+    "w-full rounded-xl border border-[#E5E2DF] bg-[#FAFAF9] px-4 py-3.5 text-sm text-[#242424] outline-none transition placeholder:text-[#999] focus:border-[#B96882] focus:bg-white focus:ring-4 focus:ring-[#B96882]/10";
 
   return (
     <div className="min-h-screen bg-[#F7F7F6] px-5 py-10 sm:px-8 sm:py-14">

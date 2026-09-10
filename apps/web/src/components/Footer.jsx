@@ -91,30 +91,30 @@ function Footer() {
               </li>
 
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/explore?category=Hair"
                   className="text-sm text-white/50 transition hover:text-[#B96882]"
                 >
                   Hair
-                </a>
+                </Link>
               </li>
 
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/explore?category=Nails"
                   className="text-sm text-white/50 transition hover:text-[#B96882]"
                 >
                   Nails
-                </a>
+                </Link>
               </li>
 
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/explore?category=Spa%20%26%20Wellness"
                   className="text-sm text-white/50 transition hover:text-[#B96882]"
                 >
-                  Spa
-                </a>
+                  Spa & Wellness
+                </Link>
               </li>
 
             </ul>
@@ -200,21 +200,21 @@ function Footer() {
               </li>
 
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/help"
                   className="text-sm text-white/50 transition hover:text-[#B96882]"
                 >
                   Help Center
-                </a>
+                </Link>
               </li>
 
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/privacy"
                   className="text-sm text-white/50 transition hover:text-[#B96882]"
                 >
                   Privacy Policy
-                </a>
+                </Link>
               </li>
 
             </ul>
@@ -235,12 +235,12 @@ function Footer() {
 
           <div className="flex flex-wrap gap-5 text-xs text-white/35">
 
-            <a
-              href="#"
+            <Link
+              to="/privacy"
               className="transition hover:text-[#B96882]"
             >
               Privacy
-            </a>
+            </Link>
 
             <a
               href="#"

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { API_URL } from "../config";
 
 function FeaturedProfessionals() {
   const [businesses, setBusinesses] = useState([]);
@@ -14,7 +15,7 @@ function FeaturedProfessionals() {
     const fetchBusinesses = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5001/api/businesses/approved"
+          `${API_URL}/api/businesses/approved`
         );
 
         const data = await response.json();
@@ -73,8 +74,8 @@ function FeaturedProfessionals() {
   // the bottom.
   const popularBusinesses = [...businesses]
     .sort((a, b) => {
-      const ratingA = Number(a.rating || 0);
-      const ratingB = Number(b.rating || 0);
+      const ratingA = Number(a.avgRating || 0);
+      const ratingB = Number(b.avgRating || 0);
 
       return ratingB - ratingA;
     })
@@ -110,13 +111,10 @@ function FeaturedProfessionals() {
   const BusinessCard = ({ business }) => {
     const image =
       business.image?.startsWith("/uploads/")
-        ? `http://localhost:5001${business.image}`
+        ? `${API_URL}${business.image}`
         : business.image;
 
-    const rating =
-      business.rating ||
-      business.averageRating ||
-      "New";
+    const rating = Number(business.avgRating || 0);
 
     return (
       <article className="group relative min-w-[82%] overflow-hidden rounded-[24px] border border-[#ECE8EC] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(40,30,40,0.12)] sm:min-w-[48%] lg:min-w-[calc(25%-18px)]">
@@ -150,9 +148,9 @@ function FeaturedProfessionals() {
 
             {/* Rating */}
 
-            {rating !== "New" && (
+            {rating > 0 && (
               <div className="absolute right-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[#222] shadow-sm backdrop-blur">
-                ★ {rating}
+                ★ {rating.toFixed(1)}
               </div>
             )}
 
@@ -167,7 +165,7 @@ function FeaturedProfessionals() {
 
             <Link
               to={`/business/${business._id}`}
-              className="block truncate text-lg font-bold text-[#171717] transition hover:text-[#D97CA5]"
+              className="block truncate text-lg font-bold text-[#171717] transition hover:text-[#B96882]"
             >
               {business.name}
             </Link>
@@ -180,7 +178,7 @@ function FeaturedProfessionals() {
           </div>
 
           <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
-            <span className="text-[#D97CA5]">
+            <span className="text-[#B96882]">
               ⌖
             </span>
 
@@ -207,7 +205,7 @@ function FeaturedProfessionals() {
 
             <Link
               to={`/business/${business._id}`}
-              className="shrink-0 rounded-full bg-[#171717] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#D97CA5]"
+              className="shrink-0 rounded-full bg-[#171717] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#B96882]"
             >
               View
             </Link>
@@ -244,7 +242,7 @@ function FeaturedProfessionals() {
 
           <div>
 
-            <p className="text-xs font-bold uppercase tracking-[3px] text-[#D97CA5]">
+            <p className="text-xs font-bold uppercase tracking-[3px] text-[#B96882]">
               {eyebrow}
             </p>
 
@@ -274,7 +272,7 @@ function FeaturedProfessionals() {
                   )
                 }
                 aria-label={`Previous ${title}`}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DED9DE] bg-white text-lg text-[#333] transition hover:border-[#D97CA5] hover:text-[#D97CA5]"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DED9DE] bg-white text-lg text-[#333] transition hover:border-[#B96882] hover:text-[#B96882]"
               >
                 ←
               </button>
@@ -288,7 +286,7 @@ function FeaturedProfessionals() {
                   )
                 }
                 aria-label={`Next ${title}`}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DED9DE] bg-white text-lg text-[#333] transition hover:border-[#D97CA5] hover:text-[#D97CA5]"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DED9DE] bg-white text-lg text-[#333] transition hover:border-[#B96882] hover:text-[#B96882]"
               >
                 →
               </button>
@@ -342,7 +340,7 @@ function FeaturedProfessionals() {
 
         <div className="mb-12 max-w-2xl">
 
-          <p className="text-xs font-bold uppercase tracking-[3px] text-[#D97CA5]">
+          <p className="text-xs font-bold uppercase tracking-[3px] text-[#B96882]">
             BookBeautiq
           </p>
 

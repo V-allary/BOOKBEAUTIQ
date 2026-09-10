@@ -19,9 +19,8 @@ function Hero() {
       params.set("location", location.trim());
     }
 
-    if (date) {
-      params.set("date", date);
-    }
+    // Note: date is not yet wired to a real availability filter,
+    // so it's intentionally not included in the search params.
 
     navigate(
       `/explore${params.toString() ? `?${params.toString()}` : ""}`
@@ -149,7 +148,7 @@ function Hero() {
 
             {/* DATE */}
 
-            <div className="rounded-2xl border border-[#E5E2DF] bg-white px-5 py-4 text-left transition focus-within:border-[#D97CA5] lg:rounded-none lg:border-0 lg:border-r lg:px-6">
+            <div className="rounded-2xl border border-[#E5E2DF] bg-white px-5 py-4 text-left transition focus-within:border-[#B96882] lg:rounded-none lg:border-0 lg:border-r lg:px-6">
 
               <p className="text-[11px] font-bold uppercase tracking-wider text-[#999391]">
                 When

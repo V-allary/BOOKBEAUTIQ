@@ -59,6 +59,13 @@ const userSchema = new mongoose.Schema(
       enum: ["pending", "approved", "suspended"],
       default: "pending",
     },
+    savedBusinesses: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Business",
+      },
+    ],
+
 
         // ==============================
     // IDENTITY + BUSINESS VERIFICATION

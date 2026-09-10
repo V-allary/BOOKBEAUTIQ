@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../../config";
 
 function StaffManager({ businesses }) {
   const [staff, setStaff] = useState([]);
@@ -19,8 +20,8 @@ function StaffManager({ businesses }) {
     try {
       const businessId = formData.businessId || businesses[0]?._id;
       const url = businessId
-        ? `http://localhost:5001/api/staff?businessId=${businessId}`
-        : "http://localhost:5001/api/staff";
+        ? `${API_URL}/api/staff?businessId=${businessId}`
+        : `${API_URL}/api/staff`;
 
       const response = await fetch(url);
       const data = await response.json();
@@ -52,7 +53,7 @@ function StaffManager({ businesses }) {
         const imageData = new FormData();
         imageData.append("image", imageFile);
 
-        const uploadResponse = await fetch("http://localhost:5001/api/uploads", {
+        const uploadResponse = await fetch(`${API_URL}/api/uploads`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: imageData,
@@ -63,7 +64,7 @@ function StaffManager({ businesses }) {
         imageUrl = uploadResult.imageUrl;
       }
 
-      const response = await fetch("http://localhost:5001/api/staff", {
+      const response = await fetch(`${API_URL}/api/staff`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -101,7 +102,7 @@ function StaffManager({ businesses }) {
     if (!window.confirm("Remove this staff member?")) return;
 
     try {
-      const response = await fetch(`http://localhost:5001/api/staff/${id}`, {
+      const response = await fetch(`${API_URL}/api/staff/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -116,7 +117,7 @@ function StaffManager({ businesses }) {
   };
 
   const imageUrl = (img) =>
-    img?.startsWith("/uploads/") ? `http://localhost:5001${img}` : img;
+    img?.startsWith("/uploads/") ? `${API_URL}${img}` : img;
 
   return (
     <div className="mt-12 rounded-3xl bg-white p-8 shadow-lg">
@@ -190,13 +191,13 @@ function StaffManager({ businesses }) {
             type="file"
             accept="image/*"
             onChange={handleImageChange}
-            className="w-full rounded-xl border border-dashed border-orange-300 p-4"
+            className="w-full rounded-xl border border-dashed border-[#D9A9B8] p-4"
           />
         </div>
 
         <button
           type="submit"
-          className="w-full rounded-xl bg-[#F2542D] py-4 font-semibold text-white hover:bg-[#D8431F]"
+          className="w-full rounded-xl bg-[#242424] py-4 font-semibold text-white transition hover:bg-[#B96882]"
         >
           Add Staff
         </button>
@@ -212,7 +213,7 @@ function StaffManager({ businesses }) {
             className="flex items-center justify-between rounded-2xl border border-[#ECE9E6] p-5"
           >
             <div className="flex items-center gap-4">
-              <div className="h-14 w-14 overflow-hidden rounded-full bg-orange-100">
+              <div className="h-14 w-14 overflow-hidden rounded-full bg-[#F2E8EC]">
                 {member.image ? (
                   <img src={imageUrl(member.image)} alt={member.name} className="h-full w-full object-cover" />
                 ) : (

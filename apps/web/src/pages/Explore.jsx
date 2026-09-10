@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BusinessCard from "../components/BusinessCard";
+import { API_URL } from "../config";
 
 function Explore() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -11,8 +12,8 @@ function Explore() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [location, setLocation] = useState("");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+  const [location, setLocation] = useState(searchParams.get("location") || "");
 
   const urlCategory = searchParams.get("category");
 
@@ -20,23 +21,44 @@ function Explore() {
     urlCategory || "All"
   );
 
+  const [topRated, setTopRated] = useState(searchParams.get("topRated") === "true");
+  const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
+  const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
+
   const [activeSearch, setActiveSearch] = useState({
-    searchTerm: "",
-    location: "",
+    searchTerm: searchParams.get("search") || "",
+    location: searchParams.get("location") || "",
     category: urlCategory || "All",
+    topRated: searchParams.get("topRated") === "true",
+    minPrice: searchParams.get("minPrice") || "",
+    maxPrice: searchParams.get("maxPrice") || "",
   });
 
   const businessesRef = useRef(null);
 
   // ==========================================
-  // FETCH APPROVED BUSINESSES
+  // FETCH BUSINESSES — via real search endpoint
   // ==========================================
 
   useEffect(() => {
     const fetchBusinesses = async () => {
+      setLoading(true);
+      setError("");
+
       try {
+        const params = new URLSearchParams();
+
+        if (activeSearch.searchTerm) params.set("q", activeSearch.searchTerm);
+        if (activeSearch.location) params.set("location", activeSearch.location);
+        if (activeSearch.category && activeSearch.category !== "All") {
+          params.set("category", activeSearch.category);
+        }
+        if (activeSearch.topRated) params.set("topRated", "true");
+        if (activeSearch.minPrice) params.set("minPrice", activeSearch.minPrice);
+        if (activeSearch.maxPrice) params.set("maxPrice", activeSearch.maxPrice);
+
         const response = await fetch(
-          "http://localhost:5001/api/businesses/approved"
+          `${API_URL}/api/businesses/search?${params.toString()}`
         );
 
         const data = await response.json();
@@ -65,7 +87,7 @@ function Explore() {
     };
 
     fetchBusinesses();
-  }, []);
+  }, [activeSearch]);
 
   // ==========================================
   // SYNC URL CATEGORY
@@ -84,28 +106,38 @@ function Explore() {
   }, [urlCategory]);
 
   // ==========================================
+  // UPDATE URL PARAMS
+  // ==========================================
+
+  const updateUrlParams = (next) => {
+    const params = new URLSearchParams();
+
+    if (next.searchTerm) params.set("search", next.searchTerm);
+    if (next.location) params.set("location", next.location);
+    if (next.category && next.category !== "All") params.set("category", next.category);
+    if (next.topRated) params.set("topRated", "true");
+    if (next.minPrice) params.set("minPrice", next.minPrice);
+    if (next.maxPrice) params.set("maxPrice", next.maxPrice);
+
+    setSearchParams(params);
+  };
+
+  // ==========================================
   // SEARCH
   // ==========================================
 
   const handleSearch = () => {
-    const selectedCategory = category || "All";
-
-    setActiveSearch({
+    const next = {
       searchTerm: searchTerm.trim(),
       location: location.trim(),
-      category: selectedCategory,
-    });
+      category: category || "All",
+      topRated,
+      minPrice,
+      maxPrice,
+    };
 
-    if (selectedCategory === "All") {
-      searchParams.delete("category");
-    } else {
-      searchParams.set(
-        "category",
-        selectedCategory
-      );
-    }
-
-    setSearchParams(searchParams);
+    setActiveSearch(next);
+    updateUrlParams(next);
   };
 
   // ==========================================
@@ -117,69 +149,82 @@ function Explore() {
   ) => {
     setCategory(selectedCategory);
 
-    setActiveSearch({
+    const next = {
       searchTerm: searchTerm.trim(),
       location: location.trim(),
       category: selectedCategory,
-    });
+      topRated,
+      minPrice,
+      maxPrice,
+    };
 
-    if (selectedCategory === "All") {
-      searchParams.delete("category");
-    } else {
-      searchParams.set(
-        "category",
-        selectedCategory
-      );
-    }
-
-    setSearchParams(searchParams);
+    setActiveSearch(next);
+    updateUrlParams(next);
   };
 
   // ==========================================
-  // FILTER BUSINESSES
+  // TOP RATED TOGGLE
   // ==========================================
 
-  const filteredBusinesses =
-    businesses.filter((business) => {
-      const searchValue =
-        activeSearch.searchTerm.toLowerCase();
+  const handleTopRatedToggle = () => {
+    const nextValue = !topRated;
+    setTopRated(nextValue);
 
-      const locationValue =
-        activeSearch.location.toLowerCase();
+    const next = {
+      searchTerm: searchTerm.trim(),
+      location: location.trim(),
+      category,
+      topRated: nextValue,
+      minPrice,
+      maxPrice,
+    };
 
-      const categoryValue =
-        activeSearch.category.toLowerCase();
+    setActiveSearch(next);
+    updateUrlParams(next);
+  };
 
-      const matchesSearch =
-        !searchValue ||
-        business.name
-          ?.toLowerCase()
-          .includes(searchValue) ||
-        business.category
-          ?.toLowerCase()
-          .includes(searchValue) ||
-        business.description
-          ?.toLowerCase()
-          .includes(searchValue);
+  // ==========================================
+  // PRICE FILTER
+  // ==========================================
 
-      const matchesLocation =
-        !locationValue ||
-        business.location
-          ?.toLowerCase()
-          .includes(locationValue);
+  const handleApplyPrice = () => {
+    const next = {
+      searchTerm: searchTerm.trim(),
+      location: location.trim(),
+      category,
+      topRated,
+      minPrice,
+      maxPrice,
+    };
 
-      const matchesCategory =
-        activeSearch.category === "All" ||
-        business.category
-          ?.toLowerCase()
-          .includes(categoryValue);
+    setActiveSearch(next);
+    updateUrlParams(next);
+  };
 
-      return (
-        matchesSearch &&
-        matchesLocation &&
-        matchesCategory
-      );
-    });
+  // ==========================================
+  // CLEAR FILTERS
+  // ==========================================
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setLocation("");
+    setCategory("All");
+    setTopRated(false);
+    setMinPrice("");
+    setMaxPrice("");
+
+    const next = {
+      searchTerm: "",
+      location: "",
+      category: "All",
+      topRated: false,
+      minPrice: "",
+      maxPrice: "",
+    };
+
+    setActiveSearch(next);
+    updateUrlParams(next);
+  };
 
   // ==========================================
   // CATEGORIES
@@ -188,11 +233,19 @@ function Explore() {
   const categories = [
     { name: "All", label: "All" },
     { name: "Hair", label: "Hair" },
-    { name: "Nails", label: "Nails" },
     { name: "Barber", label: "Barber" },
+    { name: "Nails", label: "Nails" },
     { name: "Makeup", label: "Makeup" },
-    { name: "Spa", label: "Spa" },
+    { name: "Lashes & Brows", label: "Lashes & Brows" },
+    { name: "Skincare", label: "Skincare" },
+    { name: "Spa & Wellness", label: "Spa & Wellness" },
+    { name: "Bridal", label: "Bridal" },
+    { name: "Laser", label: "Laser" },
+    { name: "Tattoo & Piercing", label: "Tattoo & Piercing" },
+    { name: "Teeth Whitening", label: "Teeth Whitening" },
+    { name: "Waxing", label: "Waxing" },
   ];
+
 
   // ==========================================
   // HORIZONTAL BUSINESS SCROLL
@@ -213,6 +266,14 @@ function Explore() {
       behavior: "smooth",
     });
   };
+
+  const hasActiveFilters =
+    activeSearch.searchTerm ||
+    activeSearch.location ||
+    activeSearch.category !== "All" ||
+    activeSearch.topRated ||
+    activeSearch.minPrice ||
+    activeSearch.maxPrice;
 
   return (
     <>
@@ -343,32 +404,23 @@ function Explore() {
                   className="mt-1.5 w-full cursor-pointer bg-transparent text-sm font-medium text-[#242424] outline-none"
                 >
 
-                  <option value="All">
-                    All categories
-                  </option>
-
-                  <option value="Hair">
-                    Hair
-                  </option>
-
-                  <option value="Nails">
-                    Nails
-                  </option>
-
-                  <option value="Spa">
-                    Spa
-                  </option>
-
-                  <option value="Barber">
-                    Barber
-                  </option>
-
-                  <option value="Makeup">
-                    Makeup
-                  </option>
+                  <option value="All">All categories</option>
+                  <option value="Hair">Hair</option>
+                  <option value="Barber">Barber</option>
+                  <option value="Nails">Nails</option>
+                  <option value="Makeup">Makeup</option>
+                  <option value="Lashes & Brows">Lashes & Brows</option>
+                  <option value="Skincare">Skincare</option>
+                  <option value="Spa & Wellness">Spa & Wellness</option>
+                  <option value="Bridal">Bridal</option>
+                  <option value="Laser">Laser</option>
+                  <option value="Tattoo & Piercing">Tattoo & Piercing</option>
+                  <option value="Teeth Whitening">Teeth Whitening</option>
+                  <option value="Waxing">Waxing</option>
 
                 </select>
 
+ 
               </div>
 
               {/* SEARCH BUTTON */}
@@ -388,7 +440,7 @@ function Explore() {
         </section>
 
         {/* ==========================================
-            CATEGORY FILTERS
+            CATEGORY FILTERS + ADDITIONAL FILTERS
         ========================================== */}
 
         <section className="pt-10">
@@ -417,6 +469,68 @@ function Explore() {
                 </button>
 
               ))}
+
+            </div>
+
+            {/* TOP RATED + PRICE RANGE */}
+
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+
+              <button
+                type="button"
+                onClick={handleTopRatedToggle}
+                className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition ${
+                  topRated
+                    ? "bg-[#242424] text-white shadow-sm"
+                    : "border border-[#E5E2DF] bg-white text-gray-600 hover:border-[#B96882] hover:text-[#B96882]"
+                }`}
+              >
+                ★ Top rated
+              </button>
+
+              <div className="flex items-center gap-2 rounded-full border border-[#E5E2DF] bg-white px-4 py-2">
+
+                <span className="text-xs font-semibold text-gray-400">KES</span>
+
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleApplyPrice()}
+                  className="w-16 bg-transparent text-sm font-medium text-[#242424] outline-none placeholder:text-gray-400"
+                />
+
+                <span className="text-gray-300">—</span>
+
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleApplyPrice()}
+                  className="w-16 bg-transparent text-sm font-medium text-[#242424] outline-none placeholder:text-gray-400"
+                />
+
+                <button
+                  type="button"
+                  onClick={handleApplyPrice}
+                  className="ml-1 rounded-full bg-[#F2E8EC] px-3 py-1 text-xs font-bold text-[#9D536D] transition hover:bg-[#E9D5DE]"
+                >
+                  Apply
+                </button>
+
+              </div>
+
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="text-sm font-semibold text-gray-400 underline-offset-2 hover:text-[#B96882] hover:underline"
+                >
+                  Clear all
+                </button>
+              )}
 
             </div>
 
@@ -455,9 +569,9 @@ function Explore() {
 
               <div className="self-start rounded-full bg-white px-4 py-2 text-sm font-medium text-gray-500 shadow-sm ring-1 ring-[#E5E2DF] sm:self-auto">
 
-                {filteredBusinesses.length}{" "}
+                {businesses.length}{" "}
 
-                {filteredBusinesses.length === 1
+                {businesses.length === 1
                   ? "professional"
                   : "professionals"}
 
@@ -529,7 +643,7 @@ function Explore() {
           )}
 
           {/* ==========================================
-              NO BUSINESSES
+              NO RESULTS
           ========================================== */}
 
           {!loading &&
@@ -539,73 +653,28 @@ function Explore() {
               <div className="rounded-[28px] border border-[#E5E2DF] bg-white p-14 text-center shadow-sm">
 
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#F2E8EC] text-xl text-[#B96882]">
-                  ✦
+                  {hasActiveFilters ? "⌕" : "✦"}
                 </div>
 
                 <h3 className="mt-5 text-xl font-bold text-[#242424]">
-                  No professionals yet
+                  {hasActiveFilters ? "No matches found" : "No professionals yet"}
                 </h3>
 
                 <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">
-                  There are no approved businesses
-                  available yet. Check back soon as
-                  more professionals join BookBeautiq.
+                  {hasActiveFilters
+                    ? "We couldn't find a professional matching your search. Try another location, service or category."
+                    : "There are no approved businesses available yet. Check back soon as more professionals join BookBeautiq."}
                 </p>
 
-              </div>
-
-            )}
-
-          {/* ==========================================
-              NO SEARCH RESULTS
-          ========================================== */}
-
-          {!loading &&
-            !error &&
-            businesses.length > 0 &&
-            filteredBusinesses.length === 0 && (
-
-              <div className="rounded-[28px] border border-[#E5E2DF] bg-white p-14 text-center shadow-sm">
-
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#F2E8EC] text-xl text-[#B96882]">
-                  ⌕
-                </div>
-
-                <h3 className="mt-5 text-xl font-bold text-[#242424]">
-                  No matches found
-                </h3>
-
-                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">
-                  We couldn't find a professional
-                  matching your search. Try another
-                  location, service or category.
-                </p>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchTerm("");
-                    setLocation("");
-                    setCategory("All");
-
-                    setActiveSearch({
-                      searchTerm: "",
-                      location: "",
-                      category: "All",
-                    });
-
-                    searchParams.delete(
-                      "category"
-                    );
-
-                    setSearchParams(
-                      searchParams
-                    );
-                  }}
-                  className="mt-6 rounded-full bg-[#242424] px-7 py-3 text-sm font-semibold text-white transition hover:bg-[#B96882]"
-                >
-                  Clear filters
-                </button>
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={handleClearFilters}
+                    className="mt-6 rounded-full bg-[#242424] px-7 py-3 text-sm font-semibold text-white transition hover:bg-[#B96882]"
+                  >
+                    Clear filters
+                  </button>
+                )}
 
               </div>
 
@@ -617,13 +686,13 @@ function Explore() {
 
           {!loading &&
             !error &&
-            filteredBusinesses.length > 0 && (
+            businesses.length > 0 && (
 
               <div className="relative">
 
                 {/* Desktop arrows */}
 
-                {filteredBusinesses.length > 4 && (
+                {businesses.length > 4 && (
 
                   <div className="mb-4 hidden justify-end gap-2 sm:flex">
 
@@ -664,7 +733,7 @@ function Explore() {
                   className="flex gap-6 overflow-x-auto scroll-smooth pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
 
-                  {filteredBusinesses.map(
+                  {businesses.map(
                     (business) => (
 
                       <div
@@ -688,7 +757,7 @@ function Explore() {
 
                 {/* Mobile swipe indicator */}
 
-                {filteredBusinesses.length > 1 && (
+                {businesses.length > 1 && (
 
                   <div className="mt-2 flex items-center justify-center gap-2 text-xs text-gray-400 sm:hidden">
                     <span>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { API_URL } from "../config";
 
 function LeaveReview() {
   const { token } = useParams();
@@ -19,7 +20,7 @@ function LeaveReview() {
     const fetchBooking = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5001/api/reviews/token/${token}`
+          `${API_URL}/api/reviews/token/${token}`
         );
 
         const data = await response.json();
@@ -54,7 +55,7 @@ function LeaveReview() {
 
     try {
       const response = await fetch(
-        `http://localhost:5001/api/reviews/token/${token}`,
+        `${API_URL}/api/reviews/token/${token}`,
         {
           method: "POST",
           headers: {

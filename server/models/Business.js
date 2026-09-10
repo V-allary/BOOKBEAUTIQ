@@ -75,6 +75,22 @@ const businessSchema = new mongoose.Schema(
       default: "",
     },
 
+    openingTime: {
+      type: String,
+      default: "09:00",
+    },
+
+    closingTime: {
+      type: String,
+      default: "18:00",
+    },
+
+    closedDays: {
+      type: [String], // e.g. ["Sun"]
+      default: [],
+    },
+
+
 
     // ==============================
     // BUSINESS RATING & DISPLAY
@@ -150,6 +166,60 @@ const businessSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    lastReminderSentAt: {
+      type: Date,
+      default: null,
+    },
+
+
+    autoRenew: {
+      type: Boolean,
+      default: false,
+    },
+
+    paystackAuthorizationCode: {
+      type: String,
+      default: "",
+    },
+
+    paystackCardLast4: {
+      type: String,
+      default: "",
+    },
+
+    paystackCardBrand: {
+      type: String,
+      default: "",
+    },
+
+    profileViews: {
+      type: Number,
+      default: 0,
+    },
+
+
+    avgRating: {
+      type: Number,
+      default: 0,
+    },
+
+    reviewCount: {
+      type: Number,
+      default: 0,
+    },
+
+    completedBookingsCount: {
+      type: Number,
+      default: 0,
+    },
+
+    lastBookingAt: {
+      type: Date,
+      default: null,
+    },
+
+
 
 
     // ==============================

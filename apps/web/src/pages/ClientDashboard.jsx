@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import ChatWidget from "../components/ChatWidget";
+import { API_URL } from "../config";
 
 function ClientDashboard() {
   const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -21,7 +22,7 @@ function ClientDashboard() {
     const fetchBookings = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5001/api/bookings/my-bookings",
+          `${API_URL}/api/bookings/my-bookings`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

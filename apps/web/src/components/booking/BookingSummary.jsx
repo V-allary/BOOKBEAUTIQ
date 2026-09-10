@@ -5,6 +5,14 @@ function BookingSummary({
   selectedTime,
   onContinue,
 }) {
+  const now = new Date();
+  const onOffer =
+    selectedService?.discountPrice &&
+    (!selectedService.discountStartDate || new Date(selectedService.discountStartDate) <= now) &&
+    (!selectedService.discountEndDate || new Date(selectedService.discountEndDate) >= now);
+
+  const displayPrice = onOffer ? selectedService.discountPrice : selectedService?.price;
+
   return (
     <div className="sticky top-28 rounded-2xl border border-[#E5E2DF] bg-white p-7 shadow-sm">
       <h2 className="text-lg font-bold text-[#242424]">Booking Summary</h2>
@@ -17,12 +25,14 @@ function BookingSummary({
           </span>
         </div>
 
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-400">Professional</span>
-          <span className="font-semibold text-[#242424]">
-            {selectedStaff?.name || "Not selected"}
-          </span>
-        </div>
+        {selectedStaff && (
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-400">Professional</span>
+            <span className="font-semibold text-[#242424]">
+              {selectedStaff.name}
+            </span>
+          </div>
+        )}
 
         <div className="flex justify-between text-sm">
           <span className="text-gray-400">Date</span>
@@ -40,10 +50,17 @@ function BookingSummary({
 
         <hr className="border-[#E5E2DF]" />
 
-        <div className="flex justify-between">
+        <div className="flex items-center justify-between">
           <span className="font-bold text-[#242424]">Total</span>
-          <span className="text-xl font-bold text-[#B96882]">
-            {selectedService?.price ? `KES ${selectedService.price}` : "KES 0"}
+          <span className="flex items-center gap-2">
+            {onOffer && (
+              <span className="text-sm text-gray-400 line-through">
+                KES {selectedService.price}
+              </span>
+            )}
+            <span className="text-xl font-bold text-[#B96882]">
+              {displayPrice ? `KES ${displayPrice}` : "KES 0"}
+            </span>
           </span>
         </div>
       </div>

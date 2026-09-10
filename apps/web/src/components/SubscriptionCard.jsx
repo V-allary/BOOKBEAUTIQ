@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { API_URL } from "../config";
 
 function SubscriptionCard({ business, token, onUpdated }) {
   const [submitting, setSubmitting] = useState(false);
+  const [autoRenewChecked, setAutoRenewChecked] = useState(true);
+  const [togglingRenew, setTogglingRenew] = useState(false);
 
   const planLabel = { independent: "Independent — KES 1,500/mo", team: "Team — KES 2,500/mo" };
 
@@ -9,10 +12,14 @@ function SubscriptionCard({ business, token, onUpdated }) {
     setSubmitting(true);
     try {
       const response = await fetch(
-        `http://localhost:5001/api/subscriptions/${business._id}/initialize`,
+        `${API_URL}/api/subscriptions/${business._id}/initialize`,
         {
           method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ autoRenew: autoRenewChecked }),
         }
       );
       const data = await response.json();
@@ -21,6 +28,30 @@ function SubscriptionCard({ business, token, onUpdated }) {
     } catch (error) {
       alert(error.message);
       setSubmitting(false);
+    }
+  };
+
+  const handleToggleAutoRenew = async (nextValue) => {
+    setTogglingRenew(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/api/subscriptions/${business._id}/auto-renew`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ autoRenew: nextValue }),
+        }
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Could not update auto-renew.");
+      if (onUpdated) onUpdated();
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setTogglingRenew(false);
     }
   };
 
@@ -38,7 +69,7 @@ function SubscriptionCard({ business, token, onUpdated }) {
       bg: "bg-green-50",
       text: "text-green-700",
       message: business.subscriptionPaidUntil
-        ? `Your subscription renews on ${new Date(business.subscriptionPaidUntil).toLocaleDateString()}.`
+        ? `Your subscription ${business.autoRenew ? "renews" : "expires"} on ${new Date(business.subscriptionPaidUntil).toLocaleDateString()}.`
         : "Your subscription is active.",
     },
     past_due: {
@@ -58,7 +89,14 @@ function SubscriptionCard({ business, token, onUpdated }) {
   };
 
   const config = statusConfig[business.subscriptionStatus] || statusConfig.trialing;
+
+  // Payment is required for past_due/suspended, and optionally
+  // available early during the trial for anyone who wants to pay ahead.
   const needsPayment = business.subscriptionStatus === "past_due" || business.subscriptionStatus === "suspended";
+  const canPayEarly = business.subscriptionStatus === "trialing";
+  const showPaymentSection = needsPayment || canPayEarly;
+
+  const hasSavedCard = !!business.paystackAuthorizationCode;
 
   return (
     <div className="rounded-2xl border border-[#E5E2DF] bg-white p-6 shadow-sm">
@@ -78,14 +116,73 @@ function SubscriptionCard({ business, token, onUpdated }) {
         </span>
       </p>
 
-      {needsPayment && (
-        <button
-          onClick={handlePay}
-          disabled={submitting}
-          className="mt-5 w-full rounded-xl bg-[#242424] py-3.5 text-sm font-bold text-white transition hover:bg-[#B96882] disabled:opacity-60"
-        >
-          {submitting ? "Redirecting..." : "Pay Subscription"}
-        </button>
+      {/* Payment Method */}
+      <div className="mt-5 border-t border-[#ECE9E6] pt-5">
+        <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Payment Method</p>
+
+        {hasSavedCard ? (
+          <div className="mt-3 flex items-center justify-between rounded-xl border border-[#E5E2DF] bg-[#FAFAF9] p-4">
+            <div>
+              <p className="text-sm font-semibold text-[#242424]">
+                {business.paystackCardBrand?.toUpperCase() || "Card"} •••• {business.paystackCardLast4}
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                Auto-renew is {business.autoRenew ? "on" : "off"}
+              </p>
+            </div>
+            <button
+              onClick={() => handleToggleAutoRenew(!business.autoRenew)}
+              disabled={togglingRenew}
+              className={`rounded-xl px-4 py-2 text-xs font-semibold transition disabled:opacity-50 ${
+                business.autoRenew
+                  ? "border border-[#E5E2DF] text-[#242424] hover:bg-white"
+                  : "bg-[#242424] text-white hover:bg-[#9D536D]"
+              }`}
+            >
+              {togglingRenew ? "..." : business.autoRenew ? "Turn Off" : "Turn On"}
+            </button>
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-gray-400">
+            No saved card yet. Check the box below when you pay to save your card and enable auto-renew.
+          </p>
+        )}
+      </div>
+
+      {showPaymentSection && (
+        <div className="mt-5 border-t border-[#ECE9E6] pt-5">
+          {!hasSavedCard && (
+            <label className="mb-4 flex items-start gap-3 text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={autoRenewChecked}
+                onChange={(e) => setAutoRenewChecked(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#242424] focus:ring-[#B96882]"
+              />
+              <span>
+                Save my card and automatically renew this subscription each month. You can turn this off anytime.
+              </span>
+            </label>
+          )}
+
+          <button
+            onClick={handlePay}
+            disabled={submitting}
+            className="w-full rounded-xl bg-[#242424] py-3.5 text-sm font-bold text-white transition hover:bg-[#B96882] disabled:opacity-60"
+          >
+            {submitting
+              ? "Redirecting..."
+              : canPayEarly
+              ? "Pay Now (Skip Trial)"
+              : "Pay Subscription"}
+          </button>
+
+          {canPayEarly && (
+            <p className="mt-3 text-center text-xs text-gray-400">
+              Paying now starts your 30-day subscription immediately — you won't need to pay again until it renews.
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

@@ -18,14 +18,18 @@ export const initializeSubscriptionPayment = async (req, res) => {
     }
 
     const amount = PLAN_PRICES[business.subscriptionPlan] || PLAN_PRICES.independent;
+    const wantsAutoRenew = req.body?.autoRenew === true;
 
     const transaction = await paystackRequest("/transaction/initialize", "POST", {
       email: business.email || req.user.email,
-      amount: amount * 100,
+      amount: amount * 1500,
       currency: "KES",
-      callback_url: `${process.env.CLIENT_URL}/dashboard`,
-      metadata: { businessId: business._id.toString(), type: "subscription" },
-      // No subaccount here — this money goes to BookBeautiq's own balance.
+      callback_url: `${process.env.CLIENT_URL}/subscription/callback`,
+      metadata: {
+        businessId: business._id.toString(),
+        type: "subscription",
+        autoRenew: wantsAutoRenew,
+      },
     });
 
     res.status(200).json({
@@ -49,6 +53,8 @@ export const verifySubscriptionPayment = async (req, res) => {
     }
 
     const businessId = transaction.metadata?.businessId;
+    const wantsAutoRenew = transaction.metadata?.autoRenew === true || transaction.metadata?.autoRenew === "true";
+
     const business = await Business.findById(businessId);
     if (!business) return res.status(404).json({ message: "Business not found for this payment." });
 
@@ -58,6 +64,18 @@ export const verifySubscriptionPayment = async (req, res) => {
     business.subscriptionStatus = "active";
     business.subscriptionPaidUntil = paidUntil;
     business.gracePeriodEndsAt = null;
+    business.lastReminderSentAt = null;
+
+    const auth = transaction.authorization;
+    if (auth?.reusable && auth?.authorization_code) {
+      business.paystackAuthorizationCode = auth.authorization_code;
+      business.paystackCardLast4 = auth.last4 || "";
+      business.paystackCardBrand = auth.brand || "";
+      business.autoRenew = wantsAutoRenew; // only true if they explicitly opted in
+    } else {
+      business.autoRenew = false;
+    }
+
     await business.save();
 
     res.status(200).json({ message: "Subscription payment verified.", business });
@@ -65,3 +83,30 @@ export const verifySubscriptionPayment = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const toggleAutoRenew = async (req, res) => {
+  try {
+    const business = await Business.findById(req.params.businessId);
+    if (!business) return res.status(404).json({ message: "Business not found." });
+
+    const isOwner = business.owner?.toString() === req.user.userId;
+    if (!isOwner && req.user.role !== "admin") {
+      return res.status(403).json({ message: "You can only manage your own business's subscription." });
+    }
+
+    if (!business.paystackAuthorizationCode) {
+      return res.status(400).json({ message: "No saved card on file. Pay once with auto-renew checked to enable this." });
+    }
+
+    business.autoRenew = req.body.autoRenew === true;
+    await business.save();
+
+    res.status(200).json({
+      message: business.autoRenew ? "Auto-renew turned on." : "Auto-renew turned off.",
+      business,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+

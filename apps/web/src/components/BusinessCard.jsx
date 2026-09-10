@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
+import { API_URL } from "../config";
 
 function BusinessCard({ business }) {
   const imageUrl = business.image
     ? business.image.startsWith("/uploads/")
-      ? `http://localhost:5001${business.image}`
+      ? `${API_URL}${business.image}`
       : business.image
     : "";
 
-  const rating = Number(business.rating || 0);
+  const rating = Number(business.avgRating || 0);
 
   return (
     <Link

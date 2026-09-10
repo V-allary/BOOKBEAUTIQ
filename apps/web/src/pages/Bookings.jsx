@@ -1,17 +1,25 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { API_URL } from "../config";
 
 function Bookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const statusColor = {
+    Pending: "bg-yellow-100 text-yellow-700",
+    Confirmed: "bg-green-100 text-green-700",
+    Completed: "bg-blue-100 text-blue-700",
+    Cancelled: "bg-red-100 text-red-700",
+  };
+
   useEffect(() => {
     const fetchBookings = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:5001/api/bookings/my-bookings", {
+        const response = await fetch(`${API_URL}/api/bookings/my-bookings`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json();
@@ -45,7 +53,11 @@ function Bookings() {
                 <h3 className="text-xl font-bold">{b.businessId?.name}</h3>
                 <p className="text-gray-500">{b.service} with {b.staff}</p>
                 <p className="text-gray-500">{b.date} at {b.time}</p>
-                <span className="mt-2 inline-block rounded-full bg-yellow-100 px-3 py-1 text-sm font-semibold text-yellow-700">
+                <span
+                  className={`mt-2 inline-block rounded-full px-3 py-1 text-sm font-semibold ${
+                    statusColor[b.status] || "bg-gray-100 text-gray-600"
+                  }`}
+                >
                   {b.status}
                 </span>
               </div>

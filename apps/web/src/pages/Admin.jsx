@@ -3,6 +3,7 @@ import BusinessList from "../components/admin/BusinessList";
 import ServiceManager from "../components/admin/ServiceManager";
 import StaffManager from "../components/admin/StaffManager";
 import OwnerVerifications from "../components/admin/OwnerVerifications.jsx";
+import { API_URL } from "../config";
 
 function Admin() {
   const [formData, setFormData] = useState({
@@ -36,7 +37,7 @@ function Admin() {
   const fetchBusinesses = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5001/api/businesses"
+        `${API_URL}/api/businesses`
       );
 
       const data = await response.json();
@@ -98,7 +99,7 @@ function Admin() {
         imageData.append("image", imageFile);
 
         const uploadResponse = await fetch(
-          "http://localhost:5001/api/uploads",
+          `${API_URL}/api/uploads`,
           {
             method: "POST",
             headers: {
@@ -122,8 +123,8 @@ function Admin() {
       }
 
       const url = editingId
-        ? `http://localhost:5001/api/businesses/${editingId}`
-        : "http://localhost:5001/api/businesses";
+        ? `${API_URL}/api/businesses/${editingId}`
+        : `${API_URL}/api/businesses`;
 
       const method = editingId ? "PUT" : "POST";
 
@@ -211,7 +212,7 @@ function Admin() {
     if (business.image) {
       const existingImage =
         business.image.startsWith("/uploads/")
-          ? `http://localhost:5001${business.image}`
+          ? `${API_URL}${business.image}`
           : business.image;
 
       setImagePreview(existingImage);
@@ -288,7 +289,7 @@ function Admin() {
   // =========================
 
   const inputClass =
-    "w-full rounded-xl border border-[#E9E3E9] bg-[#FCFAFD] px-4 py-3.5 text-sm text-[#171717] outline-none transition placeholder:text-[#99939A] focus:border-[#D97CA5] focus:bg-white focus:ring-4 focus:ring-[#D97CA5]/10";
+    "w-full rounded-xl border border-[#E9E3E9] bg-[#FCFAFD] px-4 py-3.5 text-sm text-[#171717] outline-none transition placeholder:text-[#99939A] focus:border-[#B96882] focus:bg-white focus:ring-4 focus:ring-[#B96882]/10";
 
   return (
     <div className="min-h-screen bg-[#FAF8FC] text-[#171717]">
@@ -307,7 +308,7 @@ function Admin() {
 
             <div className="flex items-center gap-3">
 
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#D97CA5] text-lg font-bold text-white shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#242424] text-lg font-bold text-white shadow-sm">
                 B
               </div>
 
@@ -349,7 +350,7 @@ function Admin() {
                     }
                     className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition ${
                       active
-                        ? "bg-[#FFF1F6] text-[#D97CA5]"
+                        ? "bg-[#F2E8EC] text-[#9D536D]"
                         : "text-[#655F66] hover:bg-[#FAF6F9] hover:text-[#171717]"
                     }`}
                   >
@@ -357,7 +358,7 @@ function Admin() {
                     <span
                       className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm ${
                         active
-                          ? "bg-[#D97CA5] text-white"
+                          ? "bg-[#B96882] text-white"
                           : "bg-[#F5F1F5] text-[#817A82] group-hover:bg-white"
                       }`}
                     >
@@ -369,7 +370,7 @@ function Admin() {
                     {item.id ===
                       "businesses" &&
                       pendingBusinesses > 0 && (
-                        <span className="ml-auto rounded-full bg-[#D97CA5] px-2 py-0.5 text-[10px] font-bold text-white">
+                        <span className="ml-auto rounded-full bg-[#B96882] px-2 py-0.5 text-[10px] font-bold text-white">
                           {pendingBusinesses}
                         </span>
                       )}
@@ -414,7 +415,7 @@ function Admin() {
 
           <div className="flex items-center gap-2">
 
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D97CA5] font-bold text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#242424] font-bold text-white">
               B
             </div>
 
@@ -472,7 +473,7 @@ function Admin() {
 
                 <div>
 
-                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-[#D97CA5]">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-[#B96882]">
                     Admin Dashboard
                   </p>
 
@@ -506,7 +507,7 @@ function Admin() {
                     setImagePreview("");
                     setActiveSection("businesses");
                   }}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#D97CA5] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#C96C96] hover:shadow-md"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#242424] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#B96882] hover:shadow-md"
                 >
                   <span className="text-lg leading-none">
                     +
@@ -534,7 +535,7 @@ function Admin() {
                       </p>
                     </div>
 
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FFF1F6] text-[#D97CA5]">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F2E8EC] text-[#9D536D]">
                       ◈
                     </div>
 
@@ -581,7 +582,7 @@ function Admin() {
                         Pending
                       </p>
 
-                      <p className="mt-3 text-3xl font-bold tracking-tight text-[#D97CA5]">
+                      <p className="mt-3 text-3xl font-bold tracking-tight text-[#B96882]">
                         {pendingBusinesses}
                       </p>
                     </div>
@@ -652,7 +653,7 @@ function Admin() {
                     className="group rounded-2xl border border-[#EAE4EA] bg-white p-5 text-left shadow-[0_8px_30px_rgba(50,35,50,0.04)] transition hover:-translate-y-0.5 hover:border-[#E8C5D4] hover:shadow-lg"
                   >
 
-                    <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-[#FFF1F6] text-[#D97CA5]">
+                    <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-[#F2E8EC] text-[#9D536D]">
                       ◈
                     </div>
 
@@ -664,7 +665,7 @@ function Admin() {
                       Add, edit and manage businesses.
                     </p>
 
-                    <span className="mt-4 inline-block text-xs font-bold text-[#D97CA5]">
+                    <span className="mt-4 inline-block text-xs font-bold text-[#B96882]">
                       Manage →
                     </span>
 
@@ -690,7 +691,7 @@ function Admin() {
                       Review business owner documents.
                     </p>
 
-                    <span className="mt-4 inline-block text-xs font-bold text-[#D97CA5]">
+                    <span className="mt-4 inline-block text-xs font-bold text-[#B96882]">
                       Review →
                     </span>
 
@@ -716,7 +717,7 @@ function Admin() {
                       Create and manage beauty services.
                     </p>
 
-                    <span className="mt-4 inline-block text-xs font-bold text-[#D97CA5]">
+                    <span className="mt-4 inline-block text-xs font-bold text-[#B96882]">
                       Manage →
                     </span>
 
@@ -742,7 +743,7 @@ function Admin() {
                       Manage business team members.
                     </p>
 
-                    <span className="mt-4 inline-block text-xs font-bold text-[#D97CA5]">
+                    <span className="mt-4 inline-block text-xs font-bold text-[#B96882]">
                       Manage →
                     </span>
 
@@ -773,7 +774,7 @@ function Admin() {
                     onClick={() =>
                       setActiveSection("businesses")
                     }
-                    className="text-xs font-bold text-[#D97CA5] hover:underline"
+                    className="text-xs font-bold text-[#B96882] hover:underline"
                   >
                     View all
                   </button>
@@ -817,7 +818,7 @@ function Admin() {
                                     business.image.startsWith(
                                       "/uploads/"
                                     )
-                                      ? `http://localhost:5001${business.image}`
+                                      ? `${API_URL}${business.image}`
                                       : business.image
                                   }
                                   alt=""
@@ -885,7 +886,7 @@ function Admin() {
 
                 <div>
 
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#D97CA5]">
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#B96882]">
                     Management
                   </p>
 
@@ -923,7 +924,7 @@ function Admin() {
 
                     <div className="flex items-center gap-3">
 
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FFF1F6] text-[#D97CA5]">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F2E8EC] text-[#9D536D]">
                         {editingId ? "✎" : "+"}
                       </div>
 
@@ -989,15 +990,29 @@ function Admin() {
 
                     <div className="grid gap-4 md:grid-cols-2">
 
-                      <input
-                        type="text"
-                        name="name"
-                        placeholder="Business Name"
-                        value={formData.name}
+                    <select
+                        name="category"
+                        value={formData.category}
                         onChange={handleChange}
-                        className={inputClass}
+                        className={`${inputClass} cursor-pointer`}
                         required
-                      />
+                      >
+                        <option value="">Select a category</option>
+                        <option value="Hair">Hair</option>
+                        <option value="Barber">Barber</option>
+                        <option value="Nails">Nails</option>
+                        <option value="Makeup">Makeup</option>
+                        <option value="Lashes & Brows">Lashes & Brows</option>
+                        <option value="Skincare">Skincare</option>
+                        <option value="Spa & Wellness">Spa & Wellness</option>
+                        <option value="Bridal">Bridal</option>
+                        <option value="Laser">Laser</option>
+                        <option value="Tattoo & Piercing">Tattoo & Piercing</option>
+                        <option value="Teeth Whitening">Teeth Whitening</option>
+                        <option value="Waxing">Waxing</option>
+                      </select>
+
+
 
                       <input
                         type="text"
@@ -1083,7 +1098,7 @@ function Admin() {
 
                     <div className="grid gap-5 md:grid-cols-[1fr_180px]">
 
-                      <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[#E5C4D2] bg-[#FFFAFC] px-5 py-6 text-center transition hover:border-[#D97CA5] hover:bg-[#FFF7FA]">
+                      <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[#E5C4D2] bg-[#FFFAFC] px-5 py-6 text-center transition hover:border-[#B96882] hover:bg-[#FFF7FA]">
 
                         <span className="text-2xl">
                           ↑
@@ -1158,7 +1173,7 @@ function Admin() {
 
                   <button
                     type="submit"
-                    className="w-full rounded-xl bg-[#D97CA5] py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#C96C96] hover:shadow-md"
+                    className="w-full rounded-xl bg-[#242424] py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#B96882] hover:shadow-md"
                   >
                     {editingId
                       ? "Update Business"
@@ -1205,7 +1220,7 @@ function Admin() {
 
               <div className="mb-7">
 
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#D97CA5]">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#B96882]">
                   Compliance
                 </p>
 
@@ -1237,7 +1252,7 @@ function Admin() {
 
               <div className="mb-7">
 
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#D97CA5]">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#B96882]">
                   Catalog
                 </p>
 
@@ -1271,7 +1286,7 @@ function Admin() {
 
               <div className="mb-7">
 
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#D97CA5]">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#B96882]">
                   Team
                 </p>
 

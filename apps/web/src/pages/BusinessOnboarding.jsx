@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 
 function BusinessOnboarding() {
   const navigate = useNavigate();
@@ -15,7 +16,6 @@ function BusinessOnboarding() {
   // ==========================================
   // BUSINESS
   // ==========================================
-
   const [businessData, setBusinessData] = useState({
     name: "",
     category: "",
@@ -24,8 +24,31 @@ function BusinessOnboarding() {
     price: "",
     phone: "",
     email: "",
-    openingHours: "",
+    openingTime: "09:00",
+    closingTime: "18:00",
+    closedDays: [],
   });
+
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const formatTimeLabel = (time24) => {
+    const [h, m] = time24.split(":").map(Number);
+    const period = h >= 12 ? "PM" : "AM";
+    const displayHour = h > 12 ? h - 12 : h === 0 ? 12 : h;
+    return `${displayHour}:${m === 0 ? "00" : m} ${period}`;
+  };
+
+  const toggleClosedDay = (day) => {
+    setBusinessData((current) => {
+      const isClosed = current.closedDays.includes(day);
+      return {
+        ...current,
+        closedDays: isClosed
+          ? current.closedDays.filter((d) => d !== day)
+          : [...current.closedDays, day],
+      };
+    });
+  };
 
   // ==========================================
   // OWNER PROFILE PHOTO
@@ -89,7 +112,7 @@ function BusinessOnboarding() {
     imageData.append("image", file);
 
     const response = await fetch(
-      "http://localhost:5001/api/uploads",
+      `${API_URL}/api/uploads`,
       {
         method: "POST",
         headers: {
@@ -143,9 +166,8 @@ function BusinessOnboarding() {
       // ----------------------------------------
       // CREATE BUSINESS
       // ----------------------------------------
-
       const response = await fetch(
-        "http://localhost:5001/api/businesses",
+        `${API_URL}/api/businesses`,
         {
           method: "POST",
           headers: {
@@ -154,10 +176,14 @@ function BusinessOnboarding() {
           },
           body: JSON.stringify({
             ...businessData,
+            openingHours: `${formatTimeLabel(businessData.openingTime)} - ${formatTimeLabel(businessData.closingTime)}${
+              businessData.closedDays.length > 0 ? ` (Closed ${businessData.closedDays.join(", ")})` : ""
+            }`,
             subscriptionPlan: selectedPlan,
           }),
         }
       );
+
 
       const data = await response.json();
 
@@ -179,7 +205,7 @@ function BusinessOnboarding() {
         const profileUrl = await uploadImage(profileFile);
 
         const profileResponse = await fetch(
-          "http://localhost:5001/api/users/profile",
+          `${API_URL}/api/users/profile`,
           {
 
             method: "PUT",
@@ -322,7 +348,7 @@ function BusinessOnboarding() {
         galleryUrls.length > 0
       ) {
         const response = await fetch(
-          `http://localhost:5001/api/businesses/${businessId}`,
+          `${API_URL}/api/businesses/${businessId}`,
           {
             method: "PUT",
             headers: {
@@ -396,7 +422,7 @@ function BusinessOnboarding() {
         if (!service.name.trim()) continue;
 
         const response = await fetch(
-          "http://localhost:5001/api/services",
+          `${API_URL}/api/services`,
           {
             method: "POST",
             headers: {
@@ -513,7 +539,7 @@ function BusinessOnboarding() {
         }
 
         const response = await fetch(
-          "http://localhost:5001/api/staff",
+          `${API_URL}/api/staff`,
           {
             method: "POST",
             headers: {
@@ -798,8 +824,7 @@ function BusinessOnboarding() {
                   required
                 />
 
-                <input
-                  placeholder="Category (e.g. Hair, Spa)"
+<select
                   value={businessData.category}
                   onChange={(e) =>
                     setBusinessData({
@@ -807,9 +832,24 @@ function BusinessOnboarding() {
                       category: e.target.value,
                     })
                   }
-                  className={inputClass}
+                  className={`${inputClass} cursor-pointer`}
                   required
-                />
+                >
+                  <option value="">Select a category</option>
+                  <option value="Hair">Hair</option>
+                  <option value="Barber">Barber</option>
+                  <option value="Nails">Nails</option>
+                  <option value="Makeup">Makeup</option>
+                  <option value="Lashes & Brows">Lashes & Brows</option>
+                  <option value="Skincare">Skincare</option>
+                  <option value="Spa & Wellness">Spa & Wellness</option>
+                  <option value="Bridal">Bridal</option>
+                  <option value="Laser">Laser</option>
+                  <option value="Tattoo & Piercing">Tattoo & Piercing</option>
+                  <option value="Teeth Whitening">Teeth Whitening</option>
+                  <option value="Waxing">Waxing</option>
+                </select>
+
 
                 <input
                   placeholder="Location"
@@ -881,21 +921,78 @@ function BusinessOnboarding() {
                   />
 
                 </div>
+                <div className="rounded-2xl border border-[#E5E2DF] bg-[#FAFAF9] p-5">
 
-                <input
-                  placeholder="Opening Hours"
-                  value={
-                    businessData.openingHours
-                  }
-                  onChange={(e) =>
-                    setBusinessData({
-                      ...businessData,
-                      openingHours:
-                        e.target.value,
-                    })
-                  }
-                  className={inputClass}
-                />
+<p className="mb-4 text-sm font-semibold text-[#242424]">
+  Business Hours
+</p>
+
+<p className="mb-4 text-xs text-[#777472]">
+  This determines the exact times customers can book — it can be changed anytime later from your dashboard.
+</p>
+
+<div className="grid gap-4 sm:grid-cols-2">
+
+  <div>
+    <label className="mb-2 block text-xs font-semibold text-gray-500">
+      Opens at
+    </label>
+    <input
+      type="time"
+      value={businessData.openingTime}
+      onChange={(e) =>
+        setBusinessData({
+          ...businessData,
+          openingTime: e.target.value,
+        })
+      }
+      className="w-full rounded-xl border border-[#DDDAD7] bg-white p-3.5 text-sm outline-none transition focus:border-[#B96882]"
+    />
+  </div>
+
+  <div>
+    <label className="mb-2 block text-xs font-semibold text-gray-500">
+      Closes at
+    </label>
+    <input
+      type="time"
+      value={businessData.closingTime}
+      onChange={(e) =>
+        setBusinessData({
+          ...businessData,
+          closingTime: e.target.value,
+        })
+      }
+      className="w-full rounded-xl border border-[#DDDAD7] bg-white p-3.5 text-sm outline-none transition focus:border-[#B96882]"
+    />
+  </div>
+
+</div>
+
+<div className="mt-4">
+  <label className="mb-2 block text-xs font-semibold text-gray-500">
+    Closed on
+  </label>
+  <div className="flex flex-wrap gap-2">
+    {weekDays.map((day) => (
+      <button
+        key={day}
+        type="button"
+        onClick={() => toggleClosedDay(day)}
+        className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+          businessData.closedDays.includes(day)
+            ? "bg-[#242424] text-white"
+            : "border border-[#DDDAD7] bg-white text-[#242424] hover:border-[#B96882]"
+        }`}
+      >
+        {day}
+      </button>
+    ))}
+  </div>
+</div>
+
+</div>
+
 
               </div>
 

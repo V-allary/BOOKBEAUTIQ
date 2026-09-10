@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import { API_URL } from "../config";
 
 function SubscriptionCallback() {
   const [searchParams] = useSearchParams();
@@ -17,7 +18,7 @@ function SubscriptionCallback() {
 
     const verify = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/subscriptions/verify/${reference}`);
+        const response = await fetch(`${API_URL}/api/subscriptions/verify/${reference}`);
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || "Verification failed.");
         setStatus("success");

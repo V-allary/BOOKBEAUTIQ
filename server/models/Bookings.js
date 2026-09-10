@@ -69,6 +69,20 @@ const bookingSchema = new mongoose.Schema(
       default: false,
     },
 
+    commissionAmount: {
+      type: Number,
+      default: 0,
+    },
+
+
+    duration: {
+      type: Number, // minutes
+      default: 60,
+    },
+
+
+
+    
     paystackReference: {
       type: String,
       default: "",
