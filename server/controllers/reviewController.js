@@ -62,20 +62,20 @@ export const submitReview = async (req, res) => {
       }
     }
 
+    const businessReviews = await Review.find({ businessId: booking.businessId });
+    const avgRating =
+      businessReviews.reduce((sum, r) => sum + r.rating, 0) / businessReviews.length;
+
+    await Business.findByIdAndUpdate(booking.businessId, {
+      avgRating,
+      reviewCount: businessReviews.length,
+    });
 
     res.status(201).json({ message: "Thank you for your review!", review });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-const businessReviews = await Review.find({ businessId: booking.businessId });
-const avgRating =
-  businessReviews.reduce((sum, r) => sum + r.rating, 0) / businessReviews.length;
-
-await Business.findByIdAndUpdate(booking.businessId, {
-  avgRating,
-  reviewCount: businessReviews.length,
-});
 
 // Public — all reviews for a business
 export const getBusinessReviews = async (req, res) => {
