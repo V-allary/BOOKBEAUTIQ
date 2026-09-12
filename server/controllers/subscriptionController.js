@@ -1,4 +1,4 @@
-import paystackRequest from "../utils/paystack.js";
+ import paystackRequest from "../utils/paystack.js";
 import Business from "../models/Business.js";
 
 const PLAN_PRICES = {
@@ -109,3 +109,5 @@ export const toggleAutoRenew = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
