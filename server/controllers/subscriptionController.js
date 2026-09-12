@@ -22,7 +22,7 @@ export const initializeSubscriptionPayment = async (req, res) => {
 
     const transaction = await paystackRequest("/transaction/initialize", "POST", {
       email: business.email || req.user.email,
-      amount: amount * 1500,
+      amount: amount * 100,
       currency: "KES",
       callback_url: `${process.env.CLIENT_URL}/subscription/callback`,
       metadata: {
@@ -109,4 +109,3 @@ export const toggleAutoRenew = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
