@@ -47,44 +47,36 @@ function TimeSlots({ businessId, selectedDate, serviceDuration, selectedStaff, s
     fetchSlots();
   }, [businessId, selectedDate?.iso, serviceDuration, selectedStaff?.name]);
 
-  if (!selectedDate) {
-    return null;
-  }
+  const selectClass =
+    "w-full appearance-none rounded-xl border border-[#DDDAD7] bg-[#FAFAF9] px-4 py-3.5 text-sm font-medium text-[#242424] outline-none transition focus:border-[#B96882] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60";
+
+  const placeholder = !selectedDate
+    ? "Select a date first"
+    : loading
+    ? "Checking availability..."
+    : closed
+    ? "Business closed on this day"
+    : slots.length === 0
+    ? "No available times"
+    : "Select a time";
 
   return (
     <div>
-      <label className="mb-3 block text-sm font-semibold text-[#242424]">Time</label>
-
-      {loading && (
-        <p className="text-sm text-gray-400">Checking availability...</p>
-      )}
-
-      {!loading && closed && (
-        <p className="text-sm text-gray-500">This business is closed on this day.</p>
-      )}
-
-      {!loading && !closed && slots.length === 0 && (
-        <p className="text-sm text-gray-500">No available times on this day. Please try another date.</p>
-      )}
-
-      {!loading && !closed && slots.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+      <label className="mb-2 block text-sm font-semibold text-[#242424]">Time</label>
+      <div className="relative">
+        <select
+          value={selectedTime || ""}
+          onChange={(e) => setSelectedTime(e.target.value)}
+          disabled={!selectedDate || loading || closed || slots.length === 0}
+          className={selectClass}
+        >
+          <option value="">{placeholder}</option>
           {slots.map((slot) => (
-            <button
-              key={slot}
-              type="button"
-              onClick={() => setSelectedTime(slot)}
-              className={`rounded-xl border py-3 text-sm font-semibold transition ${
-                selectedTime === slot
-                  ? "border-[#242424] bg-[#242424] text-white"
-                  : "border-[#E5E2DF] bg-[#FAFAF9] text-[#242424] hover:border-[#B96882]"
-              }`}
-            >
-              {slot}
-            </button>
+            <option key={slot} value={slot}>{slot}</option>
           ))}
-        </div>
-      )}
+        </select>
+        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">▾</span>
+      </div>
     </div>
   );
 }
