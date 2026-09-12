@@ -1,13 +1,13 @@
 function ServiceSelector({ services = [], selectedService, setSelectedService, loading }) {
-  if (loading) return <div className="rounded-3xl bg-white p-8 shadow-sm text-gray-500">Loading services...</div>;
-  if (services.length === 0) return <div className="rounded-3xl bg-white p-8 shadow-sm text-gray-500">No services available yet.</div>;
+  if (loading) return <p className="text-sm text-gray-400">Loading services...</p>;
+  if (services.length === 0) return <p className="text-sm text-gray-400">No services available yet.</p>;
 
   const now = new Date();
 
   return (
-    <div className="rounded-3xl bg-white p-8 shadow-sm">
-      <h2 className="mb-6 text-2xl font-bold text-[#242424]">Choose a Service</h2>
-      <div className="space-y-4">
+    <div>
+      <label className="mb-3 block text-sm font-semibold text-[#242424]">Service</label>
+      <div className="space-y-3">
         {services.map((service) => {
           const onOffer =
             service.discountPrice &&
@@ -19,7 +19,7 @@ function ServiceSelector({ services = [], selectedService, setSelectedService, l
               key={service._id}
               type="button"
               onClick={() => setSelectedService(service)}
-              className={`flex w-full items-center justify-between rounded-2xl border p-5 text-left transition ${
+              className={`flex w-full items-center justify-between rounded-xl border p-4 text-left transition ${
                 selectedService?._id === service._id
                   ? "border-[#B96882] bg-[#FFF5F9]"
                   : "border-[#E5E2DF] hover:border-[#B96882] hover:bg-[#FFF5F9]"

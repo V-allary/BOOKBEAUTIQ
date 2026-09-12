@@ -52,8 +52,8 @@ function TimeSlots({ businessId, selectedDate, serviceDuration, selectedStaff, s
   }
 
   return (
-    <div className="mt-8 rounded-2xl border border-[#E5E2DF] bg-white p-6 shadow-sm">
-      <h2 className="mb-5 text-lg font-bold text-[#242424]">Select a Time</h2>
+    <div>
+      <label className="mb-3 block text-sm font-semibold text-[#242424]">Time</label>
 
       {loading && (
         <p className="text-sm text-gray-400">Checking availability...</p>

@@ -21,9 +21,8 @@ function DateSelector({ selectedDate, setSelectedDate }) {
   }, []);
 
   return (
-    <div className="mt-8 rounded-2xl border border-[#E5E2DF] bg-white p-6 shadow-sm">
-      <h2 className="mb-1 text-lg font-bold text-[#242424]">Select a Date</h2>
-      <p className="mb-5 text-sm text-gray-400">Book up to 30 days ahead</p>
+    <div>
+      <label className="mb-3 block text-sm font-semibold text-[#242424]">Date</label>
 
       <div className="flex gap-3 overflow-x-auto pb-2">
         {dates.map((item) => (
