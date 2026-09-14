@@ -5,6 +5,7 @@ import {
   initializeSubscriptionPayment,
   verifySubscriptionPayment,
   toggleAutoRenew,
+  removePaymentMethod,
 } from "../controllers/subscriptionController.js";
 
 const router = express.Router();
@@ -23,6 +24,13 @@ router.patch(
   authMiddleware,
   roleMiddleware("business", "admin"),
   toggleAutoRenew
+);
+
+router.delete(
+  "/:businessId/payment-method",
+  authMiddleware,
+  roleMiddleware("business", "admin"),
+  removePaymentMethod
 );
 
 export default router;

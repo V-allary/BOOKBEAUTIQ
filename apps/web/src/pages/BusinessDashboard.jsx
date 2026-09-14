@@ -92,11 +92,10 @@ function BusinessDashboard() {
     bankCode: "",
     accountNumber: "",
   });
-
   const [resolvedName, setResolvedName] = useState("");
   const [payoutSubmitting, setPayoutSubmitting] = useState(false);
   const [payoutMessage, setPayoutMessage] = useState("");
-
+  const [editingPayout, setEditingPayout] = useState(false);
 
   // ==========================================
   // FETCH ANALYTICS
@@ -204,7 +203,6 @@ function BusinessDashboard() {
           },
         }
       );
-
       const data = await response.json();
 
       if (response.ok) {
@@ -315,13 +313,49 @@ function BusinessDashboard() {
     }
   };
 
-  const businessLink = `${window.location.origin}/business/${business?._id}`;
+  const businessLink = `${window.location.origin}/${business?.slug || business?._id}`;
 
-const handleCopyLink = () => {
-  navigator.clipboard.writeText(businessLink);
-  setLinkCopied(true);
-  setTimeout(() => setLinkCopied(false), 2000);
-};
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(businessLink);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/signin");
+  };
+
+  const [passwordResetSending, setPasswordResetSending] = useState(false);
+  const [passwordResetMessage, setPasswordResetMessage] = useState("");
+
+  const handleRequestPasswordReset = async () => {
+    setPasswordResetSending(true);
+    setPasswordResetMessage("");
+
+    try {
+      const userEmail = JSON.parse(localStorage.getItem("user") || "null")?.email;
+
+      const response = await fetch(`${API_URL}/api/users/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: userEmail }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Could not send reset link.");
+      }
+
+      setPasswordResetMessage(`A password reset link has been sent to ${userEmail}. Check your inbox.`);
+    } catch (error) {
+      setPasswordResetMessage(error.message);
+    } finally {
+      setPasswordResetSending(false);
+    }
+  };
 
 
   // ==========================================
@@ -638,10 +672,12 @@ const handleCopyLink = () => {
       }
 
       setPayoutMessage(
-        "Payout account linked successfully."
+        data.message || "Payout account saved successfully."
       );
 
+      setEditingPayout(false);
       await fetchBusiness();
+
     } catch (error) {
       setPayoutMessage(error.message);
     } finally {
@@ -750,8 +786,7 @@ const handleCopyLink = () => {
       icon: "▲",
     },
     {
-      id: "profile",
-      label: "Business Profile",
+      id: "profile", label: "Business Profile",
       icon: "◎",
     },
     {
@@ -784,6 +819,11 @@ const handleCopyLink = () => {
       label: "Payouts",
       icon: "◆",
     },
+    {
+      id: "account",
+      label: "Account",
+      icon: "⚙",
+    },
   ];
 
   return (
@@ -807,13 +847,26 @@ const handleCopyLink = () => {
             </p>
           </div>
 
-          <button
-            onClick={() => setActiveSection("overview")}
-            className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#242424] font-bold text-white"
-          >
-            {business.name?.charAt(0)?.toUpperCase() ||
-              "B"}
-          </button>
+          <div className="flex items-center gap-2">
+
+            <button
+              onClick={() => setActiveSection("overview")}
+              className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#242424] font-bold text-white"
+            >
+              {business.name?.charAt(0)?.toUpperCase() ||
+                "B"}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              aria-label="Log out"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E5E2DF] text-red-500 transition hover:bg-red-50"
+            >
+              ⏻
+            </button>
+
+          </div>
 
         </div>
       </div>
@@ -846,7 +899,6 @@ const handleCopyLink = () => {
           {/* Business */}
 
           <div className="mt-8 rounded-2xl bg-[#F5F4F2] p-4">
-
             <div className="flex items-center gap-3">
 
               <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#242424] font-bold text-white">
@@ -926,7 +978,7 @@ const handleCopyLink = () => {
 
           {/* Bottom */}
 
-          <div className="mt-auto pt-10">
+          <div className="mt-auto space-y-1 pt-10">
 
             <button
               type="button"
@@ -935,6 +987,15 @@ const handleCopyLink = () => {
             >
               <span>←</span>
               Back to BookBeautiq
+            </button>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-red-500 transition hover:bg-red-50"
+            >
+              <span>⏻</span>
+              Log Out
             </button>
 
           </div>
@@ -1175,7 +1236,7 @@ const handleCopyLink = () => {
                       ✉
                     </span>
 
-                  </div>
+   </div>
 
                   <p className="mt-4 text-3xl font-bold text-[#242424]">
                     {conversations.length}
@@ -1231,7 +1292,6 @@ const handleCopyLink = () => {
                         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F5F4F2]">
                           ▣
                         </div>
-
                         <p className="mt-3 text-sm font-semibold text-[#242424]">
                           No bookings yet
                         </p>
@@ -1481,9 +1541,7 @@ const handleCopyLink = () => {
               )}
 
             </div>
-          )}
-
-          {/* ==================================
+          )} {/* ==================================
               ANALYTICS
           ================================== */}
 
@@ -1690,7 +1748,6 @@ const handleCopyLink = () => {
                   </div>
 
                   {/* GALLERY */}
-
                   <div className="mt-10">
 
                     <div className="mb-4 flex items-end justify-between">
@@ -1857,7 +1914,7 @@ const handleCopyLink = () => {
 
                       {/* Price */}
 
-                      <div>
+   <div>
 
                         <label className="mb-2 block text-sm font-semibold text-[#242424]">
                           Starting Price
@@ -1948,7 +2005,7 @@ const handleCopyLink = () => {
                               }
                               className="w-full rounded-xl border border-[#DDDAD7] bg-white p-3.5 text-sm outline-none transition focus:border-[#B96882]"
                             />
-                          </div>
+              </div>
 
                           <div>
                             <label className="mb-2 block text-xs font-semibold text-gray-500">
@@ -2143,9 +2200,7 @@ const handleCopyLink = () => {
                       <div
                         key={b._id}
                         className="rounded-xl border border-[#E5E2DF] p-5"
-                      >
-
-                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                      >   <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
                           <div>
 
@@ -2301,8 +2356,7 @@ const handleCopyLink = () => {
                         selectedCustomer
                       }
                     />
-                  ) : (
-                    <div className="flex h-full min-h-[400px] items-center justify-center text-center">
+                  ) : (    <div className="flex h-full min-h-[400px] items-center justify-center text-center">
 
                       <div>
 
@@ -2361,33 +2415,53 @@ const handleCopyLink = () => {
 
                 </div>
 
-                {business.paystackSubaccountCode ? (
+                {business.paystackSubaccountCode && !editingPayout ? (
                   <div className="mt-8 rounded-2xl border border-green-200 bg-green-50 p-5">
 
-                    <div className="flex gap-3">
+                    <div className="flex items-start justify-between gap-4">
 
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-100 text-green-600">
-                        ✓
-                      </span>
+                      <div className="flex gap-3">
 
-                      <div>
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-100 text-green-600">
+                          ✓
+                        </span>
 
-                        <p className="font-semibold text-green-800">
-                          Payout account connected
-                        </p>
+                        <div>
 
-                        <p className="mt-1 text-sm text-green-700">
-                          {business.bankName} —{" "}
-                          {business.bankAccountName}
-                        </p>
+                          <p className="font-semibold text-green-800">
+                            Payout account connected
+                          </p>
+
+                          <p className="mt-1 text-sm text-green-700">
+                            {business.bankName} —{" "}
+                            {business.bankAccountName}
+                          </p>
+
+                        </div>
 
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPayoutForm({
+                            bankCode: business.bankCode || "",
+                            accountNumber: "",
+                          });
+                          setResolvedName(business.bankAccountName || "");
+                          setPayoutMessage("");
+                          setEditingPayout(true);
+                        }}
+                        className="shrink-0 rounded-xl border border-green-300 bg-white px-4 py-2 text-sm font-semibold text-green-700 transition hover:bg-green-50"
+                      >
+                        Change
+                      </button>
 
                     </div>
 
                   </div>
-                ) : (
-                  <div className="mt-8 space-y-5">
+                ) : (  <div className="mt-8 space-y-5">
+
 
                     <div>
 
@@ -2480,24 +2554,45 @@ const handleCopyLink = () => {
                       </div>
                     )}
 
-                    <button
-                      type="button"
-                      onClick={
-                        handleSavePayout
-                      }
-                      disabled={
-                        !resolvedName ||
-                        payoutSubmitting
-                      }
-                      className="w-full rounded-xl bg-[#242424] py-4 font-semibold text-white transition hover:bg-[#9D536D] disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {payoutSubmitting
-                        ? "Saving..."
-                        : "Save Payout Account"}
-                    </button>
+<div className="flex gap-3">
 
-                  </div>
-                )}
+<button
+  type="button"
+  onClick={
+    handleSavePayout
+  }
+  disabled={
+    !resolvedName ||
+    payoutSubmitting
+  }
+  className="flex-1 rounded-xl bg-[#242424] py-4 font-semibold text-white transition hover:bg-[#9D536D] disabled:cursor-not-allowed disabled:opacity-50"
+>
+  {payoutSubmitting
+    ? "Saving..."
+    : business.paystackSubaccountCode
+    ? "Save New Payout Details"
+    : "Save Payout Account"}
+</button>
+
+{business.paystackSubaccountCode && (
+  <button
+    type="button"
+    onClick={() => {
+      setEditingPayout(false);
+      setPayoutMessage("");
+      setResolvedName("");
+    }}
+    className="rounded-xl border border-[#E5E2DF] px-6 py-4 text-sm font-semibold text-[#242424] transition hover:bg-[#F5F4F2]"
+  >
+    Cancel
+  </button>
+)}
+
+</div>
+
+</div>
+)}
+
 
               </div>
 
@@ -2525,6 +2620,73 @@ const handleCopyLink = () => {
               <StaffManager
                 businesses={[business]}
               />
+            </div>
+          )}
+
+          {/* ==================================
+              ACCOUNT
+          ================================== */}
+
+          {activeSection === "account" && (
+            <div className="max-w-2xl space-y-6">
+
+              <div className="rounded-2xl border border-[#E5E2DF] bg-white p-6 shadow-sm sm:p-8">
+
+                <div className="flex items-start gap-4">
+
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#F3F1EF] text-[#242424]">
+                    ⚙
+                  </div>
+
+                  <div>
+
+                    <h2 className="text-xl font-bold text-[#242424]">
+                      Account Settings
+                    </h2>
+
+                    <p className="mt-1 text-sm leading-6 text-gray-500">
+                      Manage your login credentials and account security.
+                    </p>
+
+                  </div>
+
+                </div>
+
+                <div className="mt-8 border-t border-[#ECE9E6] pt-6">
+
+                  <h3 className="font-semibold text-[#242424]">
+                    Password
+                  </h3>
+
+                  <p className="mt-1 text-sm leading-6 text-gray-500">
+                    For your security, password changes are done through a reset link sent to your registered email — you won't set a new password directly here.
+                  </p>
+
+                  {passwordResetMessage && (
+                    <div
+                      className={`mt-4 rounded-xl p-4 text-sm leading-6 ${
+                        passwordResetMessage.includes("sent")
+                          ? "bg-green-50 text-green-700"
+                          : "bg-red-50 text-red-600"
+                      }`}
+                    >
+                      {passwordResetMessage}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleRequestPasswordReset}
+                    disabled={passwordResetSending}
+                    className="mt-5 rounded-xl bg-[#242424] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#9D536D] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {passwordResetSending ? "Sending..." : "Send Password Reset Link"}
+                  </button>
+
+                </div>
+
+              </div>
+
             </div>
           )}
 

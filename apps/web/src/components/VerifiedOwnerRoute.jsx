@@ -12,7 +12,7 @@ function VerifiedOwnerRoute() {
   if (user.role === "admin") {
     return <Outlet />;
   }
-
+ 
   if (user.role !== "business") {
     return <Navigate to="/dashboard" replace />;
   }

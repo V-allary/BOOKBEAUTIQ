@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../config";
 
@@ -66,6 +66,122 @@ function BusinessOnboarding() {
 
   const [workImages, setWorkImages] = useState([]);
   const [workPreviews, setWorkPreviews] = useState([]);
+
+  // ==========================================
+  // WORKPLACE VERIFICATION PHOTO
+  // Private — only admin sees this, never shown to customers.
+  // ==========================================
+
+  const [workplaceFile, setWorkplaceFile] = useState(null);
+  const [workplacePreview, setWorkplacePreview] = useState("");
+
+  const handleWorkplaceChange = (e) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setError("Please select a valid photo.");
+      return;
+    }
+
+    setWorkplaceFile(file);
+    setWorkplacePreview(URL.createObjectURL(file));
+    setError("");
+
+    e.target.value = "";
+  };
+
+  // ==========================================
+  // PAYOUT
+  // ==========================================
+
+  const [banks, setBanks] = useState([]);
+  const [payoutForm, setPayoutForm] = useState({
+    bankCode: "",
+    accountNumber: "",
+  });
+  const [resolvedName, setResolvedName] = useState("");
+  const [payoutMessage, setPayoutMessage] = useState("");
+  const [payoutSaved, setPayoutSaved] = useState(false);
+
+  useEffect(() => {
+    const fetchBanks = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/payouts/banks`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (response.ok) setBanks(data);
+      } catch (err) {
+        console.error("Error loading banks:", err);
+      }
+    };
+
+    fetchBanks();
+  }, []);
+
+  const handleResolveAccount = async () => {
+    setPayoutMessage("");
+
+    try {
+      const response = await fetch(`${API_URL}/api/payouts/verify-account`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payoutForm),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Could not verify that account.");
+      }
+
+      setResolvedName(data.account_name);
+    } catch (err) {
+      setPayoutMessage(err.message);
+    }
+  };
+
+  const handleSavePayout = async () => {
+    setSubmitting(true);
+    setPayoutMessage("");
+
+    try {
+      const bank = banks.find((b) => b.code === payoutForm.bankCode);
+
+      const response = await fetch(`${API_URL}/api/payouts/setup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          businessId,
+          bankCode: payoutForm.bankCode,
+          bankName: bank?.name || "",
+          accountNumber: payoutForm.accountNumber,
+          accountName: resolvedName,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to save payout account.");
+      }
+
+      setPayoutSaved(true);
+      setPayoutMessage("Payout account linked successfully.");
+    } catch (err) {
+      setPayoutMessage(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // ==========================================
   // SERVICES
@@ -230,6 +346,7 @@ function BusinessOnboarding() {
         }
       }
 
+
       setStep(2);
     } catch (err) {
       setError(err.message);
@@ -320,7 +437,7 @@ function BusinessOnboarding() {
   };
 
   // ==========================================
-  // SAVE BUSINESS PHOTOS
+  // SAVE BUSINESS PHOTOS (+ workplace photo)
   // ==========================================
 
   const handlePhotosSubmit = async () => {
@@ -329,11 +446,17 @@ function BusinessOnboarding() {
 
     try {
       let coverUrl = "";
+      let workplaceUrl = "";
       const galleryUrls = [];
 
       // Upload cover
       if (coverFile) {
         coverUrl = await uploadImage(coverFile);
+      }
+
+      // Upload workplace verification photo
+      if (workplaceFile) {
+        workplaceUrl = await uploadImage(workplaceFile);
       }
 
       // Upload work images
@@ -345,6 +468,7 @@ function BusinessOnboarding() {
       // Save to business
       if (
         coverUrl ||
+        workplaceUrl ||
         galleryUrls.length > 0
       ) {
         const response = await fetch(
@@ -358,6 +482,10 @@ function BusinessOnboarding() {
             body: JSON.stringify({
               ...(coverUrl
                 ? { image: coverUrl }
+                : {}),
+
+              ...(workplaceUrl
+                ? { workplacePhoto: workplaceUrl }
                 : {}),
 
               ...(galleryUrls.length
@@ -447,7 +575,7 @@ function BusinessOnboarding() {
       }
 
       if (selectedPlan === "team") {
-        setStep(4);
+        setStep(5);
       } else {
         navigate("/dashboard");
       }
@@ -506,7 +634,6 @@ function BusinessOnboarding() {
       );
       return;
     }
-
     const updated = [...staff];
 
     updated[index].imageFile = file;
@@ -582,8 +709,8 @@ function BusinessOnboarding() {
   // ==========================================
 
   const steps = selectedPlan === "team"
-    ? ["Business Info", "Photos", "Services", "Team"]
-    : ["Business Info", "Photos", "Services"];
+    ? ["Business Info", "Photos", "Payout", "Services", "Team"]
+    : ["Business Info", "Photos", "Payout", "Services"];
 
   return (
     <div className="min-h-screen bg-[#F5F5F4] px-4 py-8 text-[#202124] sm:px-6 sm:py-12">
@@ -612,7 +739,6 @@ function BusinessOnboarding() {
         {/* ======================================
             PROGRESS
         ====================================== */}
-
         <div className="mb-8 flex items-center">
 
           {steps.map((label, i) => {
@@ -690,12 +816,15 @@ function BusinessOnboarding() {
                 "Tell customers about your business and add your profile photo."}
 
               {step === 2 &&
-                "Add your business cover and showcase your best work."}
+                "Add your business cover, showcase your best work, and verify your workplace."}
 
               {step === 3 &&
-                "Add the services customers can book."}
+                "Where should we send your booking deposits?"}
 
               {step === 4 &&
+                "Add the services customers can book."}
+
+              {step === 5 &&
                 "Introduce the professionals working at your business."}
             </p>
 
@@ -926,7 +1055,6 @@ function BusinessOnboarding() {
 <p className="mb-4 text-sm font-semibold text-[#242424]">
   Business Hours
 </p>
-
 <p className="mb-4 text-xs text-[#777472]">
   This determines the exact times customers can book — it can be changed anytime later from your dashboard.
 </p>
@@ -1010,7 +1138,7 @@ function BusinessOnboarding() {
           )}
 
           {/* ======================================
-              STEP 2 — PHOTOS
+              STEP 2 — PHOTOS + WORKPLACE VERIFICATION
           ====================================== */}
 
           {step === 2 && (
@@ -1150,8 +1278,59 @@ function BusinessOnboarding() {
 
                     </label>
                   )}
-
                 </div>
+
+              </div>
+
+              {/* WORKPLACE VERIFICATION PHOTO */}
+
+              <div className="rounded-2xl border border-[#E5E2DF] bg-[#FAFAF9] p-5">
+
+                <h2 className="font-bold">
+                  Verify your workplace
+                </h2>
+
+                <p className="mt-1 text-sm leading-5 text-[#777472]">
+                  Take or upload a real photo of your workplace — your salon,
+                  chair, or workstation. This is private and only reviewed by
+                  our team to confirm you have a real business location; it's
+                  never shown to customers.
+                </p>
+
+                <label className="group relative mt-4 block cursor-pointer overflow-hidden rounded-2xl border border-dashed border-[#D4D0CD] bg-white">
+
+                  {workplacePreview ? (
+                    <img
+                      src={workplacePreview}
+                      alt="Workplace preview"
+                      className="h-48 w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-48 flex-col items-center justify-center">
+
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#ECEAE8] text-lg">
+                        📷
+                      </div>
+
+                      <p className="mt-3 text-sm font-semibold">
+                        Add a photo of your workplace
+                      </p>
+
+                      <p className="mt-1 text-xs text-[#999]">
+                        Required before your business can be approved
+                      </p>
+
+                    </div>
+                  )}
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleWorkplaceChange}
+                    className="hidden"
+                  />
+
+                </label>
 
               </div>
 
@@ -1186,10 +1365,113 @@ function BusinessOnboarding() {
           )}
 
           {/* ======================================
-              STEP 3 — SERVICES
+              STEP 3 — PAYOUT
           ====================================== */}
 
           {step === 3 && (
+            <div className="space-y-6">
+
+              <div className="rounded-2xl border border-[#E5E2DF] bg-[#FAFAF9] p-5">
+                <p className="text-sm leading-6 text-[#777472]">
+                  This is the bank or M-Pesa account where customers'
+                  booking deposits are sent — automatically and directly,
+                  every time someone books. BookBeautiq never holds your
+                  money. This must be set up before your business can be
+                  approved and go live, but you're free to skip it now and
+                  add it later from your dashboard.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+
+                <select
+                  value={payoutForm.bankCode}
+                  onChange={(e) =>
+                    setPayoutForm({ ...payoutForm, bankCode: e.target.value })
+                  }
+                  className={`${inputClass} cursor-pointer`}
+                >
+                  <option value="">Select your bank</option>
+                  {banks.map((bank) => (
+                    <option key={bank.code} value={bank.code}>
+                      {bank.name}
+                    </option>
+                  ))}
+                </select>
+
+                <input
+                  type="text"
+                  placeholder="Account Number"
+                  value={payoutForm.accountNumber}
+                  onChange={(e) =>
+                    setPayoutForm({ ...payoutForm, accountNumber: e.target.value })
+                  }
+                  className={inputClass}
+                />
+
+                <button
+                  type="button"
+                  onClick={handleResolveAccount}
+                  className="rounded-xl border border-[#242424] px-5 py-3 text-sm font-semibold text-[#242424] transition hover:bg-[#F5F4F2]"
+                >
+                  Verify Account
+                </button>
+
+                {resolvedName && (
+                  <div className="rounded-xl bg-[#F5F4F2] p-4 text-sm">
+                    <span className="text-gray-500">Account Name</span>
+                    <p className="mt-1 font-semibold text-[#242424]">{resolvedName}</p>
+                  </div>
+                )}
+
+                {payoutMessage && (
+                  <div
+                    className={`rounded-xl p-4 text-sm ${
+                      payoutMessage.includes("successfully")
+                        ? "bg-green-50 text-green-700"
+                        : "bg-red-50 text-red-600"
+                    }`}
+                  >
+                    {payoutMessage}
+                  </div>
+                )}
+
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+
+                <button
+                  type="button"
+                  onClick={() => setStep(4)}
+                  className="flex-1 rounded-xl border border-[#D9D5D2] py-4 text-sm font-semibold text-[#666] transition hover:bg-[#F6F5F4]"
+                >
+                  Skip for now
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!payoutSaved) {
+                      await handleSavePayout();
+                    }
+                    setStep(4);
+                  }}
+                  disabled={!resolvedName || submitting}
+                  className="flex-1 rounded-xl bg-[#242424] py-4 text-sm font-bold text-white transition hover:bg-[#B96882] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {submitting ? "Saving..." : "Save & Continue"}
+                </button>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* ======================================
+              STEP 4 — SERVICES
+          ====================================== */}
+
+          {step === 4 && (
             <div className="space-y-6">
 
               {services.map(
@@ -1229,7 +1511,6 @@ function BusinessOnboarding() {
                         }
                         className={inputClass}
                       />
-
                       <input
                         placeholder="Price"
                         type="number"
@@ -1277,7 +1558,7 @@ function BusinessOnboarding() {
 
                 <button
                   type="button"
-                  onClick={() => (selectedPlan === "team" ? setStep(4) : navigate("/dashboard"))}
+                  onClick={() => (selectedPlan === "team" ? setStep(5) : navigate("/dashboard"))}
                   className="flex-1 rounded-xl border border-[#D9D5D2] py-4 font-semibold text-[#666]"
                 >
                   Skip for now
@@ -1302,12 +1583,11 @@ function BusinessOnboarding() {
 
             </div>
           )}
-
           {/* ======================================
-              STEP 4 — TEAM
+              STEP 5 — TEAM
           ====================================== */}
 
-          {step === 4 && selectedPlan === "team" && (
+          {step === 5 && selectedPlan === "team" && (
             <div className="space-y-6">
 
               <div className="rounded-2xl bg-[#F5F4F3] p-4">

@@ -12,6 +12,8 @@ function BusinessDetailModal({ business, onClose, onApprove, onReject, processin
     ? `${API_URL}${business.image}`
     : business.image;
 
+  const canApprove = !!business.paystackSubaccountCode && !!business.workplacePhoto;
+
   const statusStyles = {
     approved: "bg-green-50 text-green-700",
     rejected: "bg-red-50 text-red-700",
@@ -120,6 +122,7 @@ function BusinessDetailModal({ business, onClose, onApprove, onReject, processin
                 </div>
               </div>
             ) : (
+           
               <p className="text-sm text-gray-400">Owner information unavailable.</p>
             )}
           </div>
@@ -182,8 +185,22 @@ function BusinessDetailModal({ business, onClose, onApprove, onReject, processin
                     )}
                   </div>
                 </div>
-              </div>
-            ) : (
+
+                <div>
+                  <p className="mb-2 text-xs text-gray-400">Workplace Photo</p>
+                  {business.workplacePhoto ? (
+                    <div className="overflow-hidden rounded-xl border border-[#E5E2DF]">
+                      <img
+                        src={documentUrl(business.workplacePhoto)}
+                        alt="Workplace verification"
+                        className="max-h-80 w-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400">Not submitted</p>
+                  )}
+                </div>
+              </div>   ) : (
               <p className="text-sm text-gray-400">No verification data available.</p>
             )}
           </div>
@@ -195,8 +212,8 @@ function BusinessDetailModal({ business, onClose, onApprove, onReject, processin
           <div className="flex gap-3 border-t border-[#E5E2DF] px-6 py-5 sm:px-8">
             <button
               onClick={() => onApprove(business._id)}
-              disabled={processing || !business.paystackSubaccountCode}
-              title={!business.paystackSubaccountCode ? "This business must link a payout account before it can be approved." : ""}
+              disabled={processing || !canApprove}
+              title={!canApprove ? "This business must link a payout account and upload a workplace photo before it can be approved." : ""}
               className="flex-1 rounded-xl bg-green-600 px-6 py-3 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {processing ? "Processing..." : "✓ Approve Business"}

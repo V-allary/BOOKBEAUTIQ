@@ -4,8 +4,16 @@ import ChatWidget from "../components/ChatWidget";
 import { API_URL } from "../config";
 
 function ClientDashboard() {
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const token = localStorage.getItem("token");
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/signin");
+  };
+
 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -165,20 +173,33 @@ function ClientDashboard() {
             </p>
 
           </div>
+          <div className="flex items-center gap-2">
 
-          <button
-            type="button"
-            onClick={() => setActiveSection("overview")}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#242424] font-bold text-white"
-          >
-            {user?.firstName
-              ?.charAt(0)
-              ?.toUpperCase() || "C"}
-          </button>
+<button
+  type="button"
+  onClick={() => setActiveSection("overview")}
+  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#242424] font-bold text-white"
+>
+  {user?.firstName
+    ?.charAt(0)
+    ?.toUpperCase() || "C"}
+</button>
 
-        </div>
+<button
+  type="button"
+  onClick={handleLogout}
+  aria-label="Log out"
+  className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E5E2DF] text-red-500 transition hover:bg-red-50"
+>
+  ⏻
+</button>
 
-      </div>
+</div>
+
+</div>
+
+</div>
+
 
       <div className="mx-auto flex max-w-[1500px]">
 
@@ -283,21 +304,31 @@ function ClientDashboard() {
 
           </div>
 
-          {/* BOTTOM */}
+                    {/* BOTTOM */}
 
-          <div className="mt-auto pt-10">
+                    <div className="mt-auto space-y-1 pt-10">
 
-            <Link
-              to="/"
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-gray-500 transition hover:bg-[#F5F4F2] hover:text-[#242424]"
-            >
-              <span>←</span>
-              Back to BookBeautiq
-            </Link>
+<Link
+  to="/"
+  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-gray-500 transition hover:bg-[#F5F4F2] hover:text-[#242424]"
+>
+  <span>←</span>
+  Back to BookBeautiq
+</Link>
 
-          </div>
+<button
+  type="button"
+  onClick={handleLogout}
+  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-red-500 transition hover:bg-red-50"
+>
+  <span>⏻</span>
+  Log Out
+</button>
 
-        </aside>
+</div>
+
+</aside>
+
 
         {/* ====================================
             MAIN CONTENT

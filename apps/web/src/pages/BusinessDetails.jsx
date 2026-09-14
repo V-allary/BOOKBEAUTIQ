@@ -9,7 +9,8 @@ import BookingSummary from "../components/booking/BookingSummary";
 import { API_URL } from "../config";
 
 function BusinessDetails() {
-  const { id } = useParams();
+  const { id, slug } = useParams();
+  const identifier = slug || id;
   const navigate = useNavigate();
 
   const [business, setBusiness] = useState(null);
@@ -44,7 +45,7 @@ function BusinessDetails() {
     const fetchBusiness = async () => {
       try {
         const response = await fetch(
-          `${API_URL}/api/businesses/${id}`
+          `${API_URL}/api/businesses/${identifier}`
         );
 
         const data = await response.json();
@@ -71,23 +72,22 @@ function BusinessDetails() {
     };
 
     fetchBusiness();
-  }, [id]);
+  }, [identifier]);
 
   /* =====================================================
       FETCH SERVICES & STAFF
-  ===================================================== */
-
+  ===================================================== */ 
   useEffect(() => {
-    if (!id) return;
+    if (!business?._id) return;
 
     const fetchServicesAndStaff = async () => {
       try {
         const [servicesRes, staffRes] = await Promise.all([
           fetch(
-            `${API_URL}/api/services?businessId=${id}`
+            `${API_URL}/api/services?businessId=${business._id}`
           ),
           fetch(
-            `${API_URL}/api/staff?businessId=${id}`
+            `${API_URL}/api/staff?businessId=${business._id}`
           ),
         ]);
 
@@ -104,17 +104,17 @@ function BusinessDetails() {
     };
 
     fetchServicesAndStaff();
-  }, [id]);
+  }, [business?._id]);
 
   /* =====================================================
       FETCH REVIEWS
   ===================================================== */
 
   useEffect(() => {
-    if (!id) return;
+    if (!business?._id) return;
 
     fetch(
-      `${API_URL}/api/reviews/business/${id}`
+      `${API_URL}/api/reviews/business/${business._id}`
     )
       .then((res) => res.json())
       .then(setReviews)
@@ -124,7 +124,7 @@ function BusinessDetails() {
           err
         )
       );
-  }, [id]);
+  }, [business?._id]);
 
   /* =====================================================
       CHECKOUT
@@ -240,7 +240,7 @@ function BusinessDetails() {
 
   /* =====================================================
       PREPARE DATA
-  ===================================================== */
+===================================================== */
 
   const coverUrl = business.image
     ? getImageUrl(business.image)
@@ -370,7 +370,6 @@ function BusinessDetails() {
 
             </div>
 
-
             {/* ================= BUSINESS INFORMATION ================= */}
 
             <div className="mt-6 rounded-2xl border border-[#E5E2DF] bg-white p-5 shadow-sm sm:mt-8 sm:p-8">
@@ -424,6 +423,57 @@ function BusinessDetails() {
             </div>
 
 
+            {/* ================= CONTACT INFORMATION ================= */}
+
+            {(business.phone || business.email) && (
+              <div className="mt-6 rounded-2xl border border-[#E5E2DF] bg-white p-5 shadow-sm sm:mt-8 sm:p-8">
+
+                <h2 className="mb-6 text-2xl font-bold text-[#242424]">
+                  Contact Information
+                </h2>
+
+                <div className="space-y-4">
+
+                  {business.phone && (
+                    <div className="flex flex-col gap-1 border-b border-[#E5E2DF] pb-4 last:border-b-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+
+                      <span className="text-gray-500">
+                        Phone
+                      </span>
+
+                      <a
+                        href={`tel:${business.phone}`}
+                        className="font-semibold text-[#242424] transition hover:text-[#B96882]"
+                      >
+                        {business.phone}
+                      </a>
+
+                    </div>
+                  )}
+
+                  {business.email && (
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+
+                      <span className="text-gray-500">
+                        Email
+                      </span>
+
+                      <a
+                        href={`mailto:${business.email}`}
+                        className="font-semibold text-[#242424] transition hover:text-[#B96882]"
+                      >
+                        {business.email}
+                      </a>
+
+                    </div>
+                  )}
+
+                </div>
+
+              </div>
+            )}
+
+
             {/* ================= SERVICES ================= */}
 
             <div className="mt-6 rounded-2xl border border-[#E5E2DF] bg-white p-5 shadow-sm sm:mt-8 sm:p-8">
@@ -447,7 +497,6 @@ function BusinessDetails() {
         key={s._id}
         className="flex items-center justify-between gap-4 border-b border-[#E5E2DF] pb-4 last:border-b-0"
       >
-
         <div className="flex items-center gap-3">
           <span className="font-semibold text-[#242424]">
             {s.name}
@@ -501,7 +550,7 @@ function BusinessDetails() {
               {/* Booking Card */}
 
               <BookingCard
-                businessId={id}
+                businessId={business._id}
                 services={services}
                 staff={staff}
 
@@ -537,7 +586,6 @@ function BusinessDetails() {
               </div>
 
             </div>
-
 
             {/* =====================================================
                 SEE OUR WORK
@@ -738,7 +786,6 @@ function BusinessDetails() {
 
                             </div>
 
-
                             {/* Gallery */}
 
                             {galleryUrls.length > 0 ? (
@@ -808,7 +855,6 @@ function BusinessDetails() {
                           </div>
 
                         )}
-
 
                         {/* TIKTOK */}
 
@@ -899,7 +945,6 @@ function BusinessDetails() {
                       </div>
 
                     </div>
-
                   </div>
 
                 )}

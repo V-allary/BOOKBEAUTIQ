@@ -26,8 +26,7 @@ export const verifyBankAccount = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
-
-// Create/link the business's payout subaccount
+ 
 export const setupPayoutAccount = async (req, res) => {
   try {
     const { businessId, bankCode, bankName, accountNumber, accountName } = req.body;
@@ -40,21 +39,43 @@ export const setupPayoutAccount = async (req, res) => {
       return res.status(403).json({ message: "You can only manage your own business's payout account." });
     }
 
-    const subaccount = await paystackRequest("/subaccount", "POST", {
-      business_name: business.name,
-      settlement_bank: bankCode,
-      account_number: accountNumber,
-      percentage_charge: 10, // platform's cut % — adjust to your model
-    });
+    let subaccount;
 
-    business.paystackSubaccountCode = subaccount.subaccount_code;
+    if (business.paystackSubaccountCode) {
+      // Already has one — update it in place, don't create a duplicate.
+      subaccount = await paystackRequest(
+        `/subaccount/${business.paystackSubaccountCode}`,
+        "PUT",
+        {
+          business_name: business.name,
+          settlement_bank: bankCode,
+          account_number: accountNumber,
+        }
+      );
+    } else {
+      // First time setting up payouts for this business.
+      subaccount = await paystackRequest("/subaccount", "POST", {
+        business_name: business.name,
+        settlement_bank: bankCode,
+        account_number: accountNumber,
+        percentage_charge: 0, 
+      });
+    }
+
+    business.paystackSubaccountCode = subaccount.subaccount_code || business.paystackSubaccountCode;
+    business.bankCode = bankCode;
     business.bankName = bankName;
     business.bankAccountNumber = accountNumber.slice(-4).padStart(accountNumber.length, "*"); // store masked
     business.bankAccountName = accountName;
 
     await business.save();
 
-    res.status(200).json({ message: "Payout account linked successfully.", business });
+    res.status(200).json({
+      message: business.paystackSubaccountCode
+        ? "Payout account updated successfully."
+        : "Payout account linked successfully.",
+      business,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

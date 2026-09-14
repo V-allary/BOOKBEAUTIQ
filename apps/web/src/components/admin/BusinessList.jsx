@@ -76,7 +76,6 @@ function BusinessList({ businesses: businessesProp, fetchBusinesses: fetchBusine
     rejected: "bg-red-100 text-red-700",
     pending: "bg-yellow-100 text-yellow-700",
   };
-
   return (
     <div className="mt-12 rounded-3xl bg-white p-8 shadow-lg">
 
@@ -89,96 +88,118 @@ function BusinessList({ businesses: businessesProp, fetchBusinesses: fetchBusine
       ) : (
         <div className="space-y-4">
 
-          {businessList.map((business) => (
+          {businessList.map((business) => {
+            const missingPayout = !business.paystackSubaccountCode;
+            const missingWorkplacePhoto = !business.workplacePhoto;
+            const canApprove = !missingPayout && !missingWorkplacePhoto;
 
-            <div
-              key={business._id}
-              className="rounded-2xl border border-[#ECE0E4] p-5 transition hover:border-[#D9C3CE]"
-            >
+            let approvalWarning = "";
+            if (missingPayout && missingWorkplacePhoto) {
+              approvalWarning = "This business hasn't linked a payout account or uploaded a workplace photo yet.";
+            } else if (missingPayout) {
+              approvalWarning = "This business hasn't linked a payout account yet.";
+            } else if (missingWorkplacePhoto) {
+              approvalWarning = "This business hasn't uploaded a workplace photo yet.";
+            }
 
-              <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            return (
+              <div
+                key={business._id}
+                className="rounded-2xl border border-[#ECE0E4] p-5 transition hover:border-[#D9C3CE]"
+              >
 
-                <div className="flex min-w-0 items-center gap-4">
+                <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
 
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#F3F1EF] font-bold text-[#242424]">
-                    {business.image ? (
-                      <img
-                        src={imageUrl(business.image)}
-                        alt={business.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      business.name?.charAt(0)?.toUpperCase() || "B"
-                    )}
-                  </div>
+                  <div className="flex min-w-0 items-center gap-4">
 
-                  <div className="min-w-0">
-                    <h3 className="truncate text-lg font-bold text-[#242424]">
-                      {business.name}
-                    </h3>
-
-                    <p className="truncate text-sm text-gray-500">
-                      {business.owner?.email || "No owner email"}
-                    </p>
-
-                    <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${statusStyles[business.status] || statusStyles.pending}`}>
-                        {business.status || "pending"}
-                      </span>
-
-                      {business.status === "pending" && !business.paystackSubaccountCode && (
-                        <span className="rounded-full bg-yellow-50 px-2.5 py-0.5 text-[11px] font-semibold text-yellow-700">
-                          ⚠ No payout account
-                        </span>
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#F3F1EF] font-bold text-[#242424]">
+                      {business.image ? (
+                        <img
+                          src={imageUrl(business.image)}
+                          alt={business.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        business.name?.charAt(0)?.toUpperCase() || "B"
                       )}
                     </div>
+
+                    <div className="min-w-0">
+                      <h3 className="truncate text-lg font-bold text-[#242424]">
+                        {business.name}
+                      </h3>
+
+                      <p className="truncate text-sm text-gray-500">
+                        {business.owner?.email || "No owner email"}
+                      </p>
+
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${statusStyles[business.status] || statusStyles.pending}`}>
+                          {business.status || "pending"}
+                        </span>
+
+                        {business.status === "pending" && !canApprove && (
+                          <span className="rounded-full bg-yellow-50 px-2.5 py-0.5 text-[11px] font-semibold text-yellow-700">
+                            ⚠ Incomplete
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+
+                    <button
+                      onClick={() => setSelectedBusiness(business)}
+                      className="rounded-xl border border-[#E5E2DF] px-5 py-2 font-semibold text-[#242424] transition hover:border-[#B96882] hover:text-[#B96882]"
+                    >
+                      View Details
+                    </button>
+
+                    {business.status === "pending" && (
+                      <>
+                        <button
+                          onClick={() => updateStatus(business._id, "approved")}
+                          disabled={!canApprove}
+                          title={!canApprove ? "This business must link a payout account and upload a workplace photo before it can be approved." : ""}
+                          className="rounded-xl bg-green-500 px-5 py-2 font-semibold text-white transition hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Approve
+                        </button>
+
+                        <button
+                          onClick={() => updateStatus(business._id, "rejected")}
+                          className="rounded-xl bg-[#242424] px-5 py-2 font-semibold text-white transition hover:bg-[#B96882]"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+
+                    <button
+                      onClick={() => deleteBusiness(business._id)}
+                      className="rounded-xl bg-red-500 px-5 py-2 font-semibold text-white transition hover:bg-red-600"
+                    >
+                      Delete
+                    </button>
+
                   </div>
 
                 </div>
 
-                <div className="flex flex-wrap gap-3">
-
-                  <button
-                    onClick={() => setSelectedBusiness(business)}
-                    className="rounded-xl border border-[#E5E2DF] px-5 py-2 font-semibold text-[#242424] transition hover:border-[#B96882] hover:text-[#B96882]"
-                  >
-                    View Details
-                  </button>
-
-                  {business.status === "pending" && (
-                    <>
-                      <button
-                        onClick={() => updateStatus(business._id, "approved")}
-                        disabled={!business.paystackSubaccountCode}
-                        title={!business.paystackSubaccountCode ? "This business must link a payout account before it can be approved." : ""}
-                        className="rounded-xl bg-green-500 px-5 py-2 font-semibold text-white transition hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        Approve
-                      </button>
-
-                      <button
-                        onClick={() => updateStatus(business._id, "rejected")}
-                        className="rounded-xl bg-[#242424] px-5 py-2 font-semibold text-white transition hover:bg-[#B96882]"
-                      >
-                        Reject
-                      </button>
-                    </>
-                  )}
-
-                  <button
-                    onClick={() => deleteBusiness(business._id)}
-                    className="rounded-xl bg-red-500 px-5 py-2 font-semibold text-white transition hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
-
-                </div>
+                {business.status === "pending" && !canApprove && (
+                  <div className="mt-3 flex items-start gap-2 rounded-xl border border-yellow-200 bg-yellow-50 px-3 py-2">
+                    <span className="mt-0.5 text-yellow-600">⚠</span>
+                    <p className="text-xs leading-5 text-yellow-700">
+                      {approvalWarning} Approval will be blocked until this is complete.
+                    </p>
+                  </div>
+                )}
 
               </div>
-
-            </div>
-
-          ))}
+            );
+          })}
 
         </div>
       )}

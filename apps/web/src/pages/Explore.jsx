@@ -741,12 +741,7 @@ function Explore() {
                         className="min-w-[82%] sm:min-w-[48%] lg:min-w-[calc(25%-18px)]"
                       >
 
-                        <BusinessCard
-                          business={{
-                            ...business,
-                            id: business._id,
-                          }}
-                        />
+<BusinessCard business={business} />
 
                       </div>
 

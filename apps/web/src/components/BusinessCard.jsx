@@ -12,7 +12,7 @@ function BusinessCard({ business }) {
 
   return (
     <Link
-      to={`/business/${business._id}`}
+      to={`/${business.slug || business._id}`}
       className="group block overflow-hidden rounded-[24px] border border-[#ECE9E6] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#D9B7C3] hover:shadow-[0_14px_40px_rgba(20,23,26,0.08)]"
     >
       {/* ==========================================
@@ -52,7 +52,10 @@ function BusinessCard({ business }) {
           </span>
         )}
 
-        {/* Verified */}
+        {/* Verified — note: every business reaching this card is already
+            guaranteed approved+verified by the backend query, so this
+            badge always renders. Kept as-is since it's harmless and
+            documents intent, but it's not actually filtering anything. */}
 
         {business.status === "approved" && (
           <span className="absolute right-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-green-700 shadow-sm backdrop-blur-sm">
@@ -60,8 +63,7 @@ function BusinessCard({ business }) {
           </span>
         )}
       </div>
-
-      {/* ==========================================
+  {/* ==========================================
           BUSINESS CONTENT
       ========================================== */}
 

@@ -22,6 +22,12 @@ const businessSchema = new mongoose.Schema(
       trim: true,
     },
 
+    slug: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+
     category: {
       type: String,
       required: true,
@@ -217,6 +223,16 @@ const businessSchema = new mongoose.Schema(
     lastBookingAt: {
       type: Date,
       default: null,
+    },
+
+    bankCode: {
+      type: String,
+      default: "",
+    },
+
+    workplacePhoto: {
+      type: String,
+      default: "",
     },
 
 

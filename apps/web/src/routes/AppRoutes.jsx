@@ -72,6 +72,8 @@ function AppRoutes() {
           <Route path="/admin" element={<Admin />} />
         </Route>
 
+        <Route path="/:slug" element={<BusinessDetails />} />
+
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
 

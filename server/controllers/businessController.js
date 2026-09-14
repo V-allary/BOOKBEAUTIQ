@@ -2,6 +2,16 @@ import Business from "../models/Business.js";
 import Service from "../models/Service.js";
 import User from "../models/User.js";
 import notify from "../utils/notify.js";
+import slugify from "slugify";
+
+// Route names that must never be given away as a business slug
+const RESERVED_SLUGS = [
+  "explore", "categories", "businesses", "signin", "signup",
+  "admin", "help", "privacy", "dashboard", "checkout", "profile",
+  "bookings", "onboarding", "verify-account", "forgot-password",
+  "reset-password", "payment", "subscription", "review", "business",
+  "api", "about", "contact", "careers", "blog", "terms", "cookies",
+];
 
 
 // ==========================================
@@ -177,13 +187,21 @@ export const searchBusinesses = async (req, res) => {
   }
 };
 
+// ==========================================
+// GET SINGLE BUSINESS
+// Accepts either a slug (e.g. "rico-nails") or a raw
+// MongoDB ObjectId, so old links using the ID still
+// work alongside new Instagram-style slug links.
+// ==========================================
 
 export const getBusinessById = async (req, res) => {
   try {
-    const business = await Business.findById(req.params.id).populate(
-      "owner",
-      "verificationStatus"
-    );
+    const identifier = req.params.id;
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(identifier);
+
+    const business = isValidObjectId
+      ? await Business.findById(identifier).populate("owner", "verificationStatus")
+      : await Business.findOne({ slug: identifier }).populate("owner", "verificationStatus");
 
     if (!business) {
       return res.status(404).json({ message: "Business not found." });
@@ -249,7 +267,6 @@ export const getBusinessForOwner = async (req, res) => {
 // Owner must already be a verified account
 // (enforced by requireVerifiedOwner middleware)
 // ==========================================
-
 export const createBusiness = async (req, res) => {
   try {
     const userId = getUserId(req);
@@ -270,6 +287,21 @@ export const createBusiness = async (req, res) => {
     const trialEndsAt = new Date();
     trialEndsAt.setDate(trialEndsAt.getDate() + 7);
 
+    // Generate a unique, Instagram-style URL slug from the business name
+    let baseSlug = slugify(req.body.name || "business", { lower: true, strict: true });
+
+    if (RESERVED_SLUGS.includes(baseSlug)) {
+      baseSlug = `${baseSlug}-salon`;
+    }
+
+    let slug = baseSlug;
+    let counter = 1;
+
+    while (await Business.findOne({ slug })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
     const business = await Business.create({
       ...req.body,
       owner: userId,
@@ -277,6 +309,7 @@ export const createBusiness = async (req, res) => {
       subscriptionPlan: req.body.subscriptionPlan === "team" ? "team" : "independent",
       subscriptionStatus: "trialing",
       trialEndsAt,
+      slug,
     });
 
     res.status(201).json({
@@ -357,6 +390,10 @@ export const updateBusiness = async (req, res) => {
     // Nobody can change the owner through this route.
     delete req.body.owner;
 
+    // Nobody can change the slug through this general update route
+    // (keeps links permanent and predictable).
+    delete req.body.slug;
+
     Object.assign(business, req.body);
 
     const updatedBusiness = await business.save();
@@ -380,12 +417,18 @@ export const approveBusiness = async (req, res) => {
     if (!business) {
       return res.status(404).json({ message: "Business not found." });
     }
-
     if (!business.paystackSubaccountCode) {
       return res.status(400).json({
         message: "This business must link a payout account (bank or M-Pesa) before it can be approved.",
       });
     }
+
+    if (!business.workplacePhoto) {
+      return res.status(400).json({
+        message: "This business must upload a photo of their workplace before it can be approved.",
+      });
+    }
+
 
     business.status = "approved";
 

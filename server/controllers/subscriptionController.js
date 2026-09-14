@@ -1,4 +1,4 @@
- import paystackRequest from "../utils/paystack.js";
+import paystackRequest from "../utils/paystack.js";
 import Business from "../models/Business.js";
 
 const PLAN_PRICES = {
@@ -24,6 +24,7 @@ export const initializeSubscriptionPayment = async (req, res) => {
       email: business.email || req.user.email,
       amount: amount * 100,
       currency: "KES",
+      channels: ["card", "mobile_money", "bank"], // guarantees M-Pesa/Airtel Money show as options
       callback_url: `${process.env.CLIENT_URL}/subscription/callback`,
       metadata: {
         businessId: business._id.toString(),
@@ -40,6 +41,7 @@ export const initializeSubscriptionPayment = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Verify subscription payment and reactivate the business
 export const verifySubscriptionPayment = async (req, res) => {
@@ -110,4 +112,31 @@ export const toggleAutoRenew = async (req, res) => {
   }
 };
 
+// Clears the saved payment method. The next payment will
+// prompt for a fresh card or mobile money option — this is
+// meant to be called immediately before opening a new checkout,
+// not as a standalone "delete and leave empty" action.
+export const removePaymentMethod = async (req, res) => {
+  try {
+    const business = await Business.findById(req.params.businessId);
+    if (!business) return res.status(404).json({ message: "Business not found." });
 
+    const isOwner = business.owner?.toString() === req.user.userId;
+    if (!isOwner && req.user.role !== "admin") {
+      return res.status(403).json({ message: "You can only manage your own business's subscription." });
+    }
+
+    business.paystackAuthorizationCode = "";
+    business.paystackCardLast4 = "";
+    business.paystackCardBrand = "";
+    business.autoRenew = false;
+    await business.save();
+
+    res.status(200).json({
+      message: "Payment method removed.",
+      business,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

@@ -120,11 +120,11 @@ function FeaturedProfessionals() {
       <article className="group relative min-w-[82%] overflow-hidden rounded-[24px] border border-[#ECE8EC] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(40,30,40,0.12)] sm:min-w-[48%] lg:min-w-[calc(25%-18px)]">
 
         {/* Image */}
-
         <Link
-          to={`/business/${business._id}`}
+          to={`/${business.slug || business._id}`}
           className="block"
         >
+
           <div className="relative h-56 overflow-hidden bg-[#F3EFEC] sm:h-60">
 
             {image ? (
@@ -163,12 +163,13 @@ function FeaturedProfessionals() {
 
           <div className="min-w-0">
 
-            <Link
-              to={`/business/${business._id}`}
+          <Link
+              to={`/${business.slug || business._id}`}
               className="block truncate text-lg font-bold text-[#171717] transition hover:text-[#B96882]"
             >
               {business.name}
             </Link>
+
 
             <p className="mt-1 truncate text-sm text-gray-500">
               {business.category ||
@@ -204,7 +205,7 @@ function FeaturedProfessionals() {
             </div>
 
             <Link
-              to={`/business/${business._id}`}
+              to={`/${business.slug || business._id}`}
               className="shrink-0 rounded-full bg-[#171717] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#B96882]"
             >
               View
