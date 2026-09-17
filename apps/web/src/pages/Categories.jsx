@@ -9,9 +9,9 @@ import bridalMakeupPhoto from "../assets/Categories Bridal.jpeg";
 import lashesPhoto from "../assets/Categories lashes.jpeg";
 import skincarePhoto from "../assets/rosa-rafael-Pe9IXUuC6QU-unsplash.jpg";
 import spaPhoto from "../assets/elias-kipfer-YhCdQGtQfk4-unsplash.jpg";
-import laserPhoto from "../assets/farhad-ibrahimzade-qualM4h-u5E-unsplash.jpg";
+import laserPhoto from "../assets/farhad-ibrahimzade-quaIM4h-u5E-unsplash.jpg";
 import tattooPhoto from "../assets/allef-vinicius-hxNiXP498UI-unsplash.jpg";
-import teethWhiteningPhoto from "../assets/shedrack-salami-CKOtmeNIGBM-unsplash.jpg";
+import teethWhiteningPhoto from "../assets/shedrack-salami-CKOtmeNlGBM-unsplash.jpg";
 import waxingPhoto from "../assets/grove-brands-lrW3m3p4mYQ-unsplash.jpg";
 
 function Categories() {
