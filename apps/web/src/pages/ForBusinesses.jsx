@@ -1,23 +1,35 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
+import hairPhoto from "../assets/mohamed-b-O1W2ZYGxFPA-unsplash.jpg";
+import barberPhoto from "../assets/Categories Barber.jpeg";
+import nailsPhoto from "../assets/IMG_4379.jpg";
+import bridalMakeupPhoto from "../assets/Categories Bridal.jpeg";
+import lashesPhoto from "../assets/Categories lashes.jpeg";
+import skincarePhoto from "../assets/rosa-rafael-Pe9IXUuC6QU-unsplash.jpg";
+import spaPhoto from "../assets/elias-kipfer-YhCdQGtQfk4-unsplash.jpg";
+import laserPhoto from "../assets/farhad-ibrahimzade-quaIM4h-u5E-unsplash.jpg";
+import tattooPhoto from "../assets/allef-vinicius-hxNiXP498UI-unsplash.jpg";
+import teethWhiteningPhoto from "../assets/shedrack-salami-CKOtmeNlGBM-unsplash.jpg";
+import waxingPhoto from "../assets/grove-brands-lrW3m3p4mYQ-unsplash.jpg";
+
 function ForBusinesses() {
   const [openMenu, setOpenMenu] = useState(null);
   const [mobileMenu, setMobileMenu] = useState(false);
 
   const businessTypes = [
-    "Salons",
-    "Barbers",
-    "Nail Artists",
-    "Spas",
-    "Makeup Artists",
-    "Lash & Brows Artists",
-    "Massage",
-    "Spa & Wellness",
-    "Laser Spa Studio",
-    "Tattoo & Piercing",
-    "Teeth Whitening",
-    "Waxing",
+    { name: "Salons", image: hairPhoto },
+    { name: "Barbers", image: barberPhoto },
+    { name: "Nail Artists", image: nailsPhoto },
+    { name: "Spas", image: spaPhoto },
+    { name: "Makeup Artists", image: bridalMakeupPhoto },
+    { name: "Lash & Brows Artists", image: lashesPhoto },
+    { name: "Massage", image: spaPhoto },
+    { name: "Spa & Wellness", image: skincarePhoto },
+    { name: "Laser Spa Studio", image: laserPhoto },
+    { name: "Tattoo & Piercing", image: tattooPhoto },
+    { name: "Teeth Whitening", image: teethWhiteningPhoto },
+    { name: "Waxing", image: waxingPhoto },
   ];
 
   const features = [
@@ -184,12 +196,12 @@ function ForBusinesses() {
                   <div className="space-y-1">
                     {businessTypes.map((type) => (
                       <a
-                        key={type}
+                        key={type.name}
                         href="#business-types"
                         onClick={() => setOpenMenu(null)}
                         className="block rounded-xl px-3 py-2.5 text-sm text-gray-600 transition hover:bg-[#FFF4F8] hover:text-[#B96882]"
                       >
-                        {type}
+                        {type.name}
                       </a>
                     ))}
                   </div>
@@ -415,8 +427,6 @@ function ForBusinesses() {
               </div>
 
             </div>
-
-
             {/* Dashboard Preview */}
 
             <div className="relative">
@@ -500,7 +510,6 @@ function ForBusinesses() {
                       </div>
 
                     </div>
-
                     {/* Calendar */}
 
                     <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
@@ -566,7 +575,6 @@ function ForBusinesses() {
 
       </section>
 
-
       {/* =====================================================
           BUSINESS TYPES
       ====================================================== */}
@@ -597,22 +605,26 @@ function ForBusinesses() {
 
           <div className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4">
 
-            {businessTypes.map((type, index) => (
+            {businessTypes.map((type) => (
               <div
-                key={type}
+                key={type.name}
                 className="group rounded-3xl border border-[#EEE7EA] bg-[#FFFCFD] p-6 transition duration-300 hover:-translate-y-1 hover:border-[#F0C9D9] hover:shadow-lg"
               >
 
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FFF1F6] text-sm font-bold text-[#B96882]">
-                  {String(index + 1).padStart(2, "0")}
+                <div className="h-11 w-11 overflow-hidden rounded-2xl">
+                  <img
+                    src={type.image}
+                    alt={type.name}
+                    className="h-full w-full object-cover"
+                  />
                 </div>
 
                 <h3 className="mt-5 font-bold text-[#1F2937]">
-                  {type}
+                  {type.name}
                 </h3>
 
                 <p className="mt-2 text-sm text-gray-500">
-                  Grow your {type.toLowerCase()} business.
+                  Grow your {type.name.toLowerCase()} business.
                 </p>
 
               </div>
@@ -661,8 +673,7 @@ function ForBusinesses() {
               </Link>
 
             </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
+   <div className="grid gap-4 sm:grid-cols-2">
 
               {features.map((feature, index) => (
                 <div
@@ -777,9 +788,7 @@ function ForBusinesses() {
             </p>
 
           </div>
-
-
-          {/* Pricing Cards */}
+  {/* Pricing Cards */}
 
           <div className="mt-14 grid gap-6 lg:grid-cols-3">
 
@@ -942,7 +951,6 @@ function ForBusinesses() {
         </div>
 
       </section>
-
       {/* =====================================================
           FINAL CTA
       ====================================================== */}
@@ -1000,7 +1008,7 @@ function ForBusinesses() {
             ©️ {new Date().getFullYear()} BookBeautiq. All rights reserved.
           </p>
 
-          <div className="flex gap-5 text-sm text-gray-500">
+  <div className="flex gap-5 text-sm text-gray-500">
             <Link
               to="/"
               className="transition hover:text-[#B96882]"
