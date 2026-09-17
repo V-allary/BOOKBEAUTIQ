@@ -1,49 +1,26 @@
 import { useNavigate } from "react-router-dom";
 
+import nairobiPhoto from "../assets/Nairobi.jpeg";
+import mombasaPhoto from "../assets/Mombasa.jpeg";
+import kisumuPhoto from "../assets/Kisumu.jpeg";
+import nakuruPhoto from "../assets/Nakuru.jpeg";
+import eldoretPhoto from "../assets/Eldoret.jpeg";
+import kampalaPhoto from "../assets/Kampala.jpeg";
+import kigaliPhoto from "../assets/Kigali.jpeg";
+import darEsSalaamPhoto from "../assets/Dar es salaam.jpeg";
+
 function PopularCities() {
   const navigate = useNavigate();
 
   const cities = [
-    {
-      name: "Nairobi",
-      country: "Kenya",
-      image: "https://source.unsplash.com/800x800/?nairobi,kenya,city",
-    },
-    {
-      name: "Mombasa",
-      country: "Kenya",
-      image: "https://source.unsplash.com/800x800/?mombasa,kenya,coast",
-    },
-    {
-      name: "Kisumu",
-      country: "Kenya",
-      image: "https://source.unsplash.com/800x800/?kisumu,kenya,lakevictoria",
-    },
-    {
-      name: "Nakuru",
-      country: "Kenya",
-      image: "https://source.unsplash.com/800x800/?nakuru,kenya",
-    },
-    {
-      name: "Eldoret",
-      country: "Kenya",
-      image: "https://source.unsplash.com/800x800/?eldoret,kenya",
-    },
-    {
-      name: "Kampala",
-      country: "Uganda",
-      image: "https://source.unsplash.com/800x800/?kampala,uganda,city",
-    },
-    {
-      name: "Kigali",
-      country: "Rwanda",
-      image: "https://source.unsplash.com/800x800/?kigali,rwanda,city",
-    },
-    {
-      name: "Dar es Salaam",
-      country: "Tanzania",
-      image: "https://source.unsplash.com/800x800/?daressalaam,tanzania,city",
-    },
+    { name: "Nairobi", country: "Kenya", image: nairobiPhoto },
+    { name: "Mombasa", country: "Kenya", image: mombasaPhoto },
+    { name: "Kisumu", country: "Kenya", image: kisumuPhoto },
+    { name: "Nakuru", country: "Kenya", image: nakuruPhoto },
+    { name: "Eldoret", country: "Kenya", image: eldoretPhoto },
+    { name: "Kampala", country: "Uganda", image: kampalaPhoto },
+    { name: "Kigali", country: "Rwanda", image: kigaliPhoto },
+    { name: "Dar es Salaam", country: "Tanzania", image: darEsSalaamPhoto },
   ];
 
   const handleCityClick = (cityName) => {
