@@ -2,56 +2,32 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
+import hairPhoto from "../assets/mohamed-b-O1W2ZYGxFPA-unsplash.jpg";
+import barberPhoto from "../assets/Categories Barber.jpeg";
+import nailsPhoto from "../assets/IMG_4379.jpg";
+import bridalMakeupPhoto from "../assets/Categories Bridal.jpeg";
+import lashesPhoto from "../assets/Categories lashes.jpeg";
+import skincarePhoto from "../assets/rosa-rafael-Pe9IXUuC6QU-unsplash.jpg";
+import spaPhoto from "../assets/elias-kipfer-YhCdQGtQfk4-unsplash.jpg";
+import laserPhoto from "../assets/farhad-ibrahimzade-qualM4h-u5E-unsplash.jpg";
+import tattooPhoto from "../assets/allef-vinicius-hxNiXP498UI-unsplash.jpg";
+import teethWhiteningPhoto from "../assets/shedrack-salami-CKOtmeNIGBM-unsplash.jpg";
+import waxingPhoto from "../assets/grove-brands-lrW3m3p4mYQ-unsplash.jpg";
+
 function Categories() {
   const categories = [
-    {
-      name: "Hair",
-      image: "https://source.unsplash.com/900x900/?african,braids,hairsalon",
-    },
-    {
-      name: "Barber",
-      image: "https://source.unsplash.com/900x900/?african,barber,fade",
-    },
-    {
-      name: "Nails",
-      image: "https://source.unsplash.com/900x900/?african,manicure,nails",
-    },
-    {
-      name: "Makeup",
-      image: "https://source.unsplash.com/900x900/?african,makeup,beauty",
-    },
-    {
-      name: "Lashes & Brows",
-      image: "https://source.unsplash.com/900x900/?african,eyelash,extensions",
-    },
-    {
-      name: "Skincare",
-      image: "https://source.unsplash.com/900x900/?african,facial,skincare",
-    },
-    {
-      name: "Spa & Wellness",
-      image: "https://source.unsplash.com/900x900/?african,massage,spa",
-    },
-    {
-      name: "Bridal",
-      image: "https://source.unsplash.com/900x900/?african,bride,wedding",
-    },
-    {
-      name: "Laser",
-      image: "https://source.unsplash.com/900x900/?laser,skin,treatment",
-    },
-    {
-      name: "Tattoo & Piercing",
-      image: "https://source.unsplash.com/900x900/?tattoo,piercing,studio",
-    },
-    {
-      name: "Teeth Whitening",
-      image: "https://source.unsplash.com/900x900/?african,smile,teeth",
-    },
-    {
-      name: "Waxing",
-      image: "https://source.unsplash.com/900x900/?waxing,beautysalon",
-    },
+    { name: "Hair", image: hairPhoto },
+    { name: "Barber", image: barberPhoto },
+    { name: "Nails", image: nailsPhoto },
+    { name: "Makeup", image: bridalMakeupPhoto },
+    { name: "Lashes & Brows", image: lashesPhoto },
+    { name: "Skincare", image: skincarePhoto },
+    { name: "Spa & Wellness", image: spaPhoto },
+    { name: "Bridal", image: bridalMakeupPhoto },
+    { name: "Laser", image: laserPhoto },
+    { name: "Tattoo & Piercing", image: tattooPhoto },
+    { name: "Teeth Whitening", image: teethWhiteningPhoto },
+    { name: "Waxing", image: waxingPhoto },
   ];
 
   return (
