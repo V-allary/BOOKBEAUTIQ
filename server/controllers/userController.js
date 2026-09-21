@@ -329,6 +329,24 @@ export const resetPassword = async (req, res) => {
     user.resetPasswordExpires = null;
     await user.save();
 
+    // Notify the account owner so they'd know if a reset happened
+    // without their knowledge (e.g. their email was compromised).
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "Your BookBeautiq password was changed",
+        html: `
+          <p>Hi ${user.firstName},</p>
+          <p>This is a confirmation that your BookBeautiq password was just changed.</p>
+          <p>If you made this change, no action is needed.</p>
+          <p>If you didn't request this, please contact us immediately and consider securing your email account, since your reset link was sent there.</p>
+        `,
+      });
+    } catch (emailError) {
+
+      console.error("Failed to send password-change confirmation email:", emailError);
+    }
+
     res.status(200).json({
       message: "Password reset successfully. You can now sign in.",
     });
