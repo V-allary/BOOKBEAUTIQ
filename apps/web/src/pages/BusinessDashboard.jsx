@@ -243,8 +243,9 @@ function BusinessDashboard() {
   // ==========================================
   // LOAD PROFILE DATA INTO FORM
   // ==========================================
-
   useEffect(() => {
+    if (!business) return;
+
     setProfileForm({
       name: business.name || "",
       category: business.category || "",
@@ -271,7 +272,6 @@ function BusinessDashboard() {
     setCoverFile(null);
     setProfileMessage("");
   }, [business]);
-
   // ==========================================
   // MARK BOOKING COMPLETED
   // ==========================================
@@ -2137,7 +2137,7 @@ function BusinessDashboard() {
 
                   {/* SAVE */}
 
-                  <div className="mt-8 flex flex-col gap-4 border-t border-[#ECE9E6] pt-6 sm:flex-row sm:items-center sm:justify-between">
+                 <div className="mt-8 flex flex-col gap-4 border-t border-[#ECE9E6] pt-6 sm:flex-row sm:items-center sm:justify-between">
 
                     <div className="min-h-[24px]">
 
@@ -2151,7 +2151,7 @@ function BusinessDashboard() {
                               : "text-red-600"
                           }`}
                         >
-                          {profileMessage}
+                           {profileMessage}
                         </p>
                       )}
 
