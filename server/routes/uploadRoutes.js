@@ -1,21 +1,14 @@
 import express from "express";
 import multer from "multer";
 import sharp from "sharp";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 import authMiddleware from "../middleware/authMiddleware.js";
 import roleMiddleware from "../middleware/roleMiddleware.js";
+import cloudinary from "../config/cloudinary.js";
 
 const router = express.Router();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const uploadsDir = path.join(__dirname, "../uploads");
-
 // Store the original upload in memory — we compress it
-// ourselves before writing anything to disk.
+// ourselves before sending it up to Cloudinary.
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
@@ -35,6 +28,22 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB
   },
 });
+
+// Uploads a buffer to Cloudinary using its stream API, since we
+// already have the image in memory rather than on disk.
+const uploadBufferToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder: "bookbeautiq", resource_type: "image" },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+
+    uploadStream.end(buffer);
+  });
+};
 
 router.post("/", authMiddleware, roleMiddleware("business", "admin"), (req, res) => {
   upload.single("image")(req, res, async (error) => {
@@ -56,25 +65,20 @@ router.post("/", authMiddleware, roleMiddleware("business", "admin"), (req, res)
     }
 
     try {
-      const uniqueName =
-        Date.now() + "-" + Math.round(Math.random() * 1e9) + ".jpg";
-
-      const outputPath = path.join(uploadsDir, uniqueName);
-
       // Resize to a sensible max width and compress to high-quality
       // JPEG — keeps images sharp while cutting file size dramatically
       // compared to an untouched phone photo.
-      await sharp(req.file.buffer)
+      const compressedBuffer = await sharp(req.file.buffer)
         .rotate() // respects EXIF orientation from phone cameras
         .resize({ width: 1600, withoutEnlargement: true })
         .jpeg({ quality: 85 })
-        .toFile(outputPath);
+        .toBuffer();
 
-      const imageUrl = `/uploads/${uniqueName}`;
+      const result = await uploadBufferToCloudinary(compressedBuffer);
 
       res.status(201).json({
         message: "Image uploaded successfully.",
-        imageUrl,
+        imageUrl: result.secure_url,
       });
     } catch (processingError) {
       console.error("Image processing error:", processingError);
