@@ -1,5 +1,6 @@
 import Booking from "../models/Bookings.js";
 import Business from "../models/Business.js";
+import Staff from "../models/Staff.js";
 import crypto from "crypto";
 import notify from "../utils/notify.js";
 import User from "../models/User.js";
@@ -183,7 +184,6 @@ export const cancelBooking = async (req, res) => {
 
 // Add near your other imports at the top:
 // import Business from "../models/Business.js"; // already imported
-
 export const getAvailability = async (req, res) => {
   try {
     const { businessId, date, duration, staff } = req.query;
@@ -191,22 +191,42 @@ export const getAvailability = async (req, res) => {
     if (!businessId || !date) {
       return res.status(400).json({ message: "businessId and date are required." });
     }
-
     const business = await Business.findById(businessId);
     if (!business) return res.status(404).json({ message: "Business not found." });
 
-    const serviceDuration = Number(duration) || 60;
+    // Enforce the business's stated minimum appointment length, if set —
+    // never offer slots shorter than what they've said they actually need.
+    const requestedDuration = Number(duration) || 60;
+    const serviceDuration = business.minimumAppointmentDuration
+      ? Math.max(requestedDuration, business.minimumAppointmentDuration)
+      : requestedDuration;
+
+    // If a specific staff member is selected and they have their own
+    // hours set, use those instead of the business's general hours.
+    let effectiveOpeningTime = business.openingTime;
+    let effectiveClosingTime = business.closingTime;
+    let effectiveClosedDays = business.closedDays || [];
+
+    if (staff && staff !== "Not specified") {
+      const staffMember = await Staff.findOne({ businessId, name: staff });
+
+      if (staffMember) {
+        if (staffMember.openingTime) effectiveOpeningTime = staffMember.openingTime;
+        if (staffMember.closingTime) effectiveClosingTime = staffMember.closingTime;
+        if (staffMember.closedDays?.length) effectiveClosedDays = staffMember.closedDays;
+      }
+    }
 
     // Which day of week is this date? (matches "Mon","Tue" etc. used by closedDays)
     const dayAbbrev = new Date(date).toLocaleDateString("en-US", { weekday: "short" });
 
-    if (business.closedDays?.includes(dayAbbrev)) {
+    if (effectiveClosedDays.includes(dayAbbrev)) {
       return res.status(200).json({ slots: [], closed: true });
     }
 
     // Build all candidate 30-min slot starts between opening and closing
-    const [openHour, openMin] = business.openingTime.split(":").map(Number);
-    const [closeHour, closeMin] = business.closingTime.split(":").map(Number);
+    const [openHour, openMin] = effectiveOpeningTime.split(":").map(Number);
+    const [closeHour, closeMin] = effectiveClosingTime.split(":").map(Number);
 
     const openMinutes = openHour * 60 + openMin;
     const closeMinutes = closeHour * 60 + closeMin;
@@ -264,7 +284,6 @@ export const getAvailability = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 
 // Business marks a booking as completed — triggers the review email

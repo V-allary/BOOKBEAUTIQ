@@ -10,14 +10,22 @@ function StaffManager({ businesses }) {
 
   const [editingStaffId, setEditingStaffId] = useState(null);
 
-  const [formData, setFormData] = useState({
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const emptyForm = {
     businessId: businesses[0]?._id || "",
     name: "",
     role: "",
     phone: "",
     email: "",
     image: "",
-  });
+    openingTime: "",
+    closingTime: "",
+    closedDays: [],
+  };
+
+  const [formData, setFormData] = useState(emptyForm);
+  const [customHoursEnabled, setCustomHoursEnabled] = useState(false);
 
   const fetchStaff = async () => {
     try {
@@ -40,6 +48,18 @@ function StaffManager({ businesses }) {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const toggleClosedDay = (day) => {
+    setFormData((current) => {
+      const isClosed = current.closedDays.includes(day);
+      return {
+        ...current,
+        closedDays: isClosed
+          ? current.closedDays.filter((d) => d !== day)
+          : [...current.closedDays, day],
+      };
+    });
   };
 
   const handleImageChange = (e) => {
@@ -67,7 +87,12 @@ function StaffManager({ businesses }) {
       phone: member.phone || "",
       email: member.email || "",
       image: member.image || "",
+      openingTime: member.openingTime || "",
+      closingTime: member.closingTime || "",
+      closedDays: member.closedDays || [],
     });
+
+    setCustomHoursEnabled(!!(member.openingTime || member.closingTime || member.closedDays?.length));
 
     setImageFile(null);
     setImagePreview(member.image ? imageUrl(member.image) : "");
@@ -77,16 +102,8 @@ function StaffManager({ businesses }) {
 
   const handleCancelEdit = () => {
     setEditingStaffId(null);
-
-    setFormData({
-      businessId: businesses[0]?._id || "",
-      name: "",
-      role: "",
-      phone: "",
-      email: "",
-      image: "",
-    });
-
+    setFormData({ ...emptyForm, businessId: businesses[0]?._id || "" });
+    setCustomHoursEnabled(false);
     setImageFile(null);
     setImagePreview("");
   };
@@ -117,6 +134,16 @@ function StaffManager({ businesses }) {
 
       const isEditing = !!editingStaffId;
 
+      const payload = {
+        ...formData,
+        image: uploadedImageUrl,
+        // If custom hours are turned off, clear them so this person
+        // simply follows the business's general hours.
+        openingTime: customHoursEnabled ? formData.openingTime : "",
+        closingTime: customHoursEnabled ? formData.closingTime : "",
+        closedDays: customHoursEnabled ? formData.closedDays : [],
+      };
+
       const response = await fetch(
         isEditing
           ? `${API_URL}/api/staff/${editingStaffId}`
@@ -127,7 +154,7 @@ function StaffManager({ businesses }) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ ...formData, image: uploadedImageUrl }),
+          body: JSON.stringify(payload),
         }
       );
 
@@ -279,6 +306,88 @@ function StaffManager({ businesses }) {
           )}
         </div>
 
+        {/* WORKING HOURS */}
+
+        <div className="rounded-2xl border border-[#E5E2DF] bg-[#FAFAF9] p-5">
+
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={customHoursEnabled}
+              onChange={(e) => setCustomHoursEnabled(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-[#B96882] focus:ring-[#B96882]"
+            />
+            <span className="font-semibold text-[#242424]">
+              This person works different hours than the business
+            </span>
+          </label>
+
+          <p className="mt-1 pl-7 text-xs text-gray-500">
+            Leave unchecked to follow the business's general hours.
+          </p>
+
+          {customHoursEnabled && (
+            <div className="mt-4 space-y-4">
+
+              <div className="grid gap-3 sm:grid-cols-2">
+
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-gray-500">
+                    Starts at
+                  </label>
+                  <input
+                    type="time"
+                    value={formData.openingTime}
+                    onChange={(e) =>
+                      setFormData({ ...formData, openingTime: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-[#DDDAD7] bg-white p-3.5 text-sm outline-none focus:border-[#B96882]"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-gray-500">
+                    Ends at
+                  </label>
+                  <input
+                    type="time"
+                    value={formData.closingTime}
+                    onChange={(e) =>
+                      setFormData({ ...formData, closingTime: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-[#DDDAD7] bg-white p-3.5 text-sm outline-none focus:border-[#B96882]"
+                  />
+                </div>
+
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs font-semibold text-gray-500">
+                  Days off
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {weekDays.map((day) => (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => toggleClosedDay(day)}
+                      className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+                        formData.closedDays.includes(day)
+                          ? "bg-[#242424] text-white"
+                          : "border border-[#DDDAD7] bg-white text-[#242424] hover:border-[#B96882]"
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          )}
+
+        </div>
+
         <button
           type="submit"
           className="w-full rounded-xl bg-[#242424] py-4 font-semibold text-white transition hover:bg-[#B96882]"
@@ -307,6 +416,11 @@ function StaffManager({ businesses }) {
               <div>
                 <h3 className="text-lg font-bold">{member.name}</h3>
                 <p className="text-gray-500">{member.role}</p>
+                {(member.openingTime || member.closingTime) && (
+                  <p className="mt-0.5 text-xs text-[#9D536D]">
+                    Custom hours: {member.openingTime || "—"} – {member.closingTime || "—"}
+                  </p>
+                )}
               </div>
             </div>
 

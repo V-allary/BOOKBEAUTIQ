@@ -35,7 +35,6 @@ function BusinessDashboard() {
   // ==========================================
   // BUSINESS PROFILE STATE
   // ==========================================
-
   const [profileForm, setProfileForm] = useState({
     name: "",
     category: "",
@@ -47,6 +46,7 @@ function BusinessDashboard() {
     openingTime: "09:00",
     closingTime: "18:00",
     closedDays: [],
+    minimumAppointmentDuration: "",
     instagramUrl: "",
     tiktokUrl: "",
   });
@@ -245,7 +245,6 @@ function BusinessDashboard() {
   // ==========================================
 
   useEffect(() => {
-    if (!business) return;
     setProfileForm({
       name: business.name || "",
       category: business.category || "",
@@ -257,10 +256,10 @@ function BusinessDashboard() {
       openingTime: business.openingTime || "09:00",
       closingTime: business.closingTime || "18:00",
       closedDays: business.closedDays || [],
+      minimumAppointmentDuration: business.minimumAppointmentDuration || "",
       instagramUrl: business.instagramUrl || "",
       tiktokUrl: business.tiktokUrl || "",
     });
-
     setCoverPreview(business.image ? getImageUrl(business.image) : "");
     const rawGallery = Array.isArray(business.gallery) ? business.gallery : [];
     setExistingGalleryUrls(rawGallery);
@@ -550,6 +549,9 @@ function BusinessDashboard() {
           },
           body: JSON.stringify({
             ...profileForm,
+            minimumAppointmentDuration: profileForm.minimumAppointmentDuration
+              ? Number(profileForm.minimumAppointmentDuration)
+              : 0,
             openingHours: `${formatTimeLabel(profileForm.openingTime)} - ${formatTimeLabel(profileForm.closingTime)}${
               profileForm.closedDays.length > 0 ? ` (Closed ${profileForm.closedDays.join(", ")})` : ""
             }`,
@@ -2030,8 +2032,35 @@ function BusinessDashboard() {
                           </div>
                         </div>
 
-                      </div>
+                        <div className="mt-4">
+                          <label className="mb-2 block text-xs font-semibold text-gray-500">
+                            Minimum appointment length (optional)
+                          </label>
+                          <p className="mb-2 text-xs text-gray-400">
+                            No customer will be offered a booking slot shorter than
+                            this, even if a service's own duration is set lower.
+                          </p>
+                          <select
+                            value={profileForm.minimumAppointmentDuration}
+                            onChange={(e) =>
+                              setProfileForm({
+                                ...profileForm,
+                                minimumAppointmentDuration: e.target.value,
+                              })
+                            }
+                            className="w-full cursor-pointer rounded-xl border border-[#DDDAD7] bg-white p-3.5 text-sm outline-none transition focus:border-[#B96882]"
+                          >
+                            <option value="">No minimum</option>
+                            <option value="30">30 minutes</option>
+                            <option value="45">45 minutes</option>
+                            <option value="60">1 hour</option>
+                            <option value="90">1.5 hours</option>
+                            <option value="120">2 hours</option>
+                            <option value="180">3 hours</option>
+                          </select>
+                        </div>
 
+                      </div>
                                             {/* Instagram */}
 
                                             <div>
@@ -2254,7 +2283,7 @@ function BusinessDashboard() {
               MESSAGES
           ================================== */}
 
-          {activeSection === "messages" && (
+{activeSection === "messages" && (
             <div className="rounded-2xl border border-[#E5E2DF] bg-white shadow-sm">
 
               <div className="border-b border-[#E5E2DF] px-6 py-5">
@@ -2287,38 +2316,81 @@ function BusinessDashboard() {
                       </p>
                     ) : (
                       conversations.map((c) => (
-                        <button
+                        <div
                           key={c._id}
-                          onClick={() => {
-                            setSelectedCustomer(c._id);
-                            setTimeout(() => fetchConversations(business._id), 800);
-                          }}
-                          className={`flex w-full items-center justify-between rounded-xl px-3 py-3 text-left transition ${
-                            selectedCustomer ===
-                            c._id
+                          className={`group flex items-center gap-1 rounded-xl transition ${
+                            selectedCustomer === c._id
                               ? "bg-[#F2E8EC]"
                               : "hover:bg-[#F5F4F2]"
                           }`}
                         >
 
-                          <p
-                            className={`truncate text-sm font-semibold ${
-                              selectedCustomer ===
-                              c._id
-                                ? "text-[#9D536D]"
-                                : "text-[#242424]"
-                            }`}
+                          <button
+                            onClick={() => {
+                              setSelectedCustomer(c._id);
+                              setTimeout(() => fetchConversations(business._id), 800);
+                            }}
+                            className="flex flex-1 items-center justify-between px-3 py-3 text-left"
                           >
-                            {c._id}
-                          </p>
 
-                          {c.unreadCount > 0 && (
-                            <span className="ml-2 flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-[#242424] px-1.5 text-[10px] font-bold text-white">
-                              {c.unreadCount}
-                            </span>
-                          )}
+                            <p
+                              className={`truncate text-sm font-semibold ${
+                                selectedCustomer === c._id
+                                  ? "text-[#9D536D]"
+                                  : "text-[#242424]"
+                              }`}
+                            >
+                              {c._id}
+                            </p>
 
-                        </button>
+                            {c.unreadCount > 0 && (
+                              <span className="ml-2 flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-[#242424] px-1.5 text-[10px] font-bold text-white">
+                                {c.unreadCount}
+                              </span>
+                            )}
+
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+
+                              if (!window.confirm(`Delete this conversation with ${c._id}? This cannot be undone.`)) {
+                                return;
+                              }
+
+                              try {
+                                const response = await fetch(
+                                  `${API_URL}/api/messages/business/${business._id}/${encodeURIComponent(c._id)}`,
+                                  {
+                                    method: "DELETE",
+                                    headers: { Authorization: `Bearer ${token}` },
+                                  }
+                                );
+
+                                const data = await response.json();
+
+                                if (!response.ok) {
+                                  throw new Error(data.message || "Failed to delete conversation.");
+                                }
+
+                                if (selectedCustomer === c._id) {
+                                  setSelectedCustomer(null);
+                                }
+
+                                fetchConversations(business._id);
+                              } catch (error) {
+                                alert(error.message);
+                              }
+                            }}
+                            aria-label="Delete conversation"
+                            className="mr-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-gray-300 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                          >
+                            ×
+                          </button>
+
+                        </div>
                       ))
 
                     )}
@@ -2332,12 +2404,53 @@ function BusinessDashboard() {
                 <div className="p-5">
 
                   {selectedCustomer ? (
-                    <BusinessChatWidget
-                      businessId={business._id}
-                      customerEmail={
-                        selectedCustomer
-                      }
-                    />
+                    <>
+
+                      <div className="mb-3 flex items-center justify-end">
+
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!window.confirm(`Delete this conversation with ${selectedCustomer}? This cannot be undone.`)) {
+                              return;
+                            }
+
+                            try {
+                              const response = await fetch(
+                                `${API_URL}/api/messages/business/${business._id}/${encodeURIComponent(selectedCustomer)}`,
+                                {
+                                  method: "DELETE",
+                                  headers: { Authorization: `Bearer ${token}` },
+                                }
+                              );
+
+                              const data = await response.json();
+
+                              if (!response.ok) {
+                                throw new Error(data.message || "Failed to delete conversation.");
+                              }
+
+                              setSelectedCustomer(null);
+                              fetchConversations(business._id);
+                            } catch (error) {
+                              alert(error.message);
+                            }
+                          }}
+                          className="rounded-xl border border-[#E5E2DF] px-4 py-2 text-xs font-semibold text-red-500 transition hover:border-red-200 hover:bg-red-50"
+                        >
+                          Delete Conversation
+                        </button>
+
+                      </div>
+
+                      <BusinessChatWidget
+                        businessId={business._id}
+                        customerEmail={
+                          selectedCustomer
+                        }
+                      />
+
+                    </>
                   ) : (    <div className="flex h-full min-h-[400px] items-center justify-center text-center">
 
                       <div>
@@ -2365,6 +2478,7 @@ function BusinessDashboard() {
 
             </div>
           )}
+ 
 
           {/* ==================================
               PAYOUTS

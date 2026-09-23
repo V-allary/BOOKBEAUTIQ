@@ -27,6 +27,7 @@ function BusinessOnboarding() {
     openingTime: "09:00",
     closingTime: "18:00",
     closedDays: [],
+    minimumAppointmentDuration: "",
   });
 
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -121,17 +122,40 @@ function BusinessOnboarding() {
     fetchBanks();
   }, []);
 
+  const isMpesaSelected =
+    banks.find((b) => b.code === payoutForm.bankCode)
+      ?.name?.toUpperCase()
+      .includes("MPESA") ||
+    banks.find((b) => b.code === payoutForm.bankCode)
+      ?.name?.toUpperCase()
+      .includes("M-PESA");
+
   const handleResolveAccount = async () => {
     setPayoutMessage("");
 
     try {
+      // Paystack's M-PESA verification expects the local format
+      // (0712345678), not +254712345678 or 254712345678 — normalize
+      // automatically so people don't need to know this detail.
+      let accountNumber = payoutForm.accountNumber.trim();
+
+      if (isMpesaSelected) {
+        accountNumber = accountNumber.replace(/\s+/g, "");
+
+        if (accountNumber.startsWith("+254")) {
+          accountNumber = "0" + accountNumber.slice(4);
+        } else if (accountNumber.startsWith("254")) {
+          accountNumber = "0" + accountNumber.slice(3);
+        }
+      }
+
       const response = await fetch(`${API_URL}/api/payouts/verify-account`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payoutForm),
+        body: JSON.stringify({ ...payoutForm, accountNumber }),
       });
 
       const data = await response.json();
@@ -140,6 +164,7 @@ function BusinessOnboarding() {
         throw new Error(data.message || "Could not verify that account.");
       }
 
+      setPayoutForm((current) => ({ ...current, accountNumber }));
       setResolvedName(data.account_name);
     } catch (err) {
       setPayoutMessage(err.message);
@@ -182,7 +207,6 @@ function BusinessOnboarding() {
       setSubmitting(false);
     }
   };
-
   // ==========================================
   // SERVICES
   // ==========================================
@@ -190,7 +214,8 @@ function BusinessOnboarding() {
   const [services, setServices] = useState([
     {
       name: "",
-      duration: "",
+      durationHours: "",
+      durationMinutes: "",
       price: "",
       category: "",
     },
@@ -292,6 +317,9 @@ function BusinessOnboarding() {
           },
           body: JSON.stringify({
             ...businessData,
+            minimumAppointmentDuration: businessData.minimumAppointmentDuration
+              ? Number(businessData.minimumAppointmentDuration)
+              : 0,
             openingHours: `${formatTimeLabel(businessData.openingTime)} - ${formatTimeLabel(businessData.closingTime)}${
               businessData.closedDays.length > 0 ? ` (Closed ${businessData.closedDays.join(", ")})` : ""
             }`,
@@ -426,7 +454,6 @@ function BusinessOnboarding() {
     const updatedFiles = workImages.filter(
       (_, i) => i !== index
     );
-
     setWorkImages(updatedFiles);
 
     setWorkPreviews(
@@ -534,7 +561,8 @@ function BusinessOnboarding() {
       ...services,
       {
         name: "",
-        duration: "",
+        durationHours: "",
+        durationMinutes: "",
         price: "",
         category: "",
       },
@@ -549,6 +577,10 @@ function BusinessOnboarding() {
       for (const service of services) {
         if (!service.name.trim()) continue;
 
+        const totalDurationMinutes =
+          (Number(service.durationHours) || 0) * 60 +
+          (Number(service.durationMinutes) || 0);
+
         const response = await fetch(
           `${API_URL}/api/services`,
           {
@@ -558,7 +590,10 @@ function BusinessOnboarding() {
               Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
-              ...service,
+              name: service.name,
+              price: service.price,
+              category: service.category,
+              duration: totalDurationMinutes,
               businessId,
             }),
           }
@@ -643,7 +678,6 @@ function BusinessOnboarding() {
     setStaff(updated);
     setError("");
   };
-
   // ==========================================
   // SAVE STAFF
   // ==========================================
@@ -906,236 +940,262 @@ function BusinessOnboarding() {
 
               </div>
 
-              {/* BUSINESS INFORMATION */}
+             {/* BUSINESS INFORMATION */}
 
-              <div className="space-y-4">
+             <div className="space-y-4">
 
-              <div className="mb-2">
-  <p className="mb-3 text-sm font-semibold text-[#242424]">Choose your plan</p>
-  <div className="grid gap-3 sm:grid-cols-2">
-    {[
-      { id: "independent", label: "Independent", price: "KES 1,500/mo" },
-      { id: "team", label: "Team", price: "KES 2,500/mo" },
-    ].map((plan) => (
-      <button
-        key={plan.id}
-        type="button"
-        onClick={() => setSelectedPlan(plan.id)}
-        className={`rounded-2xl border p-4 text-left transition ${
-          selectedPlan === plan.id
-            ? "border-[#242424] bg-[#242424] text-white"
-            : "border-[#DDDAD7] bg-[#FAFAF9] text-[#242424] hover:border-[#B96882]"
-        }`}
-      >
-        <p className="font-bold">{plan.label}</p>
-        <p className={`mt-1 text-sm ${selectedPlan === plan.id ? "text-white/70" : "text-gray-500"}`}>
-          {plan.price}
-        </p>
-        <p className={`mt-2 text-xs ${selectedPlan === plan.id ? "text-white/60" : "text-gray-400"}`}>
-          7 days free, then billed monthly
-        </p>
-      </button>
-    ))}
-  </div>
+<div className="mb-2">
+<p className="mb-3 text-sm font-semibold text-[#242424]">Choose your plan</p>
+<div className="grid gap-3 sm:grid-cols-2">
+{[
+{ id: "independent", label: "Independent", price: "KES 1,500/mo" },
+{ id: "team", label: "Team", price: "KES 2,500/mo" },
+].map((plan) => (
+<button
+key={plan.id}
+type="button"
+onClick={() => setSelectedPlan(plan.id)}
+className={`rounded-2xl border p-4 text-left transition ${
+selectedPlan === plan.id
+? "border-[#242424] bg-[#242424] text-white"
+: "border-[#DDDAD7] bg-[#FAFAF9] text-[#242424] hover:border-[#B96882]"
+}`}
+>
+<p className="font-bold">{plan.label}</p>
+<p className={`mt-1 text-sm ${selectedPlan === plan.id ? "text-white/70" : "text-gray-500"}`}>
+{plan.price}
+</p>
+<p className={`mt-2 text-xs ${selectedPlan === plan.id ? "text-white/60" : "text-gray-400"}`}>
+7 days free, then billed monthly
+</p>
+</button>
+))}
+</div>
 </div>
 
 
-                <input
-                  placeholder="Business Name"
-                  value={businessData.name}
-                  onChange={(e) =>
-                    setBusinessData({
-                      ...businessData,
-                      name: e.target.value,
-                    })
-                  }
-                  className={inputClass}
-                  required
-                />
+  <input
+    placeholder="Business Name"
+    value={businessData.name}
+    onChange={(e) =>
+      setBusinessData({
+        ...businessData,
+        name: e.target.value,
+      })
+    }
+    className={inputClass}
+    required
+  />
 
 <select
-                  value={businessData.category}
-                  onChange={(e) =>
-                    setBusinessData({
-                      ...businessData,
-                      category: e.target.value,
-                    })
-                  }
-                  className={`${inputClass} cursor-pointer`}
-                  required
-                >
-                  <option value="">Select a category</option>
-                  <option value="Hair">Hair</option>
-                  <option value="Barber">Barber</option>
-                  <option value="Nails">Nails</option>
-                  <option value="Makeup">Makeup</option>
-                  <option value="Lashes & Brows">Lashes & Brows</option>
-                  <option value="Skincare">Skincare</option>
-                  <option value="Spa & Wellness">Spa & Wellness</option>
-                  <option value="Bridal">Bridal</option>
-                  <option value="Laser">Laser</option>
-                  <option value="Tattoo & Piercing">Tattoo & Piercing</option>
-                  <option value="Teeth Whitening">Teeth Whitening</option>
-                  <option value="Waxing">Waxing</option>
-                </select>
+    value={businessData.category}
+    onChange={(e) =>
+      setBusinessData({
+        ...businessData,
+        category: e.target.value,
+      })
+    }
+    className={`${inputClass} cursor-pointer`}
+    required
+  >
+    <option value="">Select a category</option>
+    <option value="Hair">Hair</option>
+    <option value="Barber">Barber</option>
+    <option value="Nails">Nails</option>
+    <option value="Makeup">Makeup</option>
+    <option value="Lashes & Brows">Lashes & Brows</option>
+    <option value="Skincare">Skincare</option>
+    <option value="Spa & Wellness">Spa & Wellness</option>
+    <option value="Bridal">Bridal</option>
+    <option value="Laser">Laser</option>
+    <option value="Tattoo & Piercing">Tattoo & Piercing</option>
+    <option value="Teeth Whitening">Teeth Whitening</option>
+    <option value="Waxing">Waxing</option>
+  </select>
 
+  <input
+    placeholder="Location"
+    value={businessData.location}
+    onChange={(e) =>
+      setBusinessData({
+        ...businessData,
+        location: e.target.value,
+      })
+    }
+    className={inputClass}
+    required
+  />
 
-                <input
-                  placeholder="Location"
-                  value={businessData.location}
-                  onChange={(e) =>
-                    setBusinessData({
-                      ...businessData,
-                      location: e.target.value,
-                    })
-                  }
-                  className={inputClass}
-                  required
-                />
+  <textarea
+    placeholder="Tell customers about your business..."
+    value={
+      businessData.description
+    }
+    onChange={(e) =>
+      setBusinessData({
+        ...businessData,
+        description:
+          e.target.value,
+      })
+    }
+    rows="4"
+    className={inputClass}
+    required
+  />
 
-                <textarea
-                  placeholder="Tell customers about your business..."
-                  value={
-                    businessData.description
-                  }
-                  onChange={(e) =>
-                    setBusinessData({
-                      ...businessData,
-                      description:
-                        e.target.value,
-                    })
-                  }
-                  rows="4"
-                  className={inputClass}
-                  required
-                />
+  <input
+    placeholder="Starting Price (e.g. KSH 2000)"
+    value={businessData.price}
+    onChange={(e) =>
+      setBusinessData({
+        ...businessData,
+        price: e.target.value,
+      })
+    }
+    className={inputClass}
+  />
 
-                <input
-                  placeholder="Starting Price (e.g. KSH 2000)"
-                  value={businessData.price}
-                  onChange={(e) =>
-                    setBusinessData({
-                      ...businessData,
-                      price: e.target.value,
-                    })
-                  }
-                  className={inputClass}
-                />
+  <div className="grid gap-4 sm:grid-cols-2">
 
-                <div className="grid gap-4 sm:grid-cols-2">
+    <input
+      placeholder="Phone"
+      value={businessData.phone}
+      onChange={(e) =>
+        setBusinessData({
+          ...businessData,
+          phone: e.target.value,
+        })
+      }
+      className={inputClass}
+    />
 
-                  <input
-                    placeholder="Phone"
-                    value={businessData.phone}
-                    onChange={(e) =>
-                      setBusinessData({
-                        ...businessData,
-                        phone: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  />
+    <input
+      type="email"
+      placeholder="Business Email"
+      value={businessData.email}
+      onChange={(e) =>
+        setBusinessData({
+          ...businessData,
+          email: e.target.value,
+        })
+      }
+      className={inputClass}
+    />
 
-                  <input
-                    type="email"
-                    placeholder="Business Email"
-                    value={businessData.email}
-                    onChange={(e) =>
-                      setBusinessData({
-                        ...businessData,
-                        email: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  />
-
-                </div>
-                <div className="rounded-2xl border border-[#E5E2DF] bg-[#FAFAF9] p-5">
+  </div>
+  <div className="rounded-2xl border border-[#E5E2DF] bg-[#FAFAF9] p-5">
 
 <p className="mb-4 text-sm font-semibold text-[#242424]">
-  Business Hours
+Business Hours
 </p>
 <p className="mb-4 text-xs text-[#777472]">
-  This determines the exact times customers can book — it can be changed anytime later from your dashboard.
+This determines the exact times customers can book — it can be changed anytime later from your dashboard.
 </p>
 
 <div className="grid gap-4 sm:grid-cols-2">
 
-  <div>
-    <label className="mb-2 block text-xs font-semibold text-gray-500">
-      Opens at
-    </label>
-    <input
-      type="time"
-      value={businessData.openingTime}
-      onChange={(e) =>
-        setBusinessData({
-          ...businessData,
-          openingTime: e.target.value,
-        })
-      }
-      className="w-full rounded-xl border border-[#DDDAD7] bg-white p-3.5 text-sm outline-none transition focus:border-[#B96882]"
-    />
-  </div>
+<div>
+<label className="mb-2 block text-xs font-semibold text-gray-500">
+Opens at
+</label>
+<input
+type="time"
+value={businessData.openingTime}
+onChange={(e) =>
+setBusinessData({
+...businessData,
+openingTime: e.target.value,
+})
+}
+className="w-full rounded-xl border border-[#DDDAD7] bg-white p-3.5 text-sm outline-none transition focus:border-[#B96882]"
+/>
+</div>
 
-  <div>
-    <label className="mb-2 block text-xs font-semibold text-gray-500">
-      Closes at
-    </label>
-    <input
-      type="time"
-      value={businessData.closingTime}
-      onChange={(e) =>
-        setBusinessData({
-          ...businessData,
-          closingTime: e.target.value,
-        })
-      }
-      className="w-full rounded-xl border border-[#DDDAD7] bg-white p-3.5 text-sm outline-none transition focus:border-[#B96882]"
-    />
-  </div>
-
+<div>
+<label className="mb-2 block text-xs font-semibold text-gray-500">
+Closes at
+</label>
+<input
+type="time"
+value={businessData.closingTime}
+onChange={(e) =>
+setBusinessData({
+...businessData,
+closingTime: e.target.value,
+})
+}
+className="w-full rounded-xl border border-[#DDDAD7] bg-white p-3.5 text-sm outline-none transition focus:border-[#B96882]"
+/>
+</div>
 </div>
 
 <div className="mt-4">
-  <label className="mb-2 block text-xs font-semibold text-gray-500">
-    Closed on
-  </label>
-  <div className="flex flex-wrap gap-2">
-    {weekDays.map((day) => (
-      <button
-        key={day}
-        type="button"
-        onClick={() => toggleClosedDay(day)}
-        className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-          businessData.closedDays.includes(day)
-            ? "bg-[#242424] text-white"
-            : "border border-[#DDDAD7] bg-white text-[#242424] hover:border-[#B96882]"
-        }`}
-      >
-        {day}
-      </button>
-    ))}
-  </div>
+<label className="mb-2 block text-xs font-semibold text-gray-500">
+Closed on
+</label>
+<div className="flex flex-wrap gap-2">
+{weekDays.map((day) => (
+<button
+key={day}
+type="button"
+onClick={() => toggleClosedDay(day)}
+className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+businessData.closedDays.includes(day)
+? "bg-[#242424] text-white"
+: "border border-[#DDDAD7] bg-white text-[#242424] hover:border-[#B96882]"
+}`}
+>
+{day}
+</button>
+))}
+</div>
+</div>
+
+<div className="mt-4">
+<label className="mb-2 block text-xs font-semibold text-gray-500">
+Minimum appointment length (optional)
+</label>
+<p className="mb-2 text-xs text-[#999]">
+No customer will be offered a booking slot shorter than this,
+even if a service's own duration is set lower.
+</p>
+<select
+value={businessData.minimumAppointmentDuration}
+onChange={(e) =>
+setBusinessData({
+...businessData,
+minimumAppointmentDuration: e.target.value,
+})
+}
+className={`${inputClass} cursor-pointer`}
+>
+<option value="">No minimum</option>
+<option value="30">30 minutes</option>
+<option value="45">45 minutes</option>
+<option value="60">1 hour</option>
+<option value="90">1.5 hours</option>
+<option value="120">2 hours</option>
+<option value="180">3 hours</option>
+</select>
 </div>
 
 </div>
 
 
-              </div>
+</div>
 
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full rounded-xl bg-[#242424] py-4 text-sm font-bold text-white transition hover:bg-[#B96882] disabled:opacity-60"
-              >
-                {submitting
-                  ? "Saving..."
-                  : "Continue"}
-              </button>
+<button
+  type="submit"
+  disabled={submitting}
+  className="w-full rounded-xl bg-[#242424] py-4 text-sm font-bold text-white transition hover:bg-[#B96882] disabled:opacity-60"
+>
+  {submitting
+    ? "Saving..."
+    : "Continue"}
+</button>
 
-            </form>
-          )}
+</form>
+)}
 
           {/* ======================================
               STEP 2 — PHOTOS + WORKPLACE VERIFICATION
@@ -1373,41 +1433,58 @@ function BusinessOnboarding() {
 
               <div className="rounded-2xl border border-[#E5E2DF] bg-[#FAFAF9] p-5">
                 <p className="text-sm leading-6 text-[#777472]">
-                  This is the bank or M-Pesa account where customers'
-                  booking deposits are sent — automatically and directly,
-                  every time someone books. BookBeautiq never holds your
-                  money. This must be set up before your business can be
-                  approved and go live, but you're free to skip it now and
-                  add it later from your dashboard.
+                  This is where all your earnings from BookBeautiq are
+                  sent — every customer's booking deposit is settled
+                  directly here, automatically, usually within 1–2
+                  business days. BookBeautiq never holds your money.
+                  Choose your bank, or select M-PESA to receive payments
+                  directly to your phone number instead. This must be
+                  set up before your business can be approved and go
+                  live, but you're free to skip it now and add it later
+                  from your dashboard.
                 </p>
               </div>
 
               <div className="space-y-4">
 
-                <select
-                  value={payoutForm.bankCode}
-                  onChange={(e) =>
-                    setPayoutForm({ ...payoutForm, bankCode: e.target.value })
-                  }
-                  className={`${inputClass} cursor-pointer`}
-                >
-                  <option value="">Select your bank</option>
-                  {banks.map((bank) => (
-                    <option key={bank.code} value={bank.code}>
-                      {bank.name}
-                    </option>
-                  ))}
-                </select>
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-[#242424]">
+                    Payout Method
+                  </label>
 
-                <input
-                  type="text"
-                  placeholder="Account Number"
-                  value={payoutForm.accountNumber}
-                  onChange={(e) =>
-                    setPayoutForm({ ...payoutForm, accountNumber: e.target.value })
-                  }
-                  className={inputClass}
-                />
+                  <select
+                    value={payoutForm.bankCode}
+                    onChange={(e) =>
+                      setPayoutForm({ ...payoutForm, bankCode: e.target.value })
+                    }
+                    className={`${inputClass} cursor-pointer`}
+                  >
+                    <option value="">Select your bank or M-PESA</option>
+                    {banks.map((bank) => (
+                      <option key={bank.code} value={bank.code}>
+                        {bank.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-[#242424]">
+                    {isMpesaSelected ? "M-PESA Phone Number" : "Account Number"}
+                  </label>
+
+                  <input
+                    type="text"
+                    placeholder={
+                      isMpesaSelected ? "e.g. 0712345678" : "Enter account number"
+                    }
+                    value={payoutForm.accountNumber}
+                    onChange={(e) =>
+                      setPayoutForm({ ...payoutForm, accountNumber: e.target.value })
+                    }
+                    className={inputClass}
+                  />
+                </div>
 
                 <button
                   type="button"
@@ -1494,38 +1571,58 @@ function BusinessOnboarding() {
                       className={inputClass}
                     />
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">
+                        Duration
+                      </label>
 
-                      <input
-                        placeholder="Duration (mins)"
-                        type="number"
-                        value={
-                          service.duration
-                        }
-                        onChange={(e) =>
-                          updateService(
-                            i,
-                            "duration",
-                            e.target.value
-                          )
-                        }
-                        className={inputClass}
-                      />
-                      <input
-                        placeholder="Price"
-                        type="number"
-                        value={service.price}
-                        onChange={(e) =>
-                          updateService(
-                            i,
-                            "price",
-                            e.target.value
-                          )
-                        }
-                        className={inputClass}
-                      />
+                      <div className="grid grid-cols-2 gap-3">
 
+                        <div>
+                          <input
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            value={service.durationHours}
+                            onChange={(e) =>
+                              updateService(i, "durationHours", e.target.value)
+                            }
+                            className={inputClass}
+                          />
+                          <p className="mt-1 text-xs text-gray-400">Hours</p>
+                        </div>
+
+                        <div>
+                          <input
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            max="59"
+                            value={service.durationMinutes}
+                            onChange={(e) =>
+                              updateService(i, "durationMinutes", e.target.value)
+                            }
+                            className={inputClass}
+                          />
+                          <p className="mt-1 text-xs text-gray-400">Minutes</p>
+                        </div>
+
+                      </div>
                     </div>
+
+                    <input
+                      placeholder="Price"
+                      type="number"
+                      value={service.price}
+                      onChange={(e) =>
+                        updateService(
+                          i,
+                          "price",
+                          e.target.value
+                        )
+                      }
+                      className={inputClass}
+                    />
 
                     <input
                       placeholder="Category"
@@ -1683,7 +1780,6 @@ function BusinessOnboarding() {
                         }
                         className={inputClass}
                       />
-
                       <input
                         placeholder="Role (e.g. Senior Nail Artist)"
                         value={member.role}
@@ -1749,7 +1845,7 @@ function BusinessOnboarding() {
                   onClick={() =>
                     navigate("/dashboard")
                   }
-                  className="flex-1 rounded-xl border border-[#D9D5D2] py-4 font-semibold text-[#666] transition hover:bg-[#F6F5F4]"
+                  className="flex-1 rounded-xl border border-[#D9D5D2] py-4 text-sm font-semibold text-[#666] transition hover:bg-[#F6F5F4]"
                 >
                   Skip for now
                 </button>
@@ -1760,7 +1856,7 @@ function BusinessOnboarding() {
                     handleStaffSubmit
                   }
                   disabled={submitting}
-                  className="flex-1 rounded-xl bg-[#242424] py-4 font-bold text-white transition hover:bg-[#B96882] disabled:opacity-60"
+                  className="flex-1 rounded-xl bg-[#242424] py-4 text-sm font-bold text-white transition hover:bg-[#B96882] disabled:opacity-60"
                 >
                   {submitting
                     ? "Finishing..."

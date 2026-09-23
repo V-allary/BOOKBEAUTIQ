@@ -235,7 +235,10 @@ const businessSchema = new mongoose.Schema(
       default: "",
     },
 
-
+    minimumAppointmentDuration: {
+      type: Number,
+      default: 0, // 0 = no minimum enforced
+    },
 
 
     // ==============================

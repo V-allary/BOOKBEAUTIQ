@@ -37,6 +37,21 @@ const staffSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+ 
+    openingTime: {
+      type: String,
+      default: "",
+    },
+
+    closingTime: {
+      type: String,
+      default: "",
+    },
+
+    closedDays: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,
