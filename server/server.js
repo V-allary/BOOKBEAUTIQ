@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import cron from "node-cron";
+import helmet from "helmet";
 import connectDB from "./config/db.js";
 import businessRoutes from "./routes/businessRoutes.js";
 import serviceRoutes from "./routes/serviceRoutes.js";
@@ -40,10 +41,13 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+app.use(helmet());
+
 app.use(
   "/uploads",
   express.static(path.join(__dirname, "uploads"))
 );
+
 app.use(cors({
   origin: ["http://localhost:5173", "https://v-allary.github.io", "https://bookbeautiq.com", "https://www.bookbeautiq.com"],
   credentials: true,
@@ -55,8 +59,6 @@ app.post(
   express.raw({ type: "application/json" }),
   paystackWebhook
 );
-
-app.use(cors({ origin: ["http://localhost:5173"], credentials: true }));
 
 app.use(express.json());
 

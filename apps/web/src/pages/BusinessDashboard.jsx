@@ -2388,7 +2388,7 @@ function BusinessDashboard() {
               PAYOUTS
           ================================== */}
 
-          {activeSection === "payouts" && (
+{activeSection === "payouts" && (
             <div className="max-w-3xl">
 
               <div className="rounded-2xl border border-[#E5E2DF] bg-white p-6 shadow-sm sm:p-8">
@@ -2406,9 +2406,10 @@ function BusinessDashboard() {
                     </h2>
 
                     <p className="mt-1 text-sm leading-6 text-gray-500">
-                      Link your bank account to receive
-                      deposit payments. Settlements
-                      typically take 1–2 business days.
+                      This is where your customers' booking deposits are
+                      sent. Choose your bank, or select M-PESA if you'd
+                      like payments sent directly to your phone number.
+                      Settlements typically take 1–2 business days.
                     </p>
 
                   </div>
@@ -2416,6 +2417,7 @@ function BusinessDashboard() {
                 </div>
 
                 {business.paystackSubaccountCode && !editingPayout ? (
+
                   <div className="mt-8 rounded-2xl border border-green-200 bg-green-50 p-5">
 
                     <div className="flex items-start justify-between gap-4">
@@ -2448,7 +2450,10 @@ function BusinessDashboard() {
                             bankCode: business.bankCode || "",
                             accountNumber: "",
                           });
-                          setResolvedName(business.bankAccountName || "");
+                          // Deliberately reset, not pre-filled with the old
+                          // name — the new details must be re-verified
+                          // before Save becomes available.
+                          setResolvedName("");
                           setPayoutMessage("");
                           setEditingPayout(true);
                         }}
@@ -2460,31 +2465,35 @@ function BusinessDashboard() {
                     </div>
 
                   </div>
-                ) : (  <div className="mt-8 space-y-5">
 
+                ) : (
+
+                  <div className="mt-8 space-y-5">
 
                     <div>
 
                       <label className="mb-2 block text-sm font-semibold text-[#242424]">
-                        Bank
+                        Payout Method
                       </label>
 
+                      <p className="mb-3 text-xs text-gray-500">
+                        Select your bank, or choose M-PESA to receive
+                        payments directly to your phone number instead.
+                      </p>
+
                       <select
-                        value={
-                          payoutForm.bankCode
-                        }
+                        value={payoutForm.bankCode}
                         onChange={(e) =>
                           setPayoutForm({
                             ...payoutForm,
-                            bankCode:
-                              e.target.value,
+                            bankCode: e.target.value,
                           })
                         }
-                        className="w-full rounded-xl border border-[#D9D5D1] bg-white p-4 text-sm outline-none transition focus:border-[#777]"
+                        className="w-full cursor-pointer rounded-xl border border-[#D9D5D1] bg-white p-4 text-sm outline-none transition focus:border-[#777]"
                       >
 
                         <option value="">
-                          Select your bank
+                          Select your bank or M-PESA
                         </option>
 
                         {banks.map((bank) => (
@@ -2503,20 +2512,33 @@ function BusinessDashboard() {
                     <div>
 
                       <label className="mb-2 block text-sm font-semibold text-[#242424]">
-                        Account Number
+                        {banks.find((b) => b.code === payoutForm.bankCode)
+                          ?.name?.toUpperCase()
+                          .includes("MPESA") ||
+                        banks.find((b) => b.code === payoutForm.bankCode)
+                          ?.name?.toUpperCase()
+                          .includes("M-PESA")
+                          ? "M-PESA Phone Number"
+                          : "Account Number"}
                       </label>
 
                       <input
                         type="text"
-                        placeholder="Enter account number"
-                        value={
-                          payoutForm.accountNumber
+                        placeholder={
+                          banks.find((b) => b.code === payoutForm.bankCode)
+                            ?.name?.toUpperCase()
+                            .includes("MPESA") ||
+                          banks.find((b) => b.code === payoutForm.bankCode)
+                            ?.name?.toUpperCase()
+                            .includes("M-PESA")
+                            ? "e.g. 0712345678"
+                            : "Enter account number"
                         }
+                        value={payoutForm.accountNumber}
                         onChange={(e) =>
                           setPayoutForm({
                             ...payoutForm,
-                            accountNumber:
-                              e.target.value,
+                            accountNumber: e.target.value,
                           })
                         }
                         className="w-full rounded-xl border border-[#D9D5D1] p-4 text-sm outline-none transition focus:border-[#777]"
@@ -2526,9 +2548,7 @@ function BusinessDashboard() {
 
                     <button
                       type="button"
-                      onClick={
-                        handleResolveAccount
-                      }
+                      onClick={handleResolveAccount}
                       className="rounded-xl border border-[#242424] px-5 py-3 text-sm font-semibold text-[#242424] transition hover:bg-[#F5F4F2]"
                     >
                       Verify Account
@@ -2554,51 +2574,45 @@ function BusinessDashboard() {
                       </div>
                     )}
 
-<div className="flex gap-3">
+                    <div className="flex gap-3">
 
-<button
-  type="button"
-  onClick={
-    handleSavePayout
-  }
-  disabled={
-    !resolvedName ||
-    payoutSubmitting
-  }
-  className="flex-1 rounded-xl bg-[#242424] py-4 font-semibold text-white transition hover:bg-[#9D536D] disabled:cursor-not-allowed disabled:opacity-50"
->
-  {payoutSubmitting
-    ? "Saving..."
-    : business.paystackSubaccountCode
-    ? "Save New Payout Details"
-    : "Save Payout Account"}
-</button>
+                      <button
+                        type="button"
+                        onClick={handleSavePayout}
+                        disabled={!resolvedName || payoutSubmitting}
+                        className="flex-1 rounded-xl bg-[#242424] py-4 font-semibold text-white transition hover:bg-[#9D536D] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {payoutSubmitting
+                          ? "Saving..."
+                          : business.paystackSubaccountCode
+                          ? "Save New Payout Details"
+                          : "Save Payout Account"}
+                      </button>
 
-{business.paystackSubaccountCode && (
-  <button
-    type="button"
-    onClick={() => {
-      setEditingPayout(false);
-      setPayoutMessage("");
-      setResolvedName("");
-    }}
-    className="rounded-xl border border-[#E5E2DF] px-6 py-4 text-sm font-semibold text-[#242424] transition hover:bg-[#F5F4F2]"
-  >
-    Cancel
-  </button>
-)}
+                      {business.paystackSubaccountCode && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingPayout(false);
+                            setPayoutMessage("");
+                            setResolvedName("");
+                          }}
+                          className="rounded-xl border border-[#E5E2DF] px-6 py-4 text-sm font-semibold text-[#242424] transition hover:bg-[#F5F4F2]"
+                        >
+                          Cancel
+                        </button>
+                      )}
 
-</div>
+                    </div>
 
-</div>
-)}
+                  </div>
 
+                )}
 
               </div>
 
             </div>
           )}
-
           {/* ==================================
               SERVICES
           ================================== */}
