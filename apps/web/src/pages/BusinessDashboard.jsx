@@ -25,6 +25,7 @@ function BusinessDashboard() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [analytics, setAnalytics] = useState(null);
+  const [existingGalleryUrls, setExistingGalleryUrls] = useState([]);
 
 
 
@@ -261,12 +262,9 @@ function BusinessDashboard() {
     });
 
     setCoverPreview(business.image ? getImageUrl(business.image) : "");
-
-    setGalleryPreviews(
-      Array.isArray(business.gallery)
-        ? business.gallery.map(getImageUrl)
-        : []
-    );
+    const rawGallery = Array.isArray(business.gallery) ? business.gallery : [];
+    setExistingGalleryUrls(rawGallery);
+    setGalleryPreviews(rawGallery.map(getImageUrl));
 
 
 
@@ -434,18 +432,12 @@ function BusinessDashboard() {
       e.target.value = "";
       return;
     }
-
-    const existingGallery = Array.isArray(
-      business?.gallery
-    )
-      ? business.gallery.map(getImageUrl)
-      : [];
+    const existingGalleryDisplay = existingGalleryUrls.map(getImageUrl);
 
     const availableSlots =
       5 -
-      existingGallery.length -
+      existingGalleryDisplay.length -
       galleryFiles.length;
-
     if (availableSlots <= 0) {
       setProfileMessage(
         "You can have a maximum of 5 gallery images."
@@ -468,7 +460,7 @@ function BusinessDashboard() {
     setGalleryFiles(combinedFiles);
 
     setGalleryPreviews([
-      ...existingGallery,
+      ...existingGalleryDisplay,
       ...combinedFiles.map((file) =>
         URL.createObjectURL(file)
       ),
@@ -480,42 +472,44 @@ function BusinessDashboard() {
   };
 
   // ==========================================
-  // REMOVE NEW GALLERY IMAGE
+  // REMOVE GALLERY IMAGE
   // ==========================================
 
-  const removeNewGalleryImage = (index) => {
-    const existingGallery = Array.isArray(
-      business?.gallery
-    )
-      ? business.gallery.map(getImageUrl)
-      : [];
-
-    const newFileIndex =
-      index - existingGallery.length;
-
-    if (newFileIndex < 0) {
-      setProfileMessage(
-        "Existing gallery images cannot be removed yet."
+  const removeGalleryImage = (index) => {
+    if (index < existingGalleryUrls.length) {
+      
+      const updatedExisting = existingGalleryUrls.filter(
+        (_, i) => i !== index
       );
-      return;
+
+      setExistingGalleryUrls(updatedExisting);
+
+      setGalleryPreviews([
+        ...updatedExisting.map(getImageUrl),
+        ...galleryFiles.map((file) =>
+          URL.createObjectURL(file)
+        ),
+      ]);
+    } else {
+      
+      const newFileIndex = index - existingGalleryUrls.length;
+
+      const updatedFiles = galleryFiles.filter(
+        (_, i) => i !== newFileIndex
+      );
+
+      setGalleryFiles(updatedFiles);
+
+      setGalleryPreviews([
+        ...existingGalleryUrls.map(getImageUrl),
+        ...updatedFiles.map((file) =>
+          URL.createObjectURL(file)
+        ),
+      ]);
     }
-
-    const updatedFiles = galleryFiles.filter(
-      (_, i) => i !== newFileIndex
-    );
-
-    setGalleryFiles(updatedFiles);
-
-    setGalleryPreviews([
-      ...existingGallery,
-      ...updatedFiles.map((file) =>
-        URL.createObjectURL(file)
-      ),
-    ]);
 
     setProfileMessage("");
   };
-
   // ==========================================
   // SAVE BUSINESS PROFILE
   // ==========================================
@@ -532,14 +526,7 @@ function BusinessDashboard() {
         coverUrl = await uploadImage(coverFile);
       }
 
-      // Existing gallery
-      const existingGallery = Array.isArray(
-        business.gallery
-      )
-        ? business.gallery
-        : [];
-
-      // Upload new gallery images
+       // Upload new gallery images
       const newGalleryUrls = [];
 
       for (const file of galleryFiles) {
@@ -547,8 +534,9 @@ function BusinessDashboard() {
         newGalleryUrls.push(url);
       }
 
+       
       const updatedGallery = [
-        ...existingGallery,
+        ...existingGalleryUrls,
         ...newGalleryUrls,
       ].slice(0, 5);
 
@@ -1787,21 +1775,15 @@ function BusinessDashboard() {
                               className="h-full w-full object-cover"
                             />
 
-                            {index >=
-                              (business.gallery
-                                ?.length || 0) && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  removeNewGalleryImage(
-                                    index
-                                  )
-                                }
-                                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition group-hover:opacity-100"
-                              >
-                                ×
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                removeGalleryImage(index)
+                              }
+                              className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition group-hover:opacity-100"
+                            >
+                              ×
+                            </button>
 
                           </div>
                         )

@@ -6,6 +6,9 @@ function StaffManager({ businesses }) {
   const token = localStorage.getItem("token");
 
   const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+
+  const [editingStaffId, setEditingStaffId] = useState(null);
 
   const [formData, setFormData] = useState({
     businessId: businesses[0]?._id || "",
@@ -40,14 +43,63 @@ function StaffManager({ businesses }) {
   };
 
   const handleImageChange = (e) => {
-    setImageFile(e.target.files[0]);
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
+
+  const imageUrl = (img) =>
+    img?.startsWith("/uploads/") ? `${API_URL}${img}` : img;
+
+  // ==========================================
+  // START EDITING AN EXISTING STAFF MEMBER
+  // ==========================================
+
+  const handleEditClick = (member) => {
+    setEditingStaffId(member._id);
+
+    setFormData({
+      businessId: member.businessId || formData.businessId,
+      name: member.name || "",
+      role: member.role || "",
+      phone: member.phone || "",
+      email: member.email || "",
+      image: member.image || "",
+    });
+
+    setImageFile(null);
+    setImagePreview(member.image ? imageUrl(member.image) : "");
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingStaffId(null);
+
+    setFormData({
+      businessId: businesses[0]?._id || "",
+      name: "",
+      role: "",
+      phone: "",
+      email: "",
+      image: "",
+    });
+
+    setImageFile(null);
+    setImagePreview("");
+  };
+
+  // ==========================================
+  // ADD OR UPDATE
+  // ==========================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      let imageUrl = formData.image;
+      let uploadedImageUrl = formData.image;
 
       if (imageFile) {
         const imageData = new FormData();
@@ -58,39 +110,38 @@ function StaffManager({ businesses }) {
           headers: { Authorization: `Bearer ${token}` },
           body: imageData,
         });
-
         const uploadResult = await uploadResponse.json();
         if (!uploadResponse.ok) throw new Error(uploadResult.message || "Image upload failed.");
-        imageUrl = uploadResult.imageUrl;
+        uploadedImageUrl = uploadResult.imageUrl;
       }
 
-      const response = await fetch(`${API_URL}/api/staff`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ...formData, image: imageUrl }),
-      });
+      const isEditing = !!editingStaffId;
+
+      const response = await fetch(
+        isEditing
+          ? `${API_URL}/api/staff/${editingStaffId}`
+          : `${API_URL}/api/staff`,
+        {
+          method: isEditing ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ ...formData, image: uploadedImageUrl }),
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to add staff");
+        throw new Error(
+          data.message || (isEditing ? "Failed to update staff member." : "Failed to add staff.")
+        );
       }
 
-      alert("Staff member added successfully!");
+      alert(isEditing ? "Staff member updated successfully!" : "Staff member added successfully!");
 
-      setFormData({
-        businessId: businesses[0]?._id || "",
-        name: "",
-        role: "",
-        phone: "",
-        email: "",
-        image: "",
-      });
-      setImageFile(null);
-
+      handleCancelEdit();
       fetchStaff();
     } catch (error) {
       console.error(error);
@@ -110,14 +161,15 @@ function StaffManager({ businesses }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Failed to remove staff member.");
 
+      if (editingStaffId === id) {
+        handleCancelEdit();
+      }
+
       fetchStaff();
     } catch (error) {
       alert(error.message);
     }
   };
-
-  const imageUrl = (img) =>
-    img?.startsWith("/uploads/") ? `${API_URL}${img}` : img;
 
   return (
     <div className="mt-12 rounded-3xl bg-white p-8 shadow-lg">
@@ -127,6 +179,21 @@ function StaffManager({ businesses }) {
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+
+        {editingStaffId && (
+          <div className="flex items-center justify-between rounded-xl bg-[#F2E8EC] px-4 py-3">
+            <p className="text-sm font-semibold text-[#9D536D]">
+              Editing {formData.name || "staff member"}
+            </p>
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="text-sm font-semibold text-[#9D536D] underline"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
 
         {businesses.length > 1 && (
           <select
@@ -187,19 +254,36 @@ function StaffManager({ businesses }) {
           <label className="mb-2 block font-medium text-gray-700">
             Staff Photo
           </label>
+
+          {imagePreview && (
+            <div className="mb-3 h-20 w-20 overflow-hidden rounded-full bg-[#F2E8EC]">
+              <img
+                src={imagePreview}
+                alt="Staff preview"
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
+
           <input
             type="file"
             accept="image/*"
             onChange={handleImageChange}
             className="w-full rounded-xl border border-dashed border-[#D9A9B8] p-4"
           />
+
+          {editingStaffId && (
+            <p className="mt-1 text-xs text-gray-400">
+              Leave empty to keep their current photo.
+            </p>
+          )}
         </div>
 
         <button
           type="submit"
           className="w-full rounded-xl bg-[#242424] py-4 font-semibold text-white transition hover:bg-[#B96882]"
         >
-          Add Staff
+          {editingStaffId ? "Save Changes" : "Add Staff"}
         </button>
 
       </form>
@@ -226,12 +310,23 @@ function StaffManager({ businesses }) {
               </div>
             </div>
 
-            <button
-              onClick={() => handleDelete(member._id)}
-              className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
-            >
-              Remove
-            </button>
+            <div className="flex gap-2">
+
+              <button
+                onClick={() => handleEditClick(member)}
+                className="rounded-xl border border-[#E5E2DF] px-4 py-2 text-sm font-semibold text-[#242424] hover:border-[#B96882] hover:text-[#B96882]"
+              >
+                Edit
+              </button>
+
+              <button
+                onClick={() => handleDelete(member._id)}
+                className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
+              >
+                Remove
+              </button>
+
+            </div>
 
           </div>
 

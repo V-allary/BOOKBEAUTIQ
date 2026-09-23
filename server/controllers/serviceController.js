@@ -37,6 +37,30 @@ export const createService = async (req, res) => {
   }
 };
 
+// Update service
+export const updateService = async (req, res) => {
+  try {
+    const service = await Service.findById(req.params.id);
+    if (!service) return res.status(404).json({ message: "Service not found." });
+
+    const business = await Business.findById(service.businessId);
+    const isOwner = business?.owner?.toString() === req.user.userId;
+    if (!isOwner && req.user.role !== "admin") {
+      return res.status(403).json({ message: "You can only manage your own business's services." });
+    }
+
+    // Nobody can move a service to a different business through this route.
+    delete req.body.businessId;
+
+    Object.assign(service, req.body);
+    const updatedService = await service.save();
+
+    res.status(200).json(updatedService);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const deleteService = async (req, res) => {
   try {
     const service = await Service.findById(req.params.id);

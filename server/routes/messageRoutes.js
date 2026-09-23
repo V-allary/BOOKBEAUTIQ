@@ -8,6 +8,7 @@ import {
   getCustomerConversation,
   getBusinessConversation,
   listBusinessConversations,
+  deleteConversation,
 } from "../controllers/messageController.js";
 
 const router = express.Router();
@@ -27,6 +28,13 @@ router.get(
   authMiddleware,
   roleMiddleware("business", "admin"),
   listBusinessConversations
+);
+
+router.delete(
+  "/business/:businessId/:customerEmail",
+  authMiddleware,
+  roleMiddleware("business", "admin"),
+  deleteConversation
 );
 
 export default router;

@@ -40,7 +40,6 @@ export const sendCustomerMessage = async (req, res) => {
       sender: "customer",
       text: text.trim(),
     });
-
     const business = await Business.findById(businessId);
     if (business) {
       const owner = await User.findById(business.owner);
@@ -49,7 +48,7 @@ export const sendCustomerMessage = async (req, res) => {
           userId: owner._id,
           type: "new_message",
           title: "New customer message",
-          message: `${email} sent you a message.`,
+          message: `${customerEmail} sent you a message.`,
           email: owner.email,
           link: "/dashboard",
         });
@@ -195,6 +194,31 @@ export const listBusinessConversations = async (req, res) => {
     ]);
 
     res.status(200).json(conversations);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+// ==========================================
+// DELETE CONVERSATION — business side
+// Removes every message between this business
+// and a specific customer.
+// ==========================================
+
+export const deleteConversation = async (req, res) => {
+  try {
+    const { businessId, customerEmail } = req.params;
+
+    const business = await Business.findById(businessId);
+    if (!business) return res.status(404).json({ message: "Business not found." });
+
+    const isOwner = business.owner?.toString() === req.user.userId;
+    if (!isOwner && req.user.role !== "admin") {
+      return res.status(403).json({ message: "You can only manage your own business's conversations." });
+    }
+
+    await Message.deleteMany({ businessId, customerEmail });
+
+    res.status(200).json({ message: "Conversation deleted successfully." });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

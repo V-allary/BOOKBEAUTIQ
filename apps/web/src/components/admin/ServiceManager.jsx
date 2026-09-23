@@ -5,11 +5,14 @@ function ServiceManager({ businesses }) {
   const [services, setServices] = useState([]);
   const token = localStorage.getItem("token");
 
-  const [formData, setFormData] = useState({
+  const [editingServiceId, setEditingServiceId] = useState(null);
+
+  const emptyForm = {
     businessId: businesses[0]?._id || "",
     name: "",
     description: "",
-    duration: "",
+    durationHours: "",
+    durationMinutes: "",
     price: "",
     category: "",
     discountEnabled: false,
@@ -17,7 +20,9 @@ function ServiceManager({ businesses }) {
     discountLabel: "",
     discountStartDate: "",
     discountEndDate: "",
-  });
+  };
+
+  const [formData, setFormData] = useState(emptyForm);
 
   const fetchServices = async () => {
     try {
@@ -43,15 +48,55 @@ function ServiceManager({ businesses }) {
     setFormData({ ...formData, [name]: type === "checkbox" ? checked : value });
   };
 
+  // ==========================================
+  // START EDITING AN EXISTING SERVICE
+  // ==========================================
+
+  const handleEditClick = (service) => {
+    setEditingServiceId(service._id);
+
+    const totalMinutes = Number(service.duration) || 0;
+
+    setFormData({
+      businessId: service.businessId || formData.businessId,
+      name: service.name || "",
+      description: service.description || "",
+      durationHours: String(Math.floor(totalMinutes / 60)),
+      durationMinutes: String(totalMinutes % 60),
+      price: service.price ?? "",
+      category: service.category || "",
+      discountEnabled: !!service.discountPrice,
+      discountPrice: service.discountPrice ?? "",
+      discountLabel: service.discountLabel || "",
+      discountStartDate: service.discountStartDate
+        ? service.discountStartDate.slice(0, 10)
+        : "",
+      discountEndDate: service.discountEndDate
+        ? service.discountEndDate.slice(0, 10)
+        : "",
+    });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingServiceId(null);
+    setFormData({ ...emptyForm, businessId: businesses[0]?._id || "" });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      const totalDurationMinutes =
+        (Number(formData.durationHours) || 0) * 60 +
+        (Number(formData.durationMinutes) || 0);
+
       const payload = {
         businessId: formData.businessId,
         name: formData.name,
         description: formData.description,
-        duration: formData.duration,
+        duration: totalDurationMinutes,
         price: formData.price,
         category: formData.category,
         discountPrice: formData.discountEnabled && formData.discountPrice ? formData.discountPrice : null,
@@ -60,37 +105,33 @@ function ServiceManager({ businesses }) {
         discountEndDate: formData.discountEnabled && formData.discountEndDate ? formData.discountEndDate : null,
       };
 
-      const response = await fetch(`${API_URL}/api/services`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      const isEditing = !!editingServiceId;
+
+      const response = await fetch(
+        isEditing
+          ? `${API_URL}/api/services/${editingServiceId}`
+          : `${API_URL}/api/services`,
+        {
+          method: isEditing ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to create service");
+        throw new Error(
+          data.message || (isEditing ? "Failed to update service." : "Failed to create service")
+        );
       }
 
-      alert("Service added successfully!");
+      alert(isEditing ? "Service updated successfully!" : "Service added successfully!");
 
-      setFormData({
-        businessId: businesses[0]?._id || "",
-        name: "",
-        description: "",
-        duration: "",
-        price: "",
-        category: "",
-        discountEnabled: false,
-        discountPrice: "",
-        discountLabel: "",
-        discountStartDate: "",
-        discountEndDate: "",
-      });
-
+      handleCancelEdit();
       fetchServices();
     } catch (error) {
       console.error(error);
@@ -110,11 +151,15 @@ function ServiceManager({ businesses }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Failed to delete service.");
 
+      if (editingServiceId === id) {
+        handleCancelEdit();
+      }
+
       fetchServices();
     } catch (error) {
       alert(error.message);
     }
-  };
+  };  
 
   const isDiscountActive = (service) => {
     if (!service.discountPrice) return false;
@@ -122,6 +167,16 @@ function ServiceManager({ businesses }) {
     if (service.discountStartDate && new Date(service.discountStartDate) > now) return false;
     if (service.discountEndDate && new Date(service.discountEndDate) < now) return false;
     return true;
+  };
+
+  const formatDuration = (totalMinutes) => {
+    const minutes = Number(totalMinutes) || 0;
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    if (hours === 0) return `${remainingMinutes} mins`;
+    if (remainingMinutes === 0) return `${hours} hr${hours > 1 ? "s" : ""}`;
+    return `${hours} hr${hours > 1 ? "s" : ""} ${remainingMinutes} mins`;
   };
 
   return (
@@ -132,6 +187,21 @@ function ServiceManager({ businesses }) {
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+
+        {editingServiceId && (
+          <div className="flex items-center justify-between rounded-xl bg-[#F2E8EC] px-4 py-3">
+            <p className="text-sm font-semibold text-[#9D536D]">
+              Editing {formData.name || "service"}
+            </p>
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="text-sm font-semibold text-[#9D536D] underline"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
 
         {businesses.length > 1 && (
           <div>
@@ -174,15 +244,42 @@ function ServiceManager({ businesses }) {
           className="w-full rounded-xl border p-4"
         />
 
-        <input
-          type="number"
-          name="duration"
-          placeholder="Duration (minutes)"
-          value={formData.duration}
-          onChange={handleChange}
-          className="w-full rounded-xl border p-4"
-          required
-        />
+        <div>
+          <label className="mb-2 block text-sm font-medium text-gray-700">
+            Duration
+          </label>
+
+          <div className="grid grid-cols-2 gap-3">
+
+            <div>
+              <input
+                type="number"
+                name="durationHours"
+                placeholder="0"
+                min="0"
+                value={formData.durationHours}
+                onChange={handleChange}
+                className="w-full rounded-xl border p-4"
+              />
+              <p className="mt-1 text-xs text-gray-400">Hours</p>
+            </div>
+
+            <div>
+              <input
+                type="number"
+                name="durationMinutes"
+                placeholder="0"
+                min="0"
+                max="59"
+                value={formData.durationMinutes}
+                onChange={handleChange}
+                className="w-full rounded-xl border p-4"
+              />
+              <p className="mt-1 text-xs text-gray-400">Minutes</p>
+            </div>
+
+          </div>
+        </div>
 
         <input
           type="number"
@@ -274,7 +371,7 @@ function ServiceManager({ businesses }) {
           type="submit"
           className="w-full rounded-xl bg-[#242424] py-4 font-semibold text-white transition hover:bg-[#B96882]"
         >
-          Add Service
+          {editingServiceId ? "Save Changes" : "Add Service"}
         </button>
 
       </form>
@@ -289,8 +386,7 @@ function ServiceManager({ businesses }) {
               key={service._id}
               className="flex items-center justify-between rounded-2xl border border-[#ECE9E6] p-5"
             >
-
-              <div>
+    <div>
                 <div className="flex items-center gap-3">
                   <h3 className="text-xl font-bold">
                     {service.name}
@@ -308,7 +404,7 @@ function ServiceManager({ businesses }) {
                 </p>
 
                 <div className="mt-3 flex items-center gap-6 text-sm">
-                  <span>⏱ {service.duration} mins</span>
+                  <span>⏱ {formatDuration(service.duration)}</span>
 
                   {onOffer ? (
                     <span className="flex items-center gap-2">
@@ -323,12 +419,23 @@ function ServiceManager({ businesses }) {
                 </div>
               </div>
 
-              <button
-                onClick={() => handleDelete(service._id)}
-                className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
-              >
-                Delete
-              </button>
+              <div className="flex gap-2">
+
+                <button
+                  onClick={() => handleEditClick(service)}
+                  className="rounded-xl border border-[#E5E2DF] px-4 py-2 text-sm font-semibold text-[#242424] hover:border-[#B96882] hover:text-[#B96882]"
+                >
+                  Edit
+                </button>
+
+                <button
+                  onClick={() => handleDelete(service._id)}
+                  className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
+                >
+                  Delete
+                </button>
+
+              </div>
 
             </div>
           );
