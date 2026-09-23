@@ -26,7 +26,6 @@ function StaffManager({ businesses }) {
 
   const [formData, setFormData] = useState(emptyForm);
   const [customHoursEnabled, setCustomHoursEnabled] = useState(false);
-
   const fetchStaff = async () => {
     try {
       const businessId = formData.businessId || businesses[0]?._id;
@@ -36,9 +35,10 @@ function StaffManager({ businesses }) {
 
       const response = await fetch(url);
       const data = await response.json();
-      setStaff(data);
+      setStaff(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error(error);
+      setStaff([]);
     }
   };
 
@@ -76,12 +76,15 @@ function StaffManager({ businesses }) {
   // ==========================================
   // START EDITING AN EXISTING STAFF MEMBER
   // ==========================================
-
   const handleEditClick = (member) => {
     setEditingStaffId(member._id);
+    const normalizedBusinessId =
+      member.businessId && typeof member.businessId === "object"
+        ? member.businessId._id
+        : member.businessId;
 
     setFormData({
-      businessId: member.businessId || formData.businessId,
+      businessId: normalizedBusinessId || formData.businessId,
       name: member.name || "",
       role: member.role || "",
       phone: member.phone || "",
