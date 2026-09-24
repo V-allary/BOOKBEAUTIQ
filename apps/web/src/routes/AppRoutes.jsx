@@ -30,7 +30,7 @@ import PrivacyPolicy from "../pages/PrivacyPolicy";
 import Contact from "../pages/Contact";
 import About from "../pages/About";
 import Careers from "../pages/Careers";
-
+import Terms from "../pages/Terms";
 
 function AppRoutes() {
   return (
@@ -55,6 +55,8 @@ function AppRoutes() {
         <Route path="/about" element={<About />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/careers" element={<Careers />} />
+        <Route path="/terms" element={<Terms />} />
+        
 
 
         <Route path="/businesses" element={<ForBusinesses />} />

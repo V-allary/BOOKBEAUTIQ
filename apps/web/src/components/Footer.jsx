@@ -148,12 +148,7 @@ function Footer() {
               </li>
 
               <li>
-                <a
-                  href="#"
-                  className="text-sm text-white/50 transition hover:text-[#B96882]"
-                >
-                  Blog
-                </a>
+                
               </li>
 
               <li>
@@ -239,13 +234,12 @@ function Footer() {
             >
               Privacy
             </Link>
-
-            <a
-              href="#"
+            <Link
+              to="/terms"
               className="transition hover:text-[#B96882]"
             >
               Terms
-            </a>
+            </Link>
 
             <a
               href="#"

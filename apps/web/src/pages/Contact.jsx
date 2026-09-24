@@ -105,7 +105,7 @@ function Contact() {
 
             <p className="text-center text-xs text-gray-400">
               This will open your email app with your message pre-filled,
-              addressed to hello@bookbeautiq.com.
+              addressed to bookbeautiq@gmail.com.
             </p>
 
           </form>
