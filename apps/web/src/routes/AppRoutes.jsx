@@ -27,6 +27,9 @@ import Categories from "../pages/Categories";
 import SubscriptionCallback from "../pages/SubscriptionCallback";
 import HelpCenter from "../pages/HelpCenter";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
+import Contact from "../pages/Contact";
+import About from "../pages/About";
+import Careers from "../pages/Careers";
 
 
 function AppRoutes() {
@@ -48,7 +51,10 @@ function AppRoutes() {
         <Route path="/review/:token" element={<LeaveReview />} />
         <Route path="/subscription/callback" element={<SubscriptionCallback />} />
         <Route path="/help" element={<HelpCenter />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/about" element={<About />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/careers" element={<Careers />} />
 
 
         <Route path="/businesses" element={<ForBusinesses />} />

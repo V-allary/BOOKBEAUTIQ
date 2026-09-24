@@ -64,9 +64,7 @@ function Footer() {
 
           {/* Explore */}
 
-          <div>
-
-            <h3 className="text-sm font-semibold text-white">
+          <div>  <h3 className="text-sm font-semibold text-white">
               Explore
             </h3>
 
@@ -132,21 +130,21 @@ function Footer() {
             <ul className="mt-5 space-y-3">
 
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/about"
                   className="text-sm text-white/50 transition hover:text-[#B96882]"
                 >
                   About BookBeautiq
-                </a>
+                </Link>
               </li>
 
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/careers"
                   className="text-sm text-white/50 transition hover:text-[#B96882]"
                 >
                   Careers
-                </a>
+                </Link>
               </li>
 
               <li>
@@ -159,12 +157,12 @@ function Footer() {
               </li>
 
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/contact"
                   className="text-sm text-white/50 transition hover:text-[#B96882]"
                 >
                   Contact
-                </a>
+                </Link>
               </li>
 
             </ul>
