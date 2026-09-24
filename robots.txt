@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /checkout
+Disallow: /onboarding
+Disallow: /verify-account
+Disallow: /bookings
+Disallow: /profile
+Disallow: /payment
+Disallow: /subscription
+Disallow: /reset-password
+
+Sitemap: https://bookbeautiq.com/sitemap.xml
