@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -125,7 +126,6 @@ function BusinessDetails() {
         )
       );
   }, [business?._id]);
-
   /* =====================================================
       CHECKOUT
   ===================================================== */
@@ -259,8 +259,31 @@ function BusinessDetails() {
 
   const rating = Number(business.avgRating || 0);
 
+  const pageTitle = `${business.name} — ${business.category} in ${business.location} | BookBeautiq`;
+  const pageDescription = business.description
+    ? business.description.slice(0, 155)
+    : `Book ${business.name}, a ${business.category} business in ${business.location}, on BookBeautiq.`;
+  const pageUrl = `https://bookbeautiq.com/${business.slug || business._id}`;
+
   return (
     <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={pageUrl} />
+
+        <meta property="og:type" content="business.business" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={pageUrl} />
+        {coverUrl && <meta property="og:image" content={coverUrl} />}
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        {coverUrl && <meta name="twitter:image" content={coverUrl} />}
+      </Helmet>
+
       <Navbar />
 
       <main className="min-h-screen bg-[#F7F7F6]">
@@ -392,7 +415,6 @@ function BusinessDetails() {
 
                 </div>
 
-
                 <div className="flex flex-col gap-1 border-b border-[#E5E2DF] pb-4 sm:flex-row sm:items-center sm:justify-between">
 
                   <span className="text-gray-500">
@@ -425,7 +447,7 @@ function BusinessDetails() {
 
             {/* ================= CONTACT INFORMATION ================= */}
 
-            {(business.phone || business.email) && (
+            {(business.phone || business.location || business.email) && (
               <div className="mt-6 rounded-2xl border border-[#E5E2DF] bg-white p-5 shadow-sm sm:mt-8 sm:p-8">
 
                 <h2 className="mb-6 text-2xl font-bold text-[#242424]">
@@ -435,7 +457,7 @@ function BusinessDetails() {
                 <div className="space-y-4">
 
                   {business.phone && (
-                    <div className="flex flex-col gap-1 border-b border-[#E5E2DF] pb-4 last:border-b-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-1 border-b border-[#E5E2DF] pb-4 sm:flex-row sm:items-center sm:justify-between">
 
                       <span className="text-gray-500">
                         Phone
@@ -447,6 +469,20 @@ function BusinessDetails() {
                       >
                         {business.phone}
                       </a>
+
+                    </div>
+                  )}
+
+                  {business.location && (
+                    <div className="flex flex-col gap-1 border-b border-[#E5E2DF] pb-4 last:border-b-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+
+                      <span className="text-gray-500">
+                        Location
+                      </span>
+
+                      <span className="font-semibold text-[#242424]">
+                        {business.location}
+                      </span>
 
                     </div>
                   )}
@@ -613,8 +649,6 @@ function BusinessDetails() {
                   </p>
 
                 </div>
-
-
                 {/* Social Buttons */}
 
                 <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-6">
@@ -688,8 +722,7 @@ function BusinessDetails() {
                           <p className="mt-1 text-xs text-gray-500">
                             View their videos
                           </p>
-
-                        </div>
+ </div>
 
                       </div>
 
@@ -991,8 +1024,7 @@ function BusinessDetails() {
 
             )}
 
-
-            {/* =====================================================
+ {/* =====================================================
                 REVIEWS
             ===================================================== */}
 
