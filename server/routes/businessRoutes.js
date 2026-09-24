@@ -85,6 +85,8 @@ router.patch(
   rejectBusiness
 );
 
+router.get("/stats", getPublicStats);
+
 // ==========================================
 // BUSINESS MANAGEMENT
 // ==========================================

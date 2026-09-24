@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 
 function Hero() {
   const navigate = useNavigate();
@@ -7,6 +8,22 @@ function Hero() {
   const [searchTerm, setSearchTerm] = useState("");
   const [location, setLocation] = useState("");
   const [date, setDate] = useState("");
+
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/businesses/stats`);
+        const data = await response.json();
+        if (response.ok) setStats(data);
+      } catch (error) {
+        console.error("Error loading stats:", error);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -185,43 +202,45 @@ function Hero() {
             TRUST / STATS
         ========================================== */}
 
-        <div className="mx-auto mt-8 flex max-w-2xl items-center justify-center gap-6 text-center sm:mt-10 sm:gap-12">
+        {stats && (
+          <div className="mx-auto mt-8 flex max-w-2xl items-center justify-center gap-6 text-center sm:mt-10 sm:gap-12">
 
-          <div>
-            <p className="text-xl font-bold tracking-tight text-[#242424] sm:text-2xl">
-              20K+
-            </p>
+            <div>
+              <p className="text-xl font-bold tracking-tight text-[#242424] sm:text-2xl">
+                {stats.categoryCount}+
+              </p>
 
-            <p className="mt-1 text-xs text-[#77716F] sm:text-sm">
-              Professionals
-            </p>
+              <p className="mt-1 text-xs text-[#77716F] sm:text-sm">
+                Categories
+              </p>
+            </div>
+
+            <div className="h-8 w-px bg-[#DDD3D1]" />
+
+            <div>
+              <p className="text-xl font-bold tracking-tight text-[#242424] sm:text-2xl">
+                {stats.businessCount}
+              </p>
+
+              <p className="mt-1 text-xs text-[#77716F] sm:text-sm">
+                Verified Businesses
+              </p>
+            </div>
+
+            <div className="h-8 w-px bg-[#DDD3D1]" />
+
+            <div>
+              <p className="text-xl font-bold tracking-tight text-[#242424] sm:text-2xl">
+                {stats.countryCount}
+              </p>
+
+              <p className="mt-1 text-xs text-[#77716F] sm:text-sm">
+                Countries
+              </p>
+            </div>
+
           </div>
-
-          <div className="h-8 w-px bg-[#DDD3D1]" />
-
-          <div>
-            <p className="text-xl font-bold tracking-tight text-[#242424] sm:text-2xl">
-              1M+
-            </p>
-
-            <p className="mt-1 text-xs text-[#77716F] sm:text-sm">
-              Bookings
-            </p>
-          </div>
-
-          <div className="h-8 w-px bg-[#DDD3D1]" />
-
-          <div>
-            <p className="text-xl font-bold tracking-tight text-[#242424] sm:text-2xl">
-              15+
-            </p>
-
-            <p className="mt-1 text-xs text-[#77716F] sm:text-sm">
-              Countries
-            </p>
-          </div>
-
-        </div>
+        )}
 
         {/* ==========================================
             APP CTA
