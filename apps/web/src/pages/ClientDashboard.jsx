@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ChatWidget from "../components/ChatWidget";
 import { API_URL } from "../config";
 
@@ -970,38 +970,77 @@ function ClientDashboard() {
                     ) : (
 
                       businesses.map((business) => (
-                        <button
+                        <div
                           key={business._id}
-                          type="button"
-                          onClick={() =>
-                            setSelectedChat(
-                              business
-                            )
-                          }
-                          className={`w-full rounded-xl px-3 py-3 text-left transition ${
-                            selectedChat?._id ===
-                            business._id
+                          className={`group flex items-center gap-1 rounded-xl transition ${
+                            selectedChat?._id === business._id
                               ? "bg-[#F2E8EC]"
                               : "hover:bg-[#F5F4F2]"
                           }`}
                         >
 
-                          <p
-                            className={`truncate text-sm font-semibold ${
-                              selectedChat?._id ===
-                              business._id
-                                ? "text-[#9D536D]"
-                                : "text-[#242424]"
-                            }`}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedChat(business)
+                            }
+                            className="flex-1 px-3 py-3 text-left"
                           >
-                            {business.name}
-                          </p>
 
-                          <p className="mt-0.5 truncate text-xs text-gray-400">
-                            Beauty business
-                          </p>
+                            <p
+                              className={`truncate text-sm font-semibold ${
+                                selectedChat?._id === business._id
+                                  ? "text-[#9D536D]"
+                                  : "text-[#242424]"
+                              }`}
+                            >
+                              {business.name}
+                            </p>
 
-                        </button>
+                            <p className="mt-0.5 truncate text-xs text-gray-400">
+                              Beauty business
+                            </p>
+
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+
+                              if (!window.confirm(`Delete this conversation with ${business.name}? This cannot be undone.`)) {
+                                return;
+                              }
+
+                              try {
+                                const response = await fetch(
+                                  `${API_URL}/api/messages/customer/${business._id}`,
+                                  {
+                                    method: "DELETE",
+                                    headers: { Authorization: `Bearer ${token}` },
+                                  }
+                                );
+
+                                const data = await response.json();
+
+                                if (!response.ok) {
+                                  throw new Error(data.message || "Failed to delete conversation.");
+                                }
+
+                                if (selectedChat?._id === business._id) {
+                                  setSelectedChat(null);
+                                }
+                              } catch (error) {
+                                alert(error.message);
+                              }
+                            }}
+                            aria-label="Delete conversation"
+                            className="mr-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-gray-300 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                          >
+                            ×
+                          </button>
+
+                        </div>
                       ))
 
                     )}

@@ -223,3 +223,26 @@ export const deleteConversation = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+// ==========================================
+// DELETE CONVERSATION — customer side
+// ==========================================
+
+export const deleteCustomerConversation = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ message: "You must be signed in to do this." });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    await Message.deleteMany({ businessId, customerEmail: user.email });
+
+    res.status(200).json({ message: "Conversation deleted successfully." });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

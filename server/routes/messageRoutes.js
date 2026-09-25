@@ -9,6 +9,7 @@ import {
   getBusinessConversation,
   listBusinessConversations,
   deleteConversation,
+  deleteCustomerConversation,
 } from "../controllers/messageController.js";
 
 const router = express.Router();
@@ -36,5 +37,7 @@ router.delete(
   roleMiddleware("business", "admin"),
   deleteConversation
 );
+
+router.delete("/customer/:businessId", authMiddleware, deleteCustomerConversation);
 
 export default router;

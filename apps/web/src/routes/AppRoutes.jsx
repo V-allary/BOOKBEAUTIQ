@@ -61,11 +61,13 @@ function AppRoutes() {
 
         <Route path="/businesses" element={<ForBusinesses />} />
 
+        {/* Checkout -Open to guests and logged in customers alike*/}
+        <Route path="/checkout" element={<Checkout />} />
+
         {/* Protected Routes — logged in required */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/bookings" element={<Bookings />} />
-          <Route path="/checkout" element={<Checkout />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/verify-account" element={<AccountVerification />} />
         </Route>
