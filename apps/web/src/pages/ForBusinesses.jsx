@@ -101,8 +101,7 @@ function ForBusinesses() {
       price: "KES 2,500",
       period: "/ month",
       trial: "7 days free",
-      description:
-        "Built for salons, spas and beauty businesses managing multiple professionals.",
+      description:  "Built for salons, spas and beauty businesses managing multiple professionals.",
       features: [
         "Everything in Independent",
         "Multiple staff profiles",
@@ -136,6 +135,12 @@ function ForBusinesses() {
   ];
   const toggleMenu = (menu) => {
     setOpenMenu(openMenu === menu ? null : menu);
+  };
+
+  const scrollToPricing = () => {
+    document
+      .getElementById("pricing")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
@@ -184,7 +189,7 @@ function ForBusinesses() {
                 >
                   ▾
                 </span>
-              </button>
+          </button>
 
               {openMenu === "business" && (
                 <div className="absolute left-1/2 top-12 w-64 -translate-x-1/2 rounded-3xl border border-[#EEE7EA] bg-white p-4 shadow-[0_20px_60px_rgba(31,41,55,0.12)]">
@@ -267,8 +272,7 @@ function ForBusinesses() {
                   </div>
 
                 </div>
-              )}
-
+              )} 
             </div>
 
             {/* Pricing */}
@@ -353,7 +357,6 @@ function ForBusinesses() {
               >
                 Sign in
               </Link>
-
               <Link
                 to="/signup"
                 className="block rounded-xl bg-[#1F2937] px-4 py-3 text-center font-semibold text-white"
@@ -404,12 +407,13 @@ function ForBusinesses() {
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
 
-                <Link
-                  to="/signup"
+                <button
+                  type="button"
+                  onClick={scrollToPricing}
                   className="rounded-full bg-[#1F2937] px-8 py-4 text-center font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#111827] hover:shadow-xl"
                 >
                   Get started free 7-days trial →
-                </Link>
+                </button>
 
                 <a
                   href="#features"
@@ -441,7 +445,7 @@ function ForBusinesses() {
                 </p>
               </div>
 
-              <div className="rounded-[2rem] bg-white p-3 shadow-[0_35px_90px_rgba(31,41,55,0.14)] ring-1 ring-[#EEE7EA]">
+  <div className="rounded-[2rem] bg-white p-3 shadow-[0_35px_90px_rgba(31,41,55,0.14)] ring-1 ring-[#EEE7EA]">
 
                 <div className="overflow-hidden rounded-[1.5rem] border border-[#EEE7EA] bg-[#FAF8F9]">
 
@@ -526,7 +530,7 @@ function ForBusinesses() {
 
                       <div className="mt-4 space-y-3">
 
-                        {[
+                   {[
                           ["09:00", "Amara", "Hair Styling"],
                           ["11:30", "Sarah", "Classic Nails"],
                           ["14:00", "Nadia", "Lash Extensions"],
@@ -606,8 +610,7 @@ function ForBusinesses() {
           <div className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4">
 
             {businessTypes.map((type) => (
-              <div
-                key={type.name}
+              <div key={type.name}
                 className="group rounded-3xl border border-[#EEE7EA] bg-[#FFFCFD] p-6 transition duration-300 hover:-translate-y-1 hover:border-[#F0C9D9] hover:shadow-lg"
               >
 
@@ -665,12 +668,13 @@ function ForBusinesses() {
                 essentials together in one simple platform.
               </p>
 
-              <Link
-                to="/signup"
+              <button
+                type="button"
+                onClick={scrollToPricing}
                 className="mt-8 inline-flex rounded-full bg-[#1F2937] px-7 py-3.5 font-semibold text-white transition hover:bg-[#111827]"
               >
                 Start growing →
-              </Link>
+              </button>
 
             </div>
    <div className="grid gap-4 sm:grid-cols-2">
@@ -734,8 +738,7 @@ function ForBusinesses() {
                 key={benefit.number}
                 className="rounded-3xl border border-[#EEE7EA] bg-[#FFFCFD] p-8"
               >
-
-                <span className="text-sm font-bold text-[#B96882]">
+  <span className="text-sm font-bold text-[#B96882]">
                   {benefit.number}
                 </span>
 
@@ -811,7 +814,6 @@ function ForBusinesses() {
                   </div>
                 )}
 
-
                 {/* Plan Name */}
 
                 <div className="pr-24">
@@ -885,9 +887,7 @@ function ForBusinesses() {
 
                       <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#FFF1F6] text-xs font-bold text-[#B96882]">
                         ✓
-                      </span>
-
-                      <span>
+                      </span>  <span>
                         {feature}
                       </span>
 
@@ -950,8 +950,7 @@ function ForBusinesses() {
 
         </div>
 
-      </section>
-      {/* =====================================================
+      </section>   {/* =====================================================
           FINAL CTA
       ====================================================== */}
 
