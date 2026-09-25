@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -29,13 +30,19 @@ function Categories() {
     { name: "Teeth Whitening", image: teethWhiteningPhoto },
     { name: "Waxing", image: waxingPhoto },
   ];
-
   return (
     <>
+      <Helmet>
+        <title>Beauty & Wellness Categories | BookBeautiq</title>
+        <meta
+          name="description"
+          content="Browse Hair, Barber, Nails, Makeup, Spa & Wellness, Bridal and more beauty categories. Discover verified professionals across Africa on BookBeautiq."
+        />
+      </Helmet>
+
       <Navbar />
 
       <main className="min-h-screen bg-[#FAFAF9]">
-
         {/* HERO */}
 
         <section className="relative overflow-hidden bg-gradient-to-br from-[#FFF9FB] via-[#F8EEF2] to-[#FAFAF9]">

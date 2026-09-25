@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BusinessCard from "../components/BusinessCard";
@@ -275,12 +276,31 @@ function Explore() {
     activeSearch.minPrice ||
     activeSearch.maxPrice;
 
-  return (
-    <>
-      <Navbar />
-
-      <main className="min-h-screen bg-[#FAFAF9]">
-
+    const pageTitle = [
+      activeSearch.category !== "All" ? activeSearch.category : null,
+      activeSearch.location || null,
+    ]
+      .filter(Boolean)
+      .join(" in ");
+  
+    const helmetTitle = pageTitle
+      ? `${pageTitle} | BookBeautiq`
+      : "Explore Beauty & Wellness Professionals | BookBeautiq";
+  
+    const helmetDescription = pageTitle
+      ? `Find and book ${pageTitle.toLowerCase()} on BookBeautiq. Verified professionals, secure deposits, real reviews.`
+      : "Browse verified salons, barbers, nail artists, spas and beauty professionals across Africa. Search by service, location and price.";
+  
+    return (
+      <>
+        <Helmet>
+          <title>{helmetTitle}</title>
+          <meta name="description" content={helmetDescription} />
+        </Helmet>
+  
+        <Navbar />
+  
+        <main className="min-h-screen bg-[#FAFAF9]">
         {/* ==========================================
             EXPLORE HERO
         ========================================== */}

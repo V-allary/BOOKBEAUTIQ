@@ -264,7 +264,29 @@ function BusinessDetails() {
     ? business.description.slice(0, 155)
     : `Book ${business.name}, a ${business.category} business in ${business.location}, on BookBeautiq.`;
   const pageUrl = `https://bookbeautiq.com/${business.slug || business._id}`;
-
+ 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "BeautySalon",
+    name: business.name,
+    description: business.description || undefined,
+    image: coverUrl || undefined,
+    url: pageUrl,
+    telephone: business.phone || undefined,
+    priceRange: business.price || undefined,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: business.location,
+      addressCountry: "KE",
+    },
+    ...(reviews.length > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: rating.toFixed(1),
+        reviewCount: reviews.length,
+      },
+    }),
+  };
   return (
     <>
       <Helmet>
@@ -282,6 +304,10 @@ function BusinessDetails() {
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDescription} />
         {coverUrl && <meta name="twitter:image" content={coverUrl} />}
+
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
       </Helmet>
 
       <Navbar />
