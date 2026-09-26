@@ -153,72 +153,43 @@ function Checkout() {
       // 1. CREATE BOOKING
       // ======================================
 
-      const bookingResponse = await fetch(
-        `${API_URL}/api/bookings`,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-
-            ...(token
-              ? {
-                  Authorization: `Bearer ${token}`,
-                }
-              : {}),
-          },
-
-          body: JSON.stringify({
-            businessId: business._id,
-
-            service: selectedService.name,
-
-            staff: selectedStaff?.name || "Not specified",
-
-            date: `${selectedDate.day} ${selectedDate.date}`,
-
-            time: selectedTime,
-
-            depositAmount,
-
-            ...formData,
-          }),
-        }
-      );
-
-      const bookingData =
-        await bookingResponse.json();
-
-      if (!bookingResponse.ok) {
-        throw new Error(
-          bookingData.message ||
-            "Booking failed."
-        );
-      }
-
       // ======================================
-      // 2. INITIALIZE PAYMENT
+      // INITIALIZE BOOKING + PAYMENT TOGETHER
+      // No Booking record is created here — the
+      // real booking only gets created once payment
+      // actually succeeds, so an abandoned checkout
+      // never blocks the slot or shows up anywhere.
       // ======================================
 
       const paymentResponse =
         await fetch(
-          `${API_URL}/api/payments/initialize`,
+          `${API_URL}/api/payments/initialize-booking`,
           {
             method: "POST",
 
             headers: {
               "Content-Type":
                 "application/json",
+
+              ...(token
+                ? {
+                    Authorization: `Bearer ${token}`,
+                  }
+                : {}),
             },
 
             body: JSON.stringify({
-              bookingId:
-                bookingData.booking._id,
+              businessId: business._id,
+              service: selectedService.name,
+              staff: selectedStaff?.name || "Not specified",
+              date: `${selectedDate.day} ${selectedDate.date}`,
+              time: selectedTime,
+              depositAmount,
+              customerId: user?.id || null,
+              ...formData,
             }),
           }
         );
-
       const paymentData =
         await paymentResponse.json();
 
