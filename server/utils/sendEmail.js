@@ -1,22 +1,18 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: process.env.SMTP_PORT === "465",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async ({ to, subject, html }) => {
-  await transporter.sendMail({
-    from: `"BookBeautiq" <${process.env.SMTP_USER}>`,
+  const { error } = await resend.emails.send({
+    from: "BookBeautiq <bookbeautiq@gmail.com>",
     to,
     subject,
     html,
   });
+
+  if (error) {
+    throw new Error(error.message || "Failed to send email.");
+  }
 };
 
 export default sendEmail;
