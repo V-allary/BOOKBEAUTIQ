@@ -14,6 +14,7 @@ import {
   updateBusiness,
   approveBusiness,
   rejectBusiness,
+  getPublicStats,
 } from "../controllers/businessController.js";
 
 const router = express.Router();
@@ -34,6 +35,10 @@ router.get("/approved", getApprovedBusinesses);
 // Used by Home hero search + Explore filters
 // Must come BEFORE "/:id" or Express will treat "search" as an ID
 router.get("/search", searchBusinesses);
+
+// Public platform-wide stats — used by Hero.jsx
+// Must come BEFORE "/:id" or Express will treat "stats" as an ID
+router.get("/stats", getPublicStats);
 
 router.get(
   "/owner",
@@ -59,8 +64,7 @@ router.get("/:id", getBusinessById);
 // ==========================================
 
 router.post(
-  "/",
-  authMiddleware,
+  "/", authMiddleware,
   roleMiddleware("business", "admin"),
   requireVerifiedOwner,
   createBusiness
@@ -84,8 +88,6 @@ router.patch(
   roleMiddleware("admin"),
   rejectBusiness
 );
-
-router.get("/stats", getPublicStats);
 
 // ==========================================
 // BUSINESS MANAGEMENT
