@@ -1,22 +1,14 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const isLoggedIn = !!user;
 
   const closeMenu = () => {
     setMenuOpen(false);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    closeMenu();
-    navigate("/signin");
   };
 
   return (
@@ -88,23 +80,13 @@ function Navbar() {
           </Link>
 
           {isLoggedIn ? (
-            <>
-              <Link
-                to="/dashboard"
-                className="flex items-center gap-2 rounded-full bg-[#242424] px-5 py-3 text-sm font-semibold text-white shadow-md transition duration-300 hover:-translate-y-0.5 hover:bg-[#B96882] hover:shadow-lg"
-              >
-                <span aria-hidden="true">👤</span>
-                Account
-              </Link>
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="text-sm font-semibold text-[#666] transition hover:text-[#B96882]"
-              >
-                Log Out
-              </button>
-            </>
+            <Link
+              to="/dashboard"
+              className="flex items-center gap-2 rounded-full bg-[#242424] px-5 py-3 text-sm font-semibold text-white shadow-md transition duration-300 hover:-translate-y-0.5 hover:bg-[#B96882] hover:shadow-lg"
+            >
+              <span aria-hidden="true">👤</span>
+              Account
+            </Link>
           ) : (
             <Link
               to="/signin"
@@ -221,16 +203,6 @@ function Navbar() {
               )}
 
             </div>
-
-            {isLoggedIn && (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="mt-3 text-center text-sm font-semibold text-red-500"
-              >
-                Log Out
-              </button>
-            )}
 
           </nav>
 
