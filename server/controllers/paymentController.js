@@ -197,6 +197,54 @@ const sendBookingConfirmationNotifications = async (booking) => {
           }
         `,
       });
+
+      if (business) {
+        const owner = await User.findById(business.owner);
+        if (owner) {
+          const commissionNote = booking.isFirstTimeDiscovery
+            ? ` This was a new customer discovered through BookBeautiq, so a one-time commission of KES ${booking.commissionAmount} was applied — you received KES ${(booking.depositAmount - booking.commissionAmount).toFixed(0)}.`
+            : "";
+    
+          await notify({
+            userId: owner._id,
+            type: "payment_received",
+            title: "Payment received",
+            message: `You received a deposit from ${booking.customerName}.${commissionNote}`,
+            email: owner.email,
+            link: "/dashboard",
+            emailHtml: `
+              <p>Hi ${owner.firstName},</p>
+              <p>You received a KES ${booking.depositAmount} deposit from ${booking.customerName}.</p>
+              ${
+                booking.isFirstTimeDiscovery
+                  ? `<p><strong>Note:</strong> ${booking.customerName} is a new customer discovered through BookBeautiq. A one-time commission of KES ${booking.commissionAmount} was applied to this transaction only — you received KES ${(booking.depositAmount - booking.commissionAmount).toFixed(0)} directly to your account.</p>`
+                  : `<p>No commission applies — you've already welcomed this customer before, so you received the full deposit.</p>`
+              }
+            `,
+          });
+    
+          await notify({
+            userId: owner._id,
+            type: "new_booking",
+            title: "New booking received",
+            message: `${booking.customerName} booked ${booking.service} for ${booking.date} at ${booking.time}.`,
+            email: owner.email,
+            link: "/dashboard",
+            emailHtml: `
+              <p>Hi ${owner.firstName},</p>
+              <p>You have a new booking for <strong>${business.name}</strong>:</p>
+              <p><strong>Service:</strong> ${booking.service}</p>
+              ${booking.staff && booking.staff !== "Not specified" ? `<p><strong>Professional:</strong> ${booking.staff}</p>` : ""}
+              <p><strong>Date:</strong> ${booking.date}</p>
+              <p><strong>Time:</strong> ${booking.time}</p>
+              <p><strong>Customer:</strong> ${booking.customerName}</p>
+              <p><strong>Customer Phone:</strong> ${booking.customerPhone}</p>
+              <p><strong>Customer Email:</strong> ${booking.customerEmail}</p>
+              <p><a href="${process.env.CLIENT_URL}/dashboard">View in your dashboard</a></p>
+            `,
+          });
+        }
+      }
     }
   }
 };
