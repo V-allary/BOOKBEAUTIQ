@@ -105,8 +105,15 @@ const bookingSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    reportToken: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );
+ 
+bookingSchema.index({ reportToken: 1 });
 
 export default mongoose.model("Booking", bookingSchema);

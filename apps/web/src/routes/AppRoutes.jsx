@@ -33,6 +33,7 @@ import Contact from "../pages/Contact";
 import About from "../pages/About";
 import Careers from "../pages/Careers";
 import Terms from "../pages/Terms";
+import ReportProblem from "../pages/ReportProblem";
 
 
 function AppRoutes() {
@@ -52,6 +53,7 @@ function AppRoutes() {
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/payment/callback" element={<PaymentCallback />} />
         <Route path="/review/:token" element={<LeaveReview />} />
+        <Route path="/report/:token" element={<ReportProblem />} />
         <Route path="/subscription/callback" element={<SubscriptionCallback />} />
         <Route path="/help" element={<HelpCenter />} />
         <Route path="/contact" element={<Contact />} />

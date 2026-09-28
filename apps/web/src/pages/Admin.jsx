@@ -5,6 +5,7 @@ import ServiceManager from "../components/admin/ServiceManager";
 import StaffManager from "../components/admin/StaffManager";
 import OwnerVerifications from "../components/admin/OwnerVerifications.jsx";
 import CustomerManager from "../components/admin/CustomerManager";
+import ReportManager from "../components/admin/ReportManager";
 import { API_URL } from "../config";
 
 function Admin() {
@@ -68,10 +69,30 @@ function Admin() {
       console.error("Error fetching businesses:", error);
     }
   };
-
+ 
   useEffect(() => {
     fetchBusinesses();
   }, []);
+
+  // Open reports, shown in the sidebar. Refreshed whenever you change tab.
+  const [openReportCount, setOpenReportCount] = useState(0);
+
+  const fetchOpenReportCount = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_URL}/api/admin/reports/summary`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (response.ok) setOpenReportCount(data.open || 0);
+    } catch (error) {
+      console.error("Error fetching report count:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchOpenReportCount();
+  }, [activeSection]);
 
   // =========================
   // FORM HANDLING
@@ -286,6 +307,11 @@ function Admin() {
       id: "customers",
       label: "Customers",
       icon: "◉",
+    },
+    {
+      id: "reports",
+      label: openReportCount > 0 ? `Reports (${openReportCount})` : "Reports",
+      icon: "⚑",
     },
     {
       id: "verification",
@@ -1306,6 +1332,35 @@ function Admin() {
               <div className="rounded-2xl border border-[#EAE4EA] bg-white p-4 shadow-[0_8px_30px_rgba(50,35,50,0.04)] sm:p-6">
 
                 <CustomerManager />
+
+              </div>
+
+            </>
+          )}
+
+{activeSection === "reports" && (
+            <>
+
+              <div className="mb-7">
+
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#B96882]">
+                  Trust &amp; safety
+                </p>
+
+                <h1 className="mt-2 text-3xl font-bold tracking-tight">
+                  Reports
+                </h1>
+
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#817A82]">
+                  Problems customers have reported about their appointments.
+                  Businesses with repeated reports are worth a closer look.
+                </p>
+
+              </div>
+
+              <div className="rounded-2xl border border-[#EAE4EA] bg-white p-4 shadow-[0_8px_30px_rgba(50,35,50,0.04)] sm:p-6">
+
+                <ReportManager />
 
               </div>
 

@@ -7,6 +7,12 @@ import {
   suspendCustomer,
   reinstateCustomer,
 } from "../controllers/adminController.js";
+import {
+  getReportSummary,
+  listReports,
+  getReportDetail,
+  updateReportStatus,
+} from "../controllers/reportController.js";
 
 const router = express.Router();
 
@@ -17,5 +23,11 @@ router.get("/customers", listCustomers);
 router.get("/customers/:id", getCustomerDetail);
 router.patch("/customers/:id/suspend", suspendCustomer);
 router.patch("/customers/:id/reinstate", reinstateCustomer);
+
+// "summary" must come before "/:id" or it would be read as an ID
+router.get("/reports/summary", getReportSummary);
+router.get("/reports", listReports);
+router.get("/reports/:id", getReportDetail);
+router.patch("/reports/:id/status", updateReportStatus);
 
 export default router;

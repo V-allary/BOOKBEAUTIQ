@@ -840,7 +840,7 @@ function ClientDashboard() {
               BOOKINGS
           ================================== */}
 
-          {activeSection === "bookings" && (
+{activeSection === "bookings" && (
             <div className="rounded-2xl border border-[#E5E2DF] bg-white shadow-sm">
 
               <div className="border-b border-[#E5E2DF] px-6 py-5">
@@ -912,16 +912,28 @@ function ClientDashboard() {
 
                           </div>
 
-                          <span
-                            className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold ${
-                              statusColor[
-                                b.status
-                              ] ||
-                              "border-gray-200 bg-gray-50 text-gray-600"
-                            }`}
-                          >
-                            {b.status}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-3">
+
+                            <span
+                              className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold ${
+                                statusColor[b.status] ||
+                                "border-gray-200 bg-gray-50 text-gray-600"
+                              }`}
+                            >
+                              {b.status}
+                            </span>
+
+                            {["Confirmed", "Completed", "No-show"].includes(b.status) &&
+                              b.reportToken && (
+                                <Link
+                                  to={`/report/${b.reportToken}`}
+                                  className="text-xs font-semibold text-gray-400 underline-offset-2 transition hover:text-[#9D536D] hover:underline"
+                                >
+                                  Report a problem
+                                </Link>
+                              )}
+
+                          </div>
 
                         </div>
 
@@ -936,7 +948,6 @@ function ClientDashboard() {
 
             </div>
           )}
-
           {/* ==================================
               MESSAGES
           ================================== */}

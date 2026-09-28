@@ -26,7 +26,7 @@ import checkReminders from "./utils/checkReminders.js";
 import autoChargeSubscriptions from "./utils/autoChargeSubscriptions.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import savedBusinessRoutes from "./routes/savedBusinessRoutes.js";
-import adminRoutes from "./routes/adminRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";import reportRoutes from "./routes/reportRoutes.js";
 
 
 cron.schedule("0 9 * * *", checkReminders); 
@@ -38,6 +38,7 @@ dotenv.config();
 connectDB();
 
 const app = express();
+app.set("trust proxy", 1);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -98,6 +99,8 @@ app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/saved-businesses", savedBusinessRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/reports", reportRoutes);
+
 
 app.get("/api/protected", authMiddleware, (req, res) => {
   res.json({

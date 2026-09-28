@@ -184,6 +184,7 @@ const createBookingFromMetadata = async (metadata, reference) => {
     depositPaid: true,
     status: "Confirmed",
     paystackReference: reference,
+    reportToken: crypto.randomBytes(24).toString("hex"),
     isFirstTimeDiscovery:
       metadata.isFirstTimeDiscovery === true ||
       metadata.isFirstTimeDiscovery === "true",
@@ -222,7 +223,11 @@ const sendBookingConfirmationNotifications = async (booking) => {
       <p>Hi ${customerName},</p>
       <p>Your booking is confirmed:</p>
       <p>${service} with ${staff} on ${date} at ${time}</p>
-      <p>Deposit paid: KES ${booking.depositAmount}</p>
+     <p>Deposit paid: KES ${booking.depositAmount}</p>
+      <p style="margin-top:24px;font-size:13px;color:#777;">
+        Something went wrong with your appointment?
+        <a href="${process.env.CLIENT_URL}/report/${booking.reportToken}">Report a problem</a>
+      </p>
     `,
   });
 
