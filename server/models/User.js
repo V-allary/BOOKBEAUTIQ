@@ -160,7 +160,19 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
-
+    suspendedAt: {
+      type: Date,
+      default: null,
+    },
+    suspendedReason: {
+      type: String,
+      default: "",
+    },
+    suspendedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
 
   },
   {

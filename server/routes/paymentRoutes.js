@@ -1,9 +1,10 @@
 import express from "express";
-import { initializeBookingPayment, verifyPayment, paystackWebhook } from "../controllers/paymentController.js";
+import optionalAuth from "../middleware/optionalAuth.js";
+import { initializeBookingPayment, verifyPayment } from "../controllers/paymentController.js";
 
 const router = express.Router();
 
-router.post("/initialize-booking", initializeBookingPayment);
+router.post("/initialize-booking", optionalAuth, initializeBookingPayment);
 router.get("/verify/:reference", verifyPayment);
 
 // Webhook is mounted separately in server.js with raw body parsing —

@@ -9,6 +9,7 @@ import {
   cancelBooking,
   getAvailability,
   markBookingCompleted,
+  markBookingNoShow,
 } from "../controllers/bookingController.js";
 
 const router = express.Router();
@@ -60,5 +61,7 @@ router.patch(
   roleMiddleware("business", "admin"),
   markBookingCompleted
 );
+
+router.patch("/:id/no-show", authMiddleware, roleMiddleware("business", "admin"), markBookingNoShow);
 
 export default router;

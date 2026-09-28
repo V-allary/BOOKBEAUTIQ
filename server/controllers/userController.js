@@ -99,11 +99,13 @@ export const loginUser = async (req, res) => {
     }
 
     if (user.accountStatus === "suspended") {
+      const support = process.env.SUPPORT_EMAIL;
       return res.status(403).json({
-        message: "Your account has been suspended.",
+        message: `Your account has been suspended.${
+          support ? ` If you think this is a mistake, contact ${support}.` : ""
+        }`,
       });
     }
-
     const token = jwt.sign(
       {
         userId: user._id,

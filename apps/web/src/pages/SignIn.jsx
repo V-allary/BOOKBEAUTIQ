@@ -1,16 +1,19 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_URL } from "../config";
 
 function SignIn() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-  const [error, setError] = useState("");
+  const [error, setError] = useState(
+    location.state?.suspended ? "Your account has been suspended." : ""
+  );
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {

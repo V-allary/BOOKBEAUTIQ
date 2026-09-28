@@ -40,6 +40,13 @@ function ClientDashboard() {
 
         const data = await response.json();
 
+        if (response.status === 403 && data.code === "ACCOUNT_SUSPENDED") {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/signin", { replace: true, state: { suspended: true } });
+          return;
+        }
+
         if (response.ok) {
           setBookings(data);
         }

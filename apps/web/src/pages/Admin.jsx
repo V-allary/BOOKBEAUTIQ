@@ -4,6 +4,7 @@ import BusinessList from "../components/admin/BusinessList";
 import ServiceManager from "../components/admin/ServiceManager";
 import StaffManager from "../components/admin/StaffManager";
 import OwnerVerifications from "../components/admin/OwnerVerifications.jsx";
+import CustomerManager from "../components/admin/CustomerManager";
 import { API_URL } from "../config";
 
 function Admin() {
@@ -280,6 +281,11 @@ function Admin() {
       id: "businesses",
       label: "Businesses",
       icon: "◈",
+    },
+    {
+      id: "customers",
+      label: "Customers",
+      icon: "◉",
     },
     {
       id: "verification",
@@ -1276,6 +1282,35 @@ function Admin() {
           {/* ==================================================
               SERVICES
           ================================================== */}
+
+           {activeSection === "customers" && (
+            <>
+
+              <div className="mb-7">
+
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#B96882]">
+                  Accounts
+                </p>
+
+                <h1 className="mt-2 text-3xl font-bold tracking-tight">
+                  Customers
+                </h1>
+
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#817A82]">
+                  Review customer accounts and booking behaviour, and suspend
+                  accounts that repeatedly miss appointments.
+                </p>
+
+              </div>
+
+              <div className="rounded-2xl border border-[#EAE4EA] bg-white p-4 shadow-[0_8px_30px_rgba(50,35,50,0.04)] sm:p-6">
+
+                <CustomerManager />
+
+              </div>
+
+            </>
+          )}
 
           {activeSection === "services" && (
             <>

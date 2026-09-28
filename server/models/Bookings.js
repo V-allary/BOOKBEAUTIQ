@@ -51,7 +51,7 @@ const bookingSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["Pending", "Confirmed", "Completed", "Cancelled"],
+      enum: ["Pending", "Confirmed", "Completed", "Cancelled", "No-show"],
       default: "Pending",
     },
 
@@ -74,6 +74,10 @@ const bookingSchema = new mongoose.Schema(
       default: 0,
     },
 
+    isFirstTimeDiscovery: {
+      type: Boolean,
+      default: false,
+    },
 
     duration: {
       type: Number, // minutes

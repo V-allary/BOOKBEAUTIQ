@@ -355,6 +355,40 @@ function BusinessDashboard() {
   };
 
 
+  const handleMarkNoShow = async (bookingId) => {
+    if (
+      !window.confirm(
+        "Mark this customer as a no-show? They'll be notified by email, and repeated no-shows can lead to account suspension."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setProcessingId(bookingId);
+
+      const response = await fetch(
+        `${API_URL}/api/bookings/${bookingId}/no-show`,
+        {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to mark no-show.");
+      }
+
+      await fetchBookings(business._id);
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   // ==========================================
   // UPLOAD IMAGE
   // ==========================================
@@ -756,6 +790,7 @@ function BusinessDashboard() {
     Confirmed: "bg-green-100 text-green-700",
     Completed: "bg-blue-100 text-blue-700",
     Cancelled: "bg-red-100 text-red-700",
+    "No-show": "bg-gray-200 text-gray-700",
   };
 
   // ==========================================
@@ -2243,25 +2278,26 @@ function BusinessDashboard() {
                               {b.status}
                             </span>
 
-                            {b.status ===
-                              "Confirmed" && (
-                              <button
-                                onClick={() =>
-                                  handleMarkCompleted(
-                                    b._id
-                                  )
-                                }
-                                disabled={
-                                  processingId ===
-                                  b._id
-                                }
-                                className="rounded-xl bg-[#242424] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#9D536D] disabled:opacity-50"
-                              >
-                                {processingId ===
-                                b._id
-                                  ? "Processing..."
-                                  : "Mark Completed"}
-                              </button>
+                            {b.status === "Confirmed" && (
+                              <>
+                                <button
+                                  onClick={() => handleMarkCompleted(b._id)}
+                                  disabled={processingId === b._id}
+                                  className="rounded-xl bg-[#242424] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#9D536D] disabled:opacity-50"
+                                >
+                                  {processingId === b._id
+                                    ? "Processing..."
+                                    : "Mark Completed"}
+                                </button>
+
+                                <button
+                                  onClick={() => handleMarkNoShow(b._id)}
+                                  disabled={processingId === b._id}
+                                  className="rounded-xl border border-[#E5E2DF] px-4 py-2.5 text-sm font-semibold text-[#242424] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                                >
+                                  No-show
+                                </button>
+                              </>
                             )}
 
                           </div>

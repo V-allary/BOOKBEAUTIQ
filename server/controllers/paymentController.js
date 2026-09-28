@@ -4,24 +4,52 @@ import Booking from "../models/Bookings.js";
 import Business from "../models/Business.js";
 import notify from "../utils/notify.js";
 import User from "../models/User.js";
+import escapeHtml from "../utils/escapeHtml.js";
 
 
 // ==========================================
 // INITIALIZE BOOKING + DEPOSIT PAYMENT
+// No Booking record exists yet. Everything travels
+// through Paystack's metadata until payment succeeds.
 // ==========================================
 export const initializeBookingPayment = async (req, res) => {
   try {
     const {
       businessId, service, staff, date, time,
       customerName, customerEmail, customerPhone,
-      depositAmount, customerId,
     } = req.body;
+
+    const depositAmount = Number(req.body.depositAmount);
+
+    // From the login token (via optionalAuth), never from the request body
+    const customerId = req.user?.userId || null;
 
     if (
       !businessId || !service || !date || !time ||
-      !customerName || !customerEmail || !customerPhone || !depositAmount
+      !customerName || !customerEmail || !customerPhone ||
+      !Number.isFinite(depositAmount) || depositAmount <= 0
     ) {
       return res.status(400).json({ message: "Missing required booking details." });
+    }
+
+    // ==========================================
+    // BLOCK SUSPENDED CUSTOMERS
+    // Covers logged-in customers and guest checkout by email
+    // ==========================================
+
+    const blockedAccount = await User.findOne({
+      accountStatus: "suspended",
+      $or: [
+        { email: String(customerEmail).trim().toLowerCase() },
+        ...(customerId ? [{ _id: customerId }] : []),
+      ],
+    }).select("_id");
+
+    if (blockedAccount) {
+      return res.status(403).json({
+        code: "ACCOUNT_SUSPENDED",
+        message: "This account can't make bookings right now. Please contact BookBeautiq support.",
+      });
     }
 
     const business = await Business.findById(businessId);
@@ -37,6 +65,8 @@ export const initializeBookingPayment = async (req, res) => {
 
     // ==========================================
     // PREVENT DOUBLE BOOKINGS
+    // Only real, non-cancelled bookings count as conflicts.
+    // Abandoned checkouts never create a record at all.
     // ==========================================
 
     const conflictFilter = {
@@ -57,6 +87,10 @@ export const initializeBookingPayment = async (req, res) => {
         message: "This professional is already booked at that date and time. Please choose another slot.",
       });
     }
+
+    // ==========================================
+    // COMMISSION — first booking with this business only
+    // ==========================================
 
     const priorBooking = await Booking.findOne({
       businessId,
@@ -84,7 +118,7 @@ export const initializeBookingPayment = async (req, res) => {
         customerName,
         customerEmail,
         customerPhone,
-        customerId: customerId || null,
+        customerId,
         depositAmount,
         isFirstTimeDiscovery,
       },
@@ -107,6 +141,7 @@ export const initializeBookingPayment = async (req, res) => {
         bearer_type: "account",
       };
     } else {
+      // Repeat customer for this business — no commission, 100% to them.
       payload.subaccount = business.paystackSubaccountCode;
     }
 
@@ -126,6 +161,9 @@ export const initializeBookingPayment = async (req, res) => {
 
 // ==========================================
 // CREATE THE REAL BOOKING FROM METADATA
+// Called only after Paystack confirms success. Shared by
+// verifyPayment and the webhook, with a guard so processing
+// the same payment twice can't create two bookings.
 // ==========================================
 
 const createBookingFromMetadata = async (metadata, reference) => {
@@ -155,8 +193,23 @@ const createBookingFromMetadata = async (metadata, reference) => {
   return { booking, isNew: true };
 };
 
+
+// ==========================================
+// NOTIFICATIONS AFTER A SUCCESSFUL BOOKING
+// Customer: booking confirmation
+// Business owner: payment received + new booking details
+// ==========================================
+
 const sendBookingConfirmationNotifications = async (booking) => {
   const business = await Business.findById(booking.businessId);
+
+  const customerName = escapeHtml(booking.customerName);
+  const service = escapeHtml(booking.service);
+  const staff = escapeHtml(booking.staff);
+  const date = escapeHtml(booking.date);
+  const time = escapeHtml(booking.time);
+
+  // ---------- Customer ----------
 
   await notify({
     userId: booking.customerId,
@@ -166,87 +219,70 @@ const sendBookingConfirmationNotifications = async (booking) => {
     email: booking.customerEmail,
     link: "/dashboard",
     emailHtml: `
-      <p>Hi ${booking.customerName},</p>
+      <p>Hi ${customerName},</p>
       <p>Your booking is confirmed:</p>
-      <p>${booking.service} with ${booking.staff} on ${booking.date} at ${booking.time}</p>
+      <p>${service} with ${staff} on ${date} at ${time}</p>
       <p>Deposit paid: KES ${booking.depositAmount}</p>
     `,
   });
 
-  if (business) {
-    const owner = await User.findById(business.owner);
-    if (owner) {
-      const commissionNote = booking.isFirstTimeDiscovery
-        ? ` This was a new customer discovered through BookBeautiq, so a one-time commission of KES ${booking.commissionAmount} was applied — you received KES ${(booking.depositAmount - booking.commissionAmount).toFixed(0)}.`
-        : "";
+  if (!business) return;
 
-      await notify({
-        userId: owner._id,
-        type: "payment_received",
-        title: "Payment received",
-        message: `You received a deposit from ${booking.customerName}.${commissionNote}`,
-        email: owner.email,
-        link: "/dashboard",
-        emailHtml: `
-          <p>Hi ${owner.firstName},</p>
-          <p>You received a KES ${booking.depositAmount} deposit from ${booking.customerName}.</p>
-          ${
-            booking.isFirstTimeDiscovery
-              ? `<p><strong>Note:</strong> ${booking.customerName} is a new customer discovered through BookBeautiq. A one-time commission of KES ${booking.commissionAmount} was applied to this transaction only — you received KES ${(booking.depositAmount - booking.commissionAmount).toFixed(0)} directly to your account.</p>`
-              : `<p>No commission applies — you've already welcomed this customer before, so you received the full deposit.</p>`
-          }
-        `,
-      });
+  const owner = await User.findById(business.owner);
+  if (!owner) return;
 
-      if (business) {
-        const owner = await User.findById(business.owner);
-        if (owner) {
-          const commissionNote = booking.isFirstTimeDiscovery
-            ? ` This was a new customer discovered through BookBeautiq, so a one-time commission of KES ${booking.commissionAmount} was applied — you received KES ${(booking.depositAmount - booking.commissionAmount).toFixed(0)}.`
-            : "";
-    
-          await notify({
-            userId: owner._id,
-            type: "payment_received",
-            title: "Payment received",
-            message: `You received a deposit from ${booking.customerName}.${commissionNote}`,
-            email: owner.email,
-            link: "/dashboard",
-            emailHtml: `
-              <p>Hi ${owner.firstName},</p>
-              <p>You received a KES ${booking.depositAmount} deposit from ${booking.customerName}.</p>
-              ${
-                booking.isFirstTimeDiscovery
-                  ? `<p><strong>Note:</strong> ${booking.customerName} is a new customer discovered through BookBeautiq. A one-time commission of KES ${booking.commissionAmount} was applied to this transaction only — you received KES ${(booking.depositAmount - booking.commissionAmount).toFixed(0)} directly to your account.</p>`
-                  : `<p>No commission applies — you've already welcomed this customer before, so you received the full deposit.</p>`
-              }
-            `,
-          });
-    
-          await notify({
-            userId: owner._id,
-            type: "new_booking",
-            title: "New booking received",
-            message: `${booking.customerName} booked ${booking.service} for ${booking.date} at ${booking.time}.`,
-            email: owner.email,
-            link: "/dashboard",
-            emailHtml: `
-              <p>Hi ${owner.firstName},</p>
-              <p>You have a new booking for <strong>${business.name}</strong>:</p>
-              <p><strong>Service:</strong> ${booking.service}</p>
-              ${booking.staff && booking.staff !== "Not specified" ? `<p><strong>Professional:</strong> ${booking.staff}</p>` : ""}
-              <p><strong>Date:</strong> ${booking.date}</p>
-              <p><strong>Time:</strong> ${booking.time}</p>
-              <p><strong>Customer:</strong> ${booking.customerName}</p>
-              <p><strong>Customer Phone:</strong> ${booking.customerPhone}</p>
-              <p><strong>Customer Email:</strong> ${booking.customerEmail}</p>
-              <p><a href="${process.env.CLIENT_URL}/dashboard">View in your dashboard</a></p>
-            `,
-          });
-        }
+  // ---------- Business owner: payment received ----------
+
+  const ownerShare = (booking.depositAmount - booking.commissionAmount).toFixed(0);
+
+  const commissionNote = booking.isFirstTimeDiscovery
+    ? ` This was a new customer discovered through BookBeautiq, so a one-time commission of KES ${booking.commissionAmount} was applied — you received KES ${ownerShare}.`
+    : "";
+
+  await notify({
+    userId: owner._id,
+    type: "payment_received",
+    title: "Payment received",
+    message: `You received a deposit from ${booking.customerName}.${commissionNote}`,
+    email: owner.email,
+    link: "/dashboard",
+    emailHtml: `
+      <p>Hi ${escapeHtml(owner.firstName)},</p>
+      <p>You received a KES ${booking.depositAmount} deposit from ${customerName}.</p>
+      ${
+        booking.isFirstTimeDiscovery
+          ? `<p><strong>Note:</strong> ${customerName} is a new customer discovered through BookBeautiq. A one-time commission of KES ${booking.commissionAmount} was applied to this transaction only — you received KES ${ownerShare} directly to your account.</p>`
+          : `<p>No commission applies — you've already welcomed this customer before, so you received the full deposit.</p>`
       }
-    }
-  }
+    `,
+  });
+
+  // ---------- Business owner: new booking details ----------
+
+  await notify({
+    userId: owner._id,
+    type: "new_booking",
+    title: "New booking received",
+    message: `${booking.customerName} booked ${booking.service} for ${booking.date} at ${booking.time}.`,
+    email: owner.email,
+    link: "/dashboard",
+    emailHtml: `
+      <p>Hi ${escapeHtml(owner.firstName)},</p>
+      <p>You have a new booking for <strong>${escapeHtml(business.name)}</strong>:</p>
+      <p><strong>Service:</strong> ${service}</p>
+      ${
+        booking.staff && booking.staff !== "Not specified"
+          ? `<p><strong>Professional:</strong> ${staff}</p>`
+          : ""
+      }
+      <p><strong>Date:</strong> ${date}</p>
+      <p><strong>Time:</strong> ${time}</p>
+      <p><strong>Customer:</strong> ${customerName}</p>
+      <p><strong>Customer Phone:</strong> ${escapeHtml(booking.customerPhone)}</p>
+      <p><strong>Customer Email:</strong> ${escapeHtml(booking.customerEmail)}</p>
+      <p><a href="${process.env.CLIENT_URL}/dashboard">View in your dashboard</a></p>
+    `,
+  });
 };
 
 
@@ -288,12 +324,13 @@ export const paystackWebhook = async (req, res) => {
 
     const expectedSignature = crypto
       .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY)
-      .update(req.body) // raw buffer — see server.js middleware note
+      .update(req.body) // raw buffer — mounted with express.raw() in server.js
       .digest("hex");
 
     if (signature !== expectedSignature) {
       return res.status(401).send("Invalid signature.");
     }
+
     const event = JSON.parse(req.body.toString());
 
     if (event.event === "charge.success") {

@@ -2,12 +2,13 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const sendEmail = async ({ to, subject, html }) => {
+const sendEmail = async ({ to, subject, html, replyTo }) => {
   const { error } = await resend.emails.send({
     from: "BookBeautiq <hello@bookbeautiq.com>",
     to,
     subject,
     html,
+    ...(replyTo ? { replyTo } : {}),
   });
 
   if (error) {

@@ -4,6 +4,9 @@ import Staff from "../models/Staff.js";
 import crypto from "crypto";
 import notify from "../utils/notify.js";
 import User from "../models/User.js";
+import sendEmail from "../utils/sendEmail.js";
+import escapeHtml from "../utils/escapeHtml.js";
+import { getSupportEmail, supportLine } from "../utils/support.js";
 
 
 
@@ -332,6 +335,48 @@ export const markBookingCompleted = async (req, res) => {
     });
 
     res.status(200).json({ message: "Booking marked completed. Review email sent.", booking });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Business marks a confirmed booking as a no-show
+export const markBookingNoShow = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ message: "Booking not found." });
+
+    const business = await Business.findById(booking.businessId);
+    const isOwner = business?.owner?.toString() === req.user.userId;
+    if (!isOwner && req.user.role !== "admin") {
+      return res.status(403).json({ message: "You can only manage your own business's bookings." });
+    }
+
+    if (booking.status !== "Confirmed") {
+      return res.status(400).json({ message: "Only confirmed bookings can be marked as a no-show." });
+    }
+
+    booking.status = "No-show";
+    await booking.save();
+
+    // Tell the customer, so a wrongly-marked no-show can be disputed
+    try {
+      await sendEmail({
+        to: booking.customerEmail,
+        replyTo: getSupportEmail() || undefined,
+        subject: "You were marked as a no-show",
+        html: `
+          <p>Hi ${escapeHtml(booking.customerName)},</p>
+          <p>${escapeHtml(business?.name || "The business")} marked your ${escapeHtml(booking.service)} appointment on ${escapeHtml(booking.date)} at ${escapeHtml(booking.time)} as a no-show.</p>
+          <p>Repeated missed appointments can lead to your BookBeautiq account being suspended.</p>
+          <p>${supportLine()}</p>
+        `,
+      });
+    } catch (emailError) {
+      console.error("Failed to send no-show email:", emailError);
+    }
+
+    res.status(200).json({ message: "Booking marked as a no-show.", booking });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
