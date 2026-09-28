@@ -22,7 +22,7 @@ function Contact() {
       `Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`
     );
 
-    window.location.href = `mailto:hello@bookbeautiq.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:contact@bookbeautiq.com?subject=${subject}&body=${body}`;
   };
 
   return (
@@ -105,7 +105,7 @@ function Contact() {
 
             <p className="text-center text-xs text-gray-400">
               This will open your email app with your message pre-filled,
-              addressed to bookbeautiq@gmail.com.
+              addressed to contact@bookbeautiq.com.
             </p>
 
           </form>

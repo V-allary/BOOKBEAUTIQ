@@ -39,7 +39,7 @@ function Careers() {
             </p>
 
             <a
-              href="mailto:hello@bookbeautiq.com?subject=Interested%20in%20joining%20BookBeautiq"
+              href="mailto:contact@bookbeautiq.com?subject=Interested%20in%20joining%20BookBeautiq"
               className="mt-6 inline-block rounded-xl bg-[#242424] px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-[#B96882]"
             >
               Get In Touch

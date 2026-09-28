@@ -178,10 +178,10 @@ function Terms() {
               <p className="mt-3 text-sm leading-7 text-gray-600">
                 Questions about these Terms? Reach us at{" "}
                 <a
-                  href="mailto:bookbeautiq@gmail.com"
+                  href="mailto:support@bookbeautiq.com"
                   className="font-semibold text-[#B96882]"
                 >
-                  hello@bookbeautiq.com
+                  support@bookbeautiq.com
                 </a>.
               </p>
             </div>
