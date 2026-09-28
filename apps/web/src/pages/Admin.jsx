@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import BusinessList from "../components/admin/BusinessList";
 import ServiceManager from "../components/admin/ServiceManager";
 import StaffManager from "../components/admin/StaffManager";
@@ -6,6 +7,14 @@ import OwnerVerifications from "../components/admin/OwnerVerifications.jsx";
 import { API_URL } from "../config";
 
 function Admin() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/signin");
+  };
+
   const [formData, setFormData] = useState({
     name: "",
     category: "",
@@ -36,8 +45,13 @@ function Admin() {
 
   const fetchBusinesses = async () => {
     try {
+      const token = localStorage.getItem("token");
+
       const response = await fetch(
-        `${API_URL}/api/businesses`
+        `${API_URL}/api/businesses`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       const data = await response.json();
@@ -399,6 +413,15 @@ function Admin() {
 
             </div>
 
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="mt-3 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-red-500 transition hover:bg-red-50"
+            >
+              <span>⏻</span>
+              Log Out
+            </button>
+
           </div>
 
         </div>
@@ -409,48 +432,56 @@ function Admin() {
           MOBILE TOP NAV
       ================================================== */}
 
-      <div className="sticky top-0 z-30 border-b border-[#E9E3E9] bg-white/95 px-4 py-4 backdrop-blur lg:hidden">
+<div className="sticky top-0 z-30 border-b border-[#E9E3E9] bg-white/95 px-4 py-4 backdrop-blur lg:hidden">
 
-        <div className="flex items-center justify-between">
+<div className="flex items-center justify-between">
 
-          <div className="flex items-center gap-2">
+  <div className="flex items-center gap-2">
 
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#242424] font-bold text-white">
-              B
-            </div>
+    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#242424] font-bold text-white">
+      B
+    </div>
 
-            <div>
-              <p className="text-sm font-bold">
-                BookBeautiq
-              </p>
+    <div>
+      <p className="text-sm font-bold">
+        BookBeautiq
+      </p>
 
-              <p className="text-[10px] text-[#918A92]">
-                Admin Console
-              </p>
-            </div>
+      <p className="text-[10px] text-[#918A92]">
+        Admin Console
+      </p>
+    </div>
 
-          </div>
+  </div>
 
-          <select
-            value={activeSection}
-            onChange={(e) =>
-              setActiveSection(e.target.value)
-            }
-            className="rounded-xl border border-[#E5DFE5] bg-white px-3 py-2 text-xs font-semibold outline-none"
-          >
-            {navigation.map((item) => (
-              <option
-                key={item.id}
-                value={item.id}
-              >
-                {item.label}
-              </option>
-            ))}
-          </select>
+  <div className="flex items-center gap-2">
 
-        </div>
+    <select
+      value={activeSection}
+      onChange={(e) => setActiveSection(e.target.value)}
+      className="rounded-xl border border-[#E5DFE5] bg-white px-3 py-2 text-xs font-semibold outline-none"
+    >
+      {navigation.map((item) => (
+        <option key={item.id} value={item.id}>
+          {item.label}
+        </option>
+      ))}
+    </select>
 
-      </div>
+    <button
+      type="button"
+      onClick={handleLogout}
+      aria-label="Log out"
+      className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E5DFE5] text-red-500 transition hover:bg-red-50"
+    >
+      ⏻
+    </button>
+
+  </div>
+
+</div>
+
+</div>
 
       {/* ==================================================
           MAIN CONTENT
@@ -1016,14 +1047,13 @@ function Admin() {
 
                       <input
                         type="text"
-                        name="category"
-                        placeholder="Category"
-                        value={formData.category}
+                        name="name"
+                        placeholder="Business Name"
+                        value={formData.name}
                         onChange={handleChange}
                         className={inputClass}
                         required
                       />
-
                       <input
                         type="text"
                         name="location"

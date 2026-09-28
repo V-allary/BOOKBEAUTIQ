@@ -23,21 +23,14 @@ const router = express.Router();
 // PUBLIC ROUTES
 // ==========================================
 
-// All businesses
-// Used by Admin
-router.get("/", getBusinesses);
+// All businesses 
+router.get("/", authMiddleware, roleMiddleware("admin"), getBusinesses);
 
-// Approved + owner-verified businesses
-// Used by Explore
+ 
 router.get("/approved", getApprovedBusinesses);
-
-// Search + filter businesses
-// Used by Home hero search + Explore filters
-// Must come BEFORE "/:id" or Express will treat "search" as an ID
+ 
 router.get("/search", searchBusinesses);
-
-// Public platform-wide stats — used by Hero.jsx
-// Must come BEFORE "/:id" or Express will treat "stats" as an ID
+ 
 router.get("/stats", getPublicStats);
 
 router.get(
@@ -53,9 +46,7 @@ router.get(
   roleMiddleware("business", "admin"),
   getBusinessForOwner
 );
-
-// Single approved + owner-verified business
-// Used by Business Details
+ 
 router.get("/:id", getBusinessById);
 
 // ==========================================
