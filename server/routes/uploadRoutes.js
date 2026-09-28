@@ -4,6 +4,7 @@ import sharp from "sharp";
 import authMiddleware from "../middleware/authMiddleware.js";
 import roleMiddleware from "../middleware/roleMiddleware.js";
 import cloudinary from "../config/cloudinary.js";
+import requireEmailVerified from "../middleware/requireEmailVerified.js";
 
 const router = express.Router();
 
@@ -29,8 +30,7 @@ const upload = multer({
   },
 });
 
-// Uploads a buffer to Cloudinary using its stream API, since we
-// already have the image in memory rather than on disk.
+
 const uploadBufferToCloudinary = (buffer) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
@@ -45,7 +45,7 @@ const uploadBufferToCloudinary = (buffer) => {
   });
 };
 
-router.post("/", authMiddleware, roleMiddleware("business", "admin"), (req, res) => {
+router.post("/", authMiddleware, roleMiddleware("business", "admin"), requireEmailVerified, (req, res) => {
   upload.single("image")(req, res, async (error) => {
     if (error) {
       console.error("Image upload error:", error);

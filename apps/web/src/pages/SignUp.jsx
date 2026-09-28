@@ -58,7 +58,7 @@ function SignUp() {
       );
 
       if (formData.role === "business") {
-        navigate("/verify-account");
+        navigate("/verify-email");
       } else {
         navigate("/dashboard");
       }

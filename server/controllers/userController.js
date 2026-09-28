@@ -61,6 +61,7 @@ export const registerUser = async (req, res) => {
         phone: user.phone,
         role: user.role,
         verificationStatus: user.verificationStatus,
+        isEmailVerified: user.isEmailVerified,
       },
     });
   } catch (error) {
@@ -125,6 +126,7 @@ export const loginUser = async (req, res) => {
         phone: user.phone,
         role: user.role,
         verificationStatus: user.verificationStatus,
+        isEmailVerified: user.isEmailVerified,
       },
     });
   } catch (error) {

@@ -18,6 +18,8 @@ import BusinessOnboarding from "../pages/BusinessOnboarding";
 import ProtectedRoute from "../components/ProtectedRoute";
 import RoleRoute from "../components/RoleRoute";
 import VerifiedOwnerRoute from "../components/VerifiedOwnerRoute";
+import VerifyEmail from "../pages/VerifyEmail";
+import EmailVerifiedRoute from "../components/EmailVerifiedRoute";
 
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
@@ -31,6 +33,7 @@ import Contact from "../pages/Contact";
 import About from "../pages/About";
 import Careers from "../pages/Careers";
 import Terms from "../pages/Terms";
+
 
 function AppRoutes() {
   return (
@@ -69,7 +72,10 @@ function AppRoutes() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/bookings" element={<Bookings />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route element={<EmailVerifiedRoute />}>
           <Route path="/verify-account" element={<AccountVerification />} />
+          </Route>
         </Route>
 
         {/* Verified Business Owner Routes */}

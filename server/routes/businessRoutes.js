@@ -2,6 +2,7 @@ import express from "express";
 import roleMiddleware from "../middleware/roleMiddleware.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import requireVerifiedOwner from "../middleware/requireVerifiedOwner.js";
+import requireEmailVerified from "../middleware/requireEmailVerified.js";
 
 import {
   getBusinesses,
@@ -57,6 +58,7 @@ router.get("/:id", getBusinessById);
 router.post(
   "/", authMiddleware,
   roleMiddleware("business", "admin"),
+  requireEmailVerified,
   requireVerifiedOwner,
   createBusiness
 );

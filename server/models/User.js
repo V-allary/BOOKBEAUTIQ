@@ -131,6 +131,35 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
+    // ==============================
+    // EMAIL VERIFICATION (OTP)
+    // ==============================
+
+    emailVerificationCode: {
+      type: String, // HMAC of the code, never the code itself
+      default: null,
+    },
+    emailVerificationExpires: {
+      type: Date,
+      default: null,
+    },
+    emailVerificationAttempts: {
+      type: Number,
+      default: 0,
+    },
+    emailVerificationLastSentAt: {
+      type: Date,
+      default: null,
+    },
+    emailVerificationSendCount: {
+      type: Number,
+      default: 0,
+    },
+    emailVerificationWindowStart: {
+      type: Date,
+      default: null,
+    },
+
 
 
   },
@@ -142,6 +171,14 @@ const userSchema = new mongoose.Schema(
 userSchema.methods.toJSON = function () {
   const user = this.toObject();
   delete user.password;
+  delete user.resetPasswordToken;
+  delete user.resetPasswordExpires;
+  delete user.emailVerificationCode;
+  delete user.emailVerificationExpires;
+  delete user.emailVerificationAttempts;
+  delete user.emailVerificationLastSentAt;
+  delete user.emailVerificationSendCount;
+  delete user.emailVerificationWindowStart;
   return user;
 };
 

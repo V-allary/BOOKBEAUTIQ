@@ -46,8 +46,9 @@ function SignIn() {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
-      if (
+      if (data.user.role === "business" && !data.user.isEmailVerified) {
+        navigate("/verify-email");
+      } else if (
         data.user.role === "business" &&
         data.user.verificationStatus !== "verified"
       ) {

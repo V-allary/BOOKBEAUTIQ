@@ -1,6 +1,7 @@
 import express from "express";
 import authMiddleware from "../middleware/authMiddleware.js";
 import roleMiddleware from "../middleware/roleMiddleware.js";
+import requireEmailVerified from "../middleware/requireEmailVerified.js";
 import {
   submitVerification,
   getPendingVerifications,
@@ -10,7 +11,13 @@ import {
 
 const router = express.Router();
 
-router.patch("/submit", authMiddleware, roleMiddleware("business"), submitVerification);
+router.patch(
+  "/submit",
+  authMiddleware,
+  roleMiddleware("business"),
+  requireEmailVerified,
+  submitVerification
+);
 router.get("/pending", authMiddleware, roleMiddleware("admin"), getPendingVerifications);
 router.patch("/:id/approve", authMiddleware, roleMiddleware("admin"), approveVerification);
 router.patch("/:id/reject", authMiddleware, roleMiddleware("admin"), rejectVerification);
