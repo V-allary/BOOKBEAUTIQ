@@ -19,7 +19,6 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import RoleRoute from "../components/RoleRoute";
 import VerifiedOwnerRoute from "../components/VerifiedOwnerRoute";
 import VerifyEmail from "../pages/VerifyEmail";
-import EmailVerifiedRoute from "../components/EmailVerifiedRoute";
 
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
@@ -75,9 +74,7 @@ function AppRoutes() {
           <Route path="/bookings" element={<Bookings />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route element={<EmailVerifiedRoute />}>
           <Route path="/verify-account" element={<AccountVerification />} />
-          </Route>
         </Route>
 
         {/* Verified Business Owner Routes */}
