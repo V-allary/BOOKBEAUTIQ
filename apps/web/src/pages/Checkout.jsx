@@ -153,14 +153,6 @@ function Checkout() {
       // 1. CREATE BOOKING
       // ======================================
 
-      // ======================================
-      // INITIALIZE BOOKING + PAYMENT TOGETHER
-      // No Booking record is created here — the
-      // real booking only gets created once payment
-      // actually succeeds, so an abandoned checkout
-      // never blocks the slot or shows up anywhere.
-      // ======================================
-
       const paymentResponse =
         await fetch(
           `${API_URL}/api/payments/initialize-booking`,
@@ -180,12 +172,10 @@ function Checkout() {
 
             body: JSON.stringify({
               businessId: business._id,
-              service: selectedService.name,
+              serviceId: selectedService._id,
               staff: selectedStaff?.name || "Not specified",
               date: `${selectedDate.day} ${selectedDate.date}`,
               time: selectedTime,
-              depositAmount,
-              customerId: user?.id || null,
               ...formData,
             }),
           }

@@ -5,6 +5,7 @@ import Business from "../models/Business.js";
 import notify from "../utils/notify.js";
 import User from "../models/User.js";
 import escapeHtml from "../utils/escapeHtml.js";
+import Service from "../models/Service.js";
 
 
 // ==========================================
@@ -15,22 +16,49 @@ import escapeHtml from "../utils/escapeHtml.js";
 export const initializeBookingPayment = async (req, res) => {
   try {
     const {
-      businessId, service, staff, date, time,
+      businessId, serviceId, staff, date, time,
       customerName, customerEmail, customerPhone,
     } = req.body;
-
-    const depositAmount = Number(req.body.depositAmount);
 
     // From the login token (via optionalAuth), never from the request body
     const customerId = req.user?.userId || null;
 
     if (
-      !businessId || !service || !date || !time ||
-      !customerName || !customerEmail || !customerPhone ||
-      !Number.isFinite(depositAmount) || depositAmount <= 0
+      !businessId || !serviceId || !date || !time ||
+      !customerName || !customerEmail || !customerPhone
     ) {
       return res.status(400).json({ message: "Missing required booking details." });
     }
+
+    if (!mongoose.isValidObjectId(serviceId)) {
+      return res.status(400).json({ message: "Invalid service." });
+    }
+
+    // ==========================================
+    // PRICE COMES FROM THE DATABASE, NEVER THE BROWSER
+    // Mirrors the same active-discount check Checkout.jsx uses
+    // for display, so the price shown always matches what's charged.
+    // ==========================================
+
+    const serviceDoc = await Service.findOne({
+      _id: serviceId,
+      businessId,
+      active: true,
+    });
+
+    if (!serviceDoc) {
+      return res.status(404).json({ message: "This service is no longer available." });
+    }
+
+    const now = new Date();
+    const discountActive =
+      serviceDoc.discountPrice != null &&
+      (!serviceDoc.discountStartDate || serviceDoc.discountStartDate <= now) &&
+      (!serviceDoc.discountEndDate || serviceDoc.discountEndDate >= now);
+
+    const effectivePrice = discountActive ? serviceDoc.discountPrice : serviceDoc.price;
+    const depositAmount = Math.round(effectivePrice * 0.3);
+    const service = serviceDoc.name;
 
     // ==========================================
     // BLOCK SUSPENDED CUSTOMERS
