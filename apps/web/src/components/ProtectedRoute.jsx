@@ -8,15 +8,22 @@ function ProtectedRoute() {
   if (!token || !user) {
     return <Navigate to="/signin" replace />;
   }
+  if (
+    user.role === "business" &&
+    !user.isEmailVerified &&
+    location.pathname !== "/verify-email"
+  ) {
+    return <Navigate to="/verify-email" replace />;
+  }
 
   if (
     user.role === "business" &&
+    user.isEmailVerified &&
     user.verificationStatus !== "verified" &&
     location.pathname !== "/verify-account"
   ) {
     return <Navigate to="/verify-account" replace />;
   }
-
   return <Outlet />;
 }
 
