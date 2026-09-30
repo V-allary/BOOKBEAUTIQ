@@ -24,8 +24,12 @@ function StaffManager({ businesses }) {
     closedDays: [],
   };
 
+  const MAX_STAFF = 5;
+
   const [formData, setFormData] = useState(emptyForm);
   const [customHoursEnabled, setCustomHoursEnabled] = useState(false);
+
+  const atStaffLimit = !editingStaffId && staff.length >= MAX_STAFF;
   const fetchStaff = async () => {
     try {
       const businessId = formData.businessId || businesses[0]?._id;
@@ -33,7 +37,9 @@ function StaffManager({ businesses }) {
         ? `${API_URL}/api/staff?businessId=${businessId}`
         : `${API_URL}/api/staff`;
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
       setStaff(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -207,8 +213,17 @@ function StaffManager({ businesses }) {
       <h2 className="mb-8 text-3xl font-bold text-[#14171A]">
         Staff Manager
       </h2>
+      {atStaffLimit && (
+        <div className="mb-6 rounded-xl border border-[#E5E2DF] bg-[#FAF7F8] px-4 py-3 text-sm text-[#777]">
+          You've reached the maximum of {MAX_STAFF} staff members for this business.
+          Remove someone before adding another.
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form
+        onSubmit={handleSubmit}
+        className={`space-y-4 ${atStaffLimit ? "pointer-events-none opacity-50" : ""}`}
+      >
 
         {editingStaffId && (
           <div className="flex items-center justify-between rounded-xl bg-[#F2E8EC] px-4 py-3">

@@ -224,6 +224,7 @@ function BusinessOnboarding() {
   // ==========================================
   // STAFF
   // ==========================================
+  const MAX_STAFF = 5;
 
   const [staff, setStaff] = useState([
     {
@@ -638,6 +639,8 @@ function BusinessOnboarding() {
   };
 
   const addStaffRow = () => {
+    if (staff.length >= MAX_STAFF) return;
+
     setStaff([
       ...staff,
       {
@@ -1830,13 +1833,19 @@ className={`${inputClass} cursor-pointer`}
                 )
               )}
 
-              <button
-                type="button"
-                onClick={addStaffRow}
-                className="text-sm font-bold text-[#555] hover:text-[#B96882]"
-              >
-                + Add another team member
-              </button>
+{staff.length < MAX_STAFF ? (
+                <button
+                  type="button"
+                  onClick={addStaffRow}
+                  className="text-sm font-bold text-[#555] hover:text-[#B96882]"
+                >
+                  + Add another team member
+                </button>
+              ) : (
+                <p className="text-xs text-[#999]">
+                  You've reached the maximum of {MAX_STAFF} team members for now.
+                </p>
+              )}
 
               <div className="flex flex-col gap-3 sm:flex-row">
 

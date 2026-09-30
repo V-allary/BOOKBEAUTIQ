@@ -1,6 +1,8 @@
 import Staff from "../models/Staff.js";
 import Business from "../models/Business.js";
 
+const MAX_STAFF_PER_BUSINESS=5;
+
 const checkOwnership = async (businessId, req) => {
   const business = await Business.findById(businessId);
   if (!business) return { ok: false, status: 404, message: "Business not found." };
@@ -27,12 +29,19 @@ export const getStaff = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-// Create staff member
+ // Create staff member
 export const createStaff = async (req, res) => {
   try {
     const check = await checkOwnership(req.body.businessId, req);
     if (!check.ok) return res.status(check.status).json({ message: check.message });
+
+    const currentCount = await Staff.countDocuments({ businessId: req.body.businessId });
+
+    if (currentCount >= MAX_STAFF_PER_BUSINESS) {
+      return res.status(400).json({
+        message: `You've reached the maximum of ${MAX_STAFF_PER_BUSINESS} staff members for this business.`,
+      });
+    }
 
     const staff = await Staff.create(req.body);
     res.status(201).json(staff);
