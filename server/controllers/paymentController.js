@@ -6,6 +6,7 @@ import notify from "../utils/notify.js";
 import User from "../models/User.js";
 import escapeHtml from "../utils/escapeHtml.js";
 import Service from "../models/Service.js";
+import mongoose from "mongoose";
 
 
 // ==========================================
