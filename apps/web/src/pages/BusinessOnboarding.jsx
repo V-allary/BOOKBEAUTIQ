@@ -102,10 +102,10 @@ function BusinessOnboarding() {
     bankCode: "",
     accountNumber: "",
   });
-  const [resolvedName, setResolvedName] = useState("");
+ const [resolvedName, setResolvedName] = useState("");
   const [payoutMessage, setPayoutMessage] = useState("");
   const [payoutSaved, setPayoutSaved] = useState(false);
-
+  const [verifying, setVerifying] = useState(false);
   useEffect(() => {
     const fetchBanks = async () => {
       try {
@@ -129,48 +129,69 @@ function BusinessOnboarding() {
     banks.find((b) => b.code === payoutForm.bankCode)
       ?.name?.toUpperCase()
       .includes("M-PESA");
-
-  const handleResolveAccount = async () => {
-    setPayoutMessage("");
-
-    try {
-      // Paystack's M-PESA verification expects the local format
-      // (0712345678), not +254712345678 or 254712345678 — normalize
-      // automatically so people don't need to know this detail.
-      let accountNumber = payoutForm.accountNumber.trim();
-
-      if (isMpesaSelected) {
-        accountNumber = accountNumber.replace(/\s+/g, "");
-
-        if (accountNumber.startsWith("+254")) {
-          accountNumber = "0" + accountNumber.slice(4);
-        } else if (accountNumber.startsWith("254")) {
-          accountNumber = "0" + accountNumber.slice(3);
+      const handleResolveAccount = async () => {
+        setPayoutMessage("");
+        setResolvedName("");
+    
+        if (!payoutForm.bankCode) {
+          setPayoutMessage("Please select your bank or M-PESA first.");
+          return;
         }
-      }
-
-      const response = await fetch(`${API_URL}/api/payouts/verify-account`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ...payoutForm, accountNumber }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Could not verify that account.");
-      }
-
-      setPayoutForm((current) => ({ ...current, accountNumber }));
-      setResolvedName(data.account_name);
-    } catch (err) {
-      setPayoutMessage(err.message);
-    }
-  };
-
+    
+        if (!payoutForm.accountNumber.trim()) {
+          setPayoutMessage(
+            isMpesaSelected ? "Please enter your M-PESA phone number." : "Please enter your account number."
+          );
+          return;
+        }
+    
+        setVerifying(true);
+    
+        try {
+          // Paystack's M-PESA verification expects the local format
+          // (0712345678), not +254712345678 or 254712345678 — normalize
+          // automatically so people don't need to know this detail.
+          let accountNumber = payoutForm.accountNumber.trim();
+    
+          if (isMpesaSelected) {
+            accountNumber = accountNumber.replace(/\s+/g, "");
+    
+            if (accountNumber.startsWith("+254")) {
+              accountNumber = "0" + accountNumber.slice(4);
+            } else if (accountNumber.startsWith("254")) {
+              accountNumber = "0" + accountNumber.slice(3);
+            }
+          }
+    
+          const response = await fetch(`${API_URL}/api/payouts/verify-account`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ ...payoutForm, accountNumber }),
+          });
+    
+          const data = await response.json();
+    
+          if (!response.ok) {
+            throw new Error(data.message || "Could not verify that account. Please try again.");
+          }
+    
+          if (!data.account_name) {
+            // The request technically succeeded, but Paystack didn't return
+            // a name — treat this as a failure rather than going silent.
+            throw new Error("We couldn't confirm the account holder's name. Please double-check the details and try again.");
+          }
+    
+          setPayoutForm((current) => ({ ...current, accountNumber }));
+          setResolvedName(data.account_name);
+        } catch (err) {
+          setPayoutMessage(err.message || "Something went wrong while verifying this account. Please try again.");
+        } finally {
+          setVerifying(false);
+        }
+      };
   const handleSavePayout = async () => {
     setSubmitting(true);
     setPayoutMessage("");
@@ -1492,11 +1513,13 @@ className={`${inputClass} cursor-pointer`}
                 <button
                   type="button"
                   onClick={handleResolveAccount}
-                  className="rounded-xl border border-[#242424] px-5 py-3 text-sm font-semibold text-[#242424] transition hover:bg-[#F5F4F2]"
+                  disabled={verifying}
+                  className="rounded-xl border border-[#242424] px-5 py-3 text-sm font-semibold text-[#242424] transition hover:bg-[#F5F4F2] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Verify Account
+                  {verifying ? "Verifying..." : "Verify Account"}
                 </button>
 
+                
                 {resolvedName && (
                   <div className="rounded-xl bg-[#F5F4F2] p-4 text-sm">
                     <span className="text-gray-500">Account Name</span>
