@@ -203,10 +203,13 @@ function AccountVerification() {
                 Driver's License
               </option>
             </select>
-
             <label className="mb-2 mt-4 block font-medium text-gray-700">
               Upload Document
             </label>
+
+            <p className="mb-2 text-xs text-gray-400">
+              Make sure the whole document is visible, in focus, and free of glare. PDFs and photos are both accepted.
+            </p>
 
             <input
               type="file"
