@@ -27,6 +27,7 @@ import autoChargeSubscriptions from "./utils/autoChargeSubscriptions.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import savedBusinessRoutes from "./routes/savedBusinessRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";import reportRoutes from "./routes/reportRoutes.js";
+import runSubscriptionCheck from "./jobs/subscriptionCheck.js";
 
 
 cron.schedule("0 9 * * *", checkReminders); 
@@ -44,6 +45,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(helmet());
+
+
+app.post("/api/internal/subscription-check", async (req, res) => {
+  const providedSecret = req.headers["x-internal-secret"];
+
+  if (!process.env.INTERNAL_JOB_SECRET || providedSecret !== process.env.INTERNAL_JOB_SECRET) {
+    return res.status(401).json({ message: "Unauthorized." });
+  }
+
+  try {
+    await runSubscriptionCheck();
+    res.status(200).json({ message: "Subscription check completed." });
+  } catch (error) {
+    console.error("Subscription check job error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
 
 app.use(
   "/uploads",
