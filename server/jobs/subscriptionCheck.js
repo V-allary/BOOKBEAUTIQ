@@ -3,18 +3,23 @@ import User from "../models/User.js";
 import notify from "../utils/notify.js";
 
 const GRACE_PERIOD_DAYS = 3;
- 
+
+// Runs daily. Moves businesses through:
+// trialing/active (paid-through date passed) -> past_due (grace period starts)
+// past_due (grace period passed) -> suspended (hidden from customers)
+// Paying at any point is handled separately, by verifySubscriptionPayment.
 const runSubscriptionCheck = async () => {
   const now = new Date();
 
   // ==========================================
   // STEP 1 — TRIAL/PAYMENT EXPIRED, START GRACE PERIOD
   // ==========================================
+
   const expiring = await Business.find({
     subscriptionStatus: { $in: ["trialing", "active"] },
     $or: [
-      { subscriptionStatus: "trialing", trialEndsAt: { $ne: null, $lte: now } },
-      { subscriptionStatus: "active", subscriptionPaidUntil: { $ne: null, $lte: now } },
+      { subscriptionStatus: "trialing", trialEndsAt: { $lte: now } },
+      { subscriptionStatus: "active", subscriptionPaidUntil: { $lte: now } },
     ],
   });
 
