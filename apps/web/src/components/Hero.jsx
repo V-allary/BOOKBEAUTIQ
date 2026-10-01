@@ -202,7 +202,7 @@ function Hero() {
             TRUST / STATS
         ========================================== */}
 
-        {stats && (
+        {false && stats && (
           <div className="mx-auto mt-8 flex max-w-2xl items-center justify-center gap-6 text-center sm:mt-10 sm:gap-12">
 
             <div>
