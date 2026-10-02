@@ -1,23 +1,15 @@
-import {
-    registerUser,
-    loginUser,
-    forgotPassword,
-    resetPassword,
-    updateProfile,
-  } from "../controllers/userController.js";
-  
-  import {
-    sendEmailVerificationCode,
-    verifyEmailCode,
-  } from "../controllers/emailVerificationController.js";
-  
-  import { getCurrentUser } from "../controllers/meController.js";
-  
-  const router = express.Router();
-  
-  router.post("/register", registerUser);
-  router.post("/login", loginUser);
-  router.post("/forgot-password", forgotPassword);
-  router.post("/reset-password/:token", resetPassword);
-  router.put("/profile", authMiddleware, updateProfile);
-  router.get("/me", authMiddleware, getCurrentUser);
+import User from "../models/User.js";
+
+// Returns the current logged-in user's live data — used whenever the
+// frontend needs to confirm a status (verification, email, etc.) that
+// may have changed since the browser's cached copy was last refreshed.
+export const getCurrentUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    res.status(200).json({ user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
