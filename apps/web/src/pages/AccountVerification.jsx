@@ -6,11 +6,10 @@ function AccountVerification() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const token = localStorage.getItem("token");
-
   const [status, setStatus] = useState(user?.verificationStatus || "unverified");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
+  const [checkingStatus, setCheckingStatus] = useState(true);
   const [identityFile, setIdentityFile] = useState(null);
   const [businessDocFile, setBusinessDocFile] = useState(null);
 
@@ -21,6 +20,33 @@ function AccountVerification() {
     businessAddress: "",
     countryOfRegistration: "",
   });
+
+  // Redirect verified owners straight to onboarding
+  // Always check the real, current status from the server on load —
+  // never trust the browser's cached copy, since it can go stale the
+  // moment an admin approves/rejects while the owner is still logged in.
+  useEffect(() => {
+    const checkCurrentStatus = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+
+        if (response.ok && data.user) {
+          const updatedUser = { ...user, verificationStatus: data.user.verificationStatus };
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          setStatus(data.user.verificationStatus);
+        }
+      } catch (err) {
+        console.error("Error checking verification status:", err);
+      } finally {
+        setCheckingStatus(false);
+      }
+    };
+
+    checkCurrentStatus();
+  }, []);
 
   // Redirect verified owners straight to onboarding
   useEffect(() => {
@@ -112,6 +138,17 @@ function AccountVerification() {
       setSubmitting(false);
     }
   };
+ 
+  if (checkingStatus) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F7F7F6] px-6">
+        <div className="text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[#E7E4E1] border-t-[#242424]" />
+          <p className="mt-4 text-sm font-medium text-gray-500">Checking your verification status...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (status === "under_review") {
     return (
