@@ -5,7 +5,6 @@ import { API_URL } from "../config";
 function SignIn() {
   const navigate = useNavigate();
   const location = useLocation();
-
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -15,6 +14,8 @@ function SignIn() {
     location.state?.suspended ? "Your account has been suspended." : ""
   );
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
 
   const handleChange = (e) => {
     setFormData({
@@ -182,16 +183,28 @@ function SignIn() {
 
               </div>
 
-              <input
-                id="password"
-                type="password"
-                name="password"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleChange}
-                className={inputClass}
-                required
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={`${inputClass} pr-12`}
+                  required
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-400 transition hover:text-[#9D536D]"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+
 
             </div>
 

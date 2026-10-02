@@ -13,9 +13,9 @@ function SignUp() {
     password: "",
     role: "customer",
   });
-
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -244,21 +244,33 @@ function SignUp() {
                 Password
               </label>
 
-              <input
-                id="password"
-                type="password"
-                name="password"
-                placeholder="Create a password"
-                value={formData.password}
-                onChange={handleChange}
-                className={inputClass}
-                required
-                minLength={6}
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Create a password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={`${inputClass} pr-12`}
+                  required
+                  minLength={6}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-400 transition hover:text-[#9D536D]"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
 
               <p className="mt-2 text-xs text-gray-400">
                 Password must be at least 6 characters.
               </p>
+
 
             </div>
 

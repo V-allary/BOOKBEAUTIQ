@@ -29,4 +29,4 @@ router.post("/email-verification/verify", authMiddleware, verifyEmailCode);
 
 router.get("/me", authMiddleware, getCurrentUser);
 
-export default router;
+export default router;  
