@@ -1,21 +1,31 @@
+import { useEffect, useState } from "react";
+import { API_URL } from "../config";
+
 function Testimonials() {
-  const testimonials = [
-    {
-      name: "Sarah M.",
-      review:
-        "BookBeautiq made it so easy to find an amazing nail artist near me.",
-    },
-    {
-      name: "James K.",
-      review:
-        "I booked a barber in under two minutes. The experience was seamless.",
-    },
-    {
-      name: "Aisha O.",
-      review:
-        "The best beauty booking platform I've used. Clean, fast and reliable.",
-    },
-  ];
+  const [testimonials, setTestimonials] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/platform-reviews/public?limit=6`);
+        const data = await response.json();
+        if (response.ok) setTestimonials(data);
+      } catch (error) {
+        console.error("Error loading testimonials:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, []);
+
+  // Nothing approved yet — stay quiet rather than show empty cards
+  // or placeholder content on a live homepage.
+  if (!loading && testimonials.length === 0) {
+    return null;
+  }
 
   return (
     <section className="bg-[#FAFAFA] py-16 sm:py-20 lg:py-24">
@@ -47,64 +57,72 @@ function Testimonials() {
             TESTIMONIALS
         ========================== */}
 
-        <div className="grid gap-5 lg:grid-cols-3">
+        {loading ? (
+          <div className="grid gap-5 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-56 animate-pulse rounded-[24px] border border-[#E9E5E8] bg-white"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-5 lg:grid-cols-3">
 
-          {testimonials.map((testimonial, index) => (
+            {testimonials.map((testimonial) => (
 
-            <article
-              key={testimonial.name}
-              className="group relative rounded-[24px] border border-[#E9E5E8] bg-white p-7 transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(40,30,40,0.09)] sm:p-8"
-            >
+              <article
+                key={testimonial._id}
+                className="group relative rounded-[24px] border border-[#E9E5E8] bg-white p-7 transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(40,30,40,0.09)] sm:p-8"
+              >
 
-              {/* Quote */}
+                {/* Quote */}
 
-              <div className="text-5xl font-serif leading-none text-[#D97CA5]/30">
-                “
-              </div>
-
-              {/* Stars */}
-
-              <div className="mt-4 flex gap-1 text-sm text-[#D97CA5]">
-                <span>★</span>
-                <span>★</span>
-                <span>★</span>
-                <span>★</span>
-                <span>★</span>
-              </div>
-
-              {/* Review */}
-
-              <p className="mt-5 text-[15px] leading-7 text-[#555]">
-                {testimonial.review}
-              </p>
-
-              {/* Customer */}
-
-              <div className="mt-7 flex items-center gap-3 border-t border-[#F0ECEF] pt-5">
-
-                {/* Avatar */}
-
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F7E7EE] text-sm font-bold text-[#B85E83]">
-                  {testimonial.name.charAt(0)}
+                <div className="text-5xl font-serif leading-none text-[#D97CA5]/30">
+                  "
                 </div>
 
-                <div>
-                  <h3 className="text-sm font-bold text-[#222]">
-                    {testimonial.name}
-                  </h3>
+                {/* Stars */}
 
-                  <p className="mt-0.5 text-xs text-[#999]">
-                    Verified customer
-                  </p>
+                <div className="mt-4 flex gap-1 text-sm text-[#D97CA5]">
+                  {"★".repeat(testimonial.rating)}
+                  <span className="text-[#E5E2DF]">
+                    {"★".repeat(5 - testimonial.rating)}
+                  </span>
                 </div>
 
-              </div>
+                {/* Review */}
 
-            </article>
+                <p className="mt-5 text-[15px] leading-7 text-[#555]">
+                  {testimonial.comment}
+                </p>
 
-          ))}
+                {/* Customer */}
 
-        </div>
+                <div className="mt-7 flex items-center gap-3 border-t border-[#F0ECEF] pt-5">
+
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F7E7EE] text-sm font-bold text-[#B85E83]">
+                    {testimonial.displayName.charAt(0)}
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-bold text-[#222]">
+                      {testimonial.displayName}
+                    </h3>
+
+                    <p className="mt-0.5 text-xs text-[#999]">
+                      {testimonial.role === "business" ? "Business owner" : "Verified customer"}
+                    </p>
+                  </div>
+
+                </div>
+
+              </article>
+
+            ))}
+
+          </div>
+        )}
 
         {/* =========================
             TRUST INDICATOR

@@ -5,6 +5,7 @@ import StaffManager from "../components/admin/StaffManager";
 import BusinessChatWidget from "../components/BusinessChatWidget";
 import SubscriptionCard from "../components/SubscriptionCard";
 import { API_URL } from "../config";
+import PlatformReviewForm from "../components/PlatformReviewForm";
 
 
 function BusinessDashboard() {
@@ -2820,7 +2821,7 @@ function BusinessDashboard() {
                     </div>
                   )}
 
-                  <button
+<button
                     type="button"
                     onClick={handleRequestPasswordReset}
                     disabled={passwordResetSending}
@@ -2831,6 +2832,10 @@ function BusinessDashboard() {
 
                 </div>
 
+              </div>
+
+              <div className="mt-6">
+                <PlatformReviewForm />
               </div>
 
             </div>

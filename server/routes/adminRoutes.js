@@ -14,6 +14,11 @@ import {
   updateReportStatus,
 } from "../controllers/reportController.js";
 
+import {
+  listPlatformReviews,
+  updatePlatformReviewStatus,
+} from "../controllers/platformReviewController.js";
+
 const router = express.Router();
 
 // Everything under /api/admin is admin-only
@@ -29,5 +34,8 @@ router.get("/reports/summary", getReportSummary);
 router.get("/reports", listReports);
 router.get("/reports/:id", getReportDetail);
 router.patch("/reports/:id/status", updateReportStatus);
+
+router.get("/platform-reviews", listPlatformReviews);
+router.patch("/platform-reviews/:id/status", updatePlatformReviewStatus);
 
 export default router;

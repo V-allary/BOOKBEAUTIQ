@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ChatWidget from "../components/ChatWidget";
 import { API_URL } from "../config";
+import PlatformReviewForm from "../components/PlatformReviewForm";
 
 function ClientDashboard() {
   const navigate = useNavigate();
@@ -1215,6 +1216,9 @@ function ClientDashboard() {
 
                     </div>
 
+                  </div>
+                  <div className="mt-8">
+                    <PlatformReviewForm />
                   </div>
 
                   <div className="mt-8 rounded-2xl border border-[#E5E2DF] bg-[#FAF9F8] p-5">

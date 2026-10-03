@@ -7,6 +7,7 @@ import OwnerVerifications from "../components/admin/OwnerVerifications.jsx";
 import CustomerManager from "../components/admin/CustomerManager";
 import ReportManager from "../components/admin/ReportManager";
 import { API_URL } from "../config";
+import PlatformReviewManager from "../components/admin/PlatformReviewManager";
 
 function Admin() {
   const navigate = useNavigate();
@@ -312,6 +313,11 @@ function Admin() {
       id: "reports",
       label: openReportCount > 0 ? `Reports (${openReportCount})` : "Reports",
       icon: "⚑",
+    },
+    {
+      id: "platform-reviews",
+      label: "Platform Reviews",
+      icon: "★",
     },
     {
       id: "verification",
@@ -1276,6 +1282,35 @@ function Admin() {
           {/* ==================================================
               VERIFICATION
           ================================================== */}
+
+{activeSection === "platform-reviews" && (
+            <>
+
+              <div className="mb-7">
+
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#B96882]">
+                  Trust &amp; safety
+                </p>
+
+                <h1 className="mt-2 text-3xl font-bold tracking-tight">
+                  Platform Reviews
+                </h1>
+
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#817A82]">
+                  Reviews of BookBeautiq itself, from customers and business owners.
+                  Approved reviews appear publicly on the homepage.
+                </p>
+
+              </div>
+
+              <div className="rounded-2xl border border-[#EAE4EA] bg-white p-4 shadow-[0_8px_30px_rgba(50,35,50,0.04)] sm:p-6">
+
+                <PlatformReviewManager />
+
+              </div>
+
+            </>
+          )}
 
           {activeSection === "verification" && (
             <>

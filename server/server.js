@@ -28,6 +28,7 @@ import analyticsRoutes from "./routes/analyticsRoutes.js";
 import savedBusinessRoutes from "./routes/savedBusinessRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";import reportRoutes from "./routes/reportRoutes.js";
 import runSubscriptionCheck from "./jobs/subscriptionCheck.js";
+import platformReviewRoutes from "./routes/platformReviewRoutes.js";
 
 
 cron.schedule("0 9 * * *", checkReminders); 
@@ -92,6 +93,8 @@ const authLimiter = rateLimit({
 app.use("/api/users/login", authLimiter);
 app.use("/api/users/register", authLimiter);
 
+
+app.use("/api/platform-reviews", platformReviewRoutes);
 
 
 // Home Route
