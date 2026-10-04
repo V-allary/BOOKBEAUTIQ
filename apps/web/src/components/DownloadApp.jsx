@@ -1,6 +1,6 @@
 function DownloadApp() {
   return (
-    <section className="bg-white py-16 sm:py-20 lg:py-24">
+    <section id="download-app" className="scroll-mt-20 bg-white py-16 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
 
         <div className="relative overflow-hidden rounded-[32px] bg-[#171717] px-6 py-12 sm:px-10 sm:py-16 lg:px-16 lg:py-20">
@@ -35,30 +35,19 @@ function DownloadApp() {
                 directly from your phone.
               </p>
 
-              {/* App buttons */}
+              {/* Coming soon */}
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
 
-                <button
-                  type="button"
-                  className="flex items-center justify-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#171717] transition hover:bg-[#F5F5F5]"
-                >
-                  <span className="text-lg"></span>
-                  Download for iPhone
-                </button>
-
-                <button
-                  type="button"
-                  className="flex items-center justify-center gap-3 rounded-full border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/10"
-                >
-                  <span className="text-lg">▶️</span>
-                  Download for Android
-                </button>
+                <div className="inline-flex items-center justify-center gap-3 rounded-full border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white/70 backdrop-blur">
+                  <span className="h-2 w-2 rounded-full bg-[#B96882]" />
+                  Coming Soon
+                </div>
 
               </div>
 
               <p className="mt-5 text-xs text-white/35">
-                Available soon on the App Store and Google Play.
+                The BookBeautiq app is on its way to the App Store and Google Play.
               </p>
 
             </div>

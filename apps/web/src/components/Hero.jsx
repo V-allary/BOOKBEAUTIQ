@@ -248,13 +248,17 @@ function Hero() {
 
         <div className="mt-9 flex justify-center sm:mt-10">
 
-          <button
+        <button
             type="button"
+            onClick={() =>
+              document
+                .getElementById("download-app")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }
             className="rounded-full border border-[#DCD2D0] bg-white/80 px-6 py-3 text-sm font-semibold text-[#242424] shadow-sm transition hover:border-[#B96882] hover:text-[#B96882]"
           >
             Get the BookBeautiq app
           </button>
-
         </div>
 
       </div>
