@@ -4,7 +4,6 @@ import { API_URL } from "../config";
 
 function SignUp() {
   const navigate = useNavigate();
-
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -13,6 +12,8 @@ function SignUp() {
     password: "",
     role: "customer",
   });
+
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -28,6 +29,12 @@ function SignUp() {
     e.preventDefault();
 
     setError("");
+
+    if (!agreedToTerms) {
+      setError("Please agree to the Terms of Service and Privacy Policy to continue.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -38,10 +45,9 @@ function SignUp() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({ ...formData, agreedToTerms }),
         }
       );
-
       const data = await response.json();
 
       if (!response.ok) {
@@ -333,11 +339,33 @@ function SignUp() {
               </div>
             )}
 
+           {/* TERMS AGREEMENT */}
+
+           <label className="flex items-start gap-3 text-sm leading-5 text-gray-600">
+              <input
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-[#B96882] focus:ring-[#B96882]"
+              />
+              <span>
+                I agree to BookBeautiq's{" "}
+                <Link to="/terms" target="_blank" className="font-semibold text-[#9D536D] hover:underline">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link to="/privacy" target="_blank" className="font-semibold text-[#9D536D] hover:underline">
+                  Privacy Policy
+                </Link>
+                .
+              </span>
+            </label>
+
             {/* SUBMIT */}
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !agreedToTerms}
               className="w-full rounded-xl bg-[#242424] py-4 text-sm font-bold text-white shadow-sm transition hover:bg-[#9D536D] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading

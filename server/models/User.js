@@ -131,6 +131,10 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
+    agreedToTermsAt: {
+      type: Date,
+      default: null,
+    },
     // ==============================
     // EMAIL VERIFICATION (OTP)
     // ==============================

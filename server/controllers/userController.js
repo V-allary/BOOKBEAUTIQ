@@ -18,7 +18,14 @@ export const registerUser = async (req, res) => {
       phone,
       password,
       role,
+      agreedToTerms,
     } = req.body;
+
+    if (agreedToTerms !== true) {
+      return res.status(400).json({
+        message: "You must agree to the Terms of Service and Privacy Policy to create an account.",
+      });
+    }
 
     const existingUser = await User.findOne({ email });
 
@@ -37,6 +44,7 @@ export const registerUser = async (req, res) => {
       phone,
       password: hashedPassword,
       role,
+      agreedToTermsAt: new Date(),
     });
 
     const token = jwt.sign(
@@ -140,96 +148,10 @@ export const loginUser = async (req, res) => {
   }
 };
 
-
 // ==========================================
-// GET CURRENT USER
-// ==========================================
-
-export const getCurrentUser = async (req, res) => {
-  try {
-    const userId =
-      req.user?.userId ||
-      req.user?.id ||
-      req.user?._id;
-
-    if (!userId) {
-      return res.status(401).json({
-        message: "User authentication information is missing.",
-      });
-    }
-
-    const user = await User.findById(userId).select("-password");
-
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found.",
-      });
-    }
-
-    res.status(200).json(user);
-  } catch (error) {
-    console.error("Get current user error:", error);
-
-    res.status(500).json({
-      message: error.message,
-    });
-  }
-};
-
-// ==========================================
-// UPDATE CURRENT USER PROFILE
+// UPDATE PROFILE
 // ==========================================
 
-export const updateCurrentUser = async (req, res) => {
-  try {
-    const userId =
-      req.user?.userId ||
-      req.user?.id ||
-      req.user?._id;
-
-    if (!userId) {
-      return res.status(401).json({
-        message: "User authentication information is missing.",
-      });
-    }
-
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found.",
-      });
-    }
-
-    const allowedFields = [
-      "firstName",
-      "lastName",
-      "phone",
-      "profileImage",
-    ];
-
-    allowedFields.forEach((field) => {
-      if (req.body[field] !== undefined) {
-        user[field] = req.body[field];
-      }
-    });
-
-    await user.save();
-
-    res.status(200).json({
-      message: "Profile updated successfully.",
-      user,
-    });
-  } catch (error) {
-    console.error("Update current user error:", error);
-
-    res.status(500).json({
-      message: error.message,
-    });
-  }
-};
-
- 
 export const updateProfile = async (req, res) => {
   try {
     const { firstName, lastName, phone, profileImage } = req.body;
@@ -249,8 +171,6 @@ export const updateProfile = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-
 
 
 // ==========================================
@@ -347,7 +267,6 @@ export const resetPassword = async (req, res) => {
         `,
       });
     } catch (emailError) {
-
       console.error("Failed to send password-change confirmation email:", emailError);
     }
 
