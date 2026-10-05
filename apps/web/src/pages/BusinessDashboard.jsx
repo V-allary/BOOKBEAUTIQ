@@ -84,6 +84,14 @@ function BusinessDashboard() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
 
+
+  const [workplaceFile, setWorkplaceFile] = useState(null);
+  const [workplacePreview, setWorkplacePreview] = useState("");
+  const [workplaceSaving, setWorkplaceSaving] = useState(false);
+  const [workplaceMessage, setWorkplaceMessage] = useState("");
+
+
+
   // ==========================================
   // PAYOUT FORM STATE
   // ==========================================
@@ -266,6 +274,7 @@ function BusinessDashboard() {
     const rawGallery = Array.isArray(business.gallery) ? business.gallery : [];
     setExistingGalleryUrls(rawGallery);
     setGalleryPreviews(rawGallery.map(getImageUrl));
+    setWorkplacePreview(business.workplacePhoto ? getImageUrl(business.workplacePhoto) : "");
 
 
 
@@ -442,6 +451,72 @@ function BusinessDashboard() {
     setProfileMessage("");
 
     e.target.value = "";
+  };
+
+
+
+
+  // ==========================================
+  // WORK PLACE IMAGE
+  // ==========================================
+
+
+
+  const handleWorkplaceChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setWorkplaceMessage("Please select a valid image.");
+      return;
+    }
+
+    setWorkplaceFile(file);
+    setWorkplacePreview(URL.createObjectURL(file));
+    setWorkplaceMessage("");
+
+    e.target.value = "";
+  };
+
+//=================================================
+//WORKPLACE SAVE IMAGE
+// ================================================
+
+  const handleSaveWorkplacePhoto = async () => {
+    if (!workplaceFile) {
+      setWorkplaceMessage("Please choose a photo first.");
+      return;
+    }
+
+    setWorkplaceSaving(true);
+    setWorkplaceMessage("");
+
+    try {
+      const workplaceUrl = await uploadImage(workplaceFile);
+
+      const response = await fetch(`${API_URL}/api/businesses/${business._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ workplacePhoto: workplaceUrl }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to save workplace photo.");
+      }
+
+      setWorkplaceFile(null);
+      setWorkplaceMessage("Workplace photo saved successfully.");
+      await fetchBusiness();
+    } catch (error) {
+      setWorkplaceMessage(error.message);
+    } finally {
+      setWorkplaceSaving(false);
+    }
   };
 
   // ==========================================
@@ -844,6 +919,12 @@ function BusinessDashboard() {
       id: "payouts",
       label: "Payouts",
       icon: "◆",
+    },
+
+    {
+      id: "workplace-photo",
+      label: "Workplace Photo",
+      icon: "📷",
     },
     {
       id: "account",
@@ -2746,6 +2827,114 @@ function BusinessDashboard() {
 
             </div>
           )}
+
+           {/* ==================================
+              WORKPLACE
+          ================================== */}
+
+{activeSection === "workplace-photo" && (
+            <div className="max-w-2xl">
+
+              <div className="rounded-2xl border border-[#E5E2DF] bg-white p-6 shadow-sm sm:p-8">
+
+                <div className="flex items-start gap-4">
+
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#F3F1EF] text-[#242424]">
+                    📷
+                  </div>
+
+                  <div>
+
+                    <h2 className="text-xl font-bold text-[#242424]">
+                      Workplace Photo
+                    </h2>
+
+                    <p className="mt-1 text-sm leading-6 text-gray-500">
+                      A real photo of your workplace — your salon, chair, or
+                      workstation. This is private and only reviewed by our
+                      team to confirm your business exists; it's never shown
+                      to customers. Required before your business can be
+                      approved.
+                    </p>
+
+                  </div>
+
+                </div>
+
+                <label className="group relative mt-6 block cursor-pointer overflow-hidden rounded-2xl border border-dashed border-[#D8D4D1] bg-[#FAFAF9]">
+
+                  {workplacePreview ? (
+                    <>
+                      <img
+                        src={workplacePreview}
+                        alt="Workplace"
+                        className="h-64 w-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/30">
+                        <span className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#242424] opacity-0 shadow-lg transition group-hover:opacity-100">
+                          Change Photo
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex h-64 flex-col items-center justify-center">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EFEDEC] text-xl text-[#777]">
+                        +
+                      </div>
+                      <p className="mt-3 text-sm font-semibold text-[#242424]">
+                        Add a photo of your workplace
+                      </p>
+                      <p className="mt-1 text-xs text-[#999]">
+                        JPG, PNG or WEBP
+                      </p>
+                    </div>
+                  )}
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleWorkplaceChange}
+                    className="hidden"
+                  />
+
+                </label>
+
+                {business.workplacePhoto && !workplaceFile && (
+                  <div className="mt-4 flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
+                    <span>✓</span>
+                    Photo on file — our team can review it.
+                  </div>
+                )}
+
+                {workplaceMessage && (
+                  <p
+                    className={`mt-4 text-sm ${
+                      workplaceMessage.includes("successfully")
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {workplaceMessage}
+                  </p>
+                )}
+
+                {workplaceFile && (
+                  <button
+                    type="button"
+                    onClick={handleSaveWorkplacePhoto}
+                    disabled={workplaceSaving}
+                    className="mt-6 w-full rounded-xl bg-[#242424] py-3.5 text-sm font-bold text-white transition hover:bg-[#9D536D] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {workplaceSaving ? "Saving..." : "Save Photo"}
+                  </button>
+                )}
+
+              </div>
+
+            </div>
+          )}
+
+
           {/* ==================================
               SERVICES
           ================================== */}
