@@ -388,9 +388,16 @@ export const updateBusiness = async (req, res) => {
     }
 
     // Nobody can change the owner through this route.
+     // Nobody can change the owner through this route.
     delete req.body.owner;
  
     delete req.body.slug;
+
+    if (Array.isArray(req.body.gallery) && req.body.gallery.length > 15) {
+      return res.status(400).json({
+        message: "A business can have a maximum of 15 gallery images.",
+      });
+    }
 
     Object.assign(business, req.body);
 

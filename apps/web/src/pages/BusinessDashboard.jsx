@@ -544,12 +544,12 @@ function BusinessDashboard() {
     const existingGalleryDisplay = existingGalleryUrls.map(getImageUrl);
 
     const availableSlots =
-      5 -
+      15 -
       existingGalleryDisplay.length -
       galleryFiles.length;
     if (availableSlots <= 0) {
       setProfileMessage(
-        "You can have a maximum of 5 gallery images."
+        "You can have a maximum of 15 gallery images."
       );
 
       e.target.value = "";
@@ -647,7 +647,7 @@ function BusinessDashboard() {
       const updatedGallery = [
         ...existingGalleryUrls,
         ...newGalleryUrls,
-      ].slice(0, 5);
+      ].slice(0, 15);
 
       const response = await fetch(
         `${API_URL}/api/businesses/${business._id}`,
@@ -1866,13 +1866,13 @@ function BusinessDashboard() {
                         </h3>
 
                         <p className="mt-1 text-sm text-[#777472]">
-                          Showcase up to 5 examples of your work.
+                          Showcase up to 15 examples of your work.
                         </p>
 
                       </div>
 
                       <span className="text-xs font-semibold text-[#999]">
-                        {galleryPreviews.length}/5
+                        {galleryPreviews.length}/15
                       </span>
 
                     </div>
@@ -1908,7 +1908,7 @@ function BusinessDashboard() {
                         )
                       )}
 
-                      {galleryPreviews.length < 5 && (
+                      {galleryPreviews.length < 15 && (
                         <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[#D8D4D1] bg-[#FAFAF9] transition hover:border-[#AAA5A1] hover:bg-white">
 
                           <span className="text-2xl text-[#777]">

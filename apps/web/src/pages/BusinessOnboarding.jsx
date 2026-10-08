@@ -5,12 +5,42 @@ import { API_URL } from "../config";
 function BusinessOnboarding() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+ 
 
   const [step, setStep] = useState(1);
   const [businessId, setBusinessId] = useState(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("independent");
+  const [checkingExisting, setCheckingExisting] = useState(true);
+
+  // If a business record already exists for this owner (Step 1 was
+  // already completed in a previous session), resume at Step 2 instead
+  // of blocking them with "you already have a business registered."
+  useEffect(() => {
+    const checkExistingBusiness = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/businesses/owner`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          const existing = await response.json();
+          if (existing?._id) {
+            setBusinessId(existing._id);
+            setSelectedPlan(existing.subscriptionPlan === "team" ? "team" : "independent");
+            setStep(2);
+          }
+        }
+      } catch (err) {
+        console.error("Error checking for existing business:", err);
+      } finally {
+        setCheckingExisting(false);
+      }
+    };
+
+    checkExistingBusiness();
+  }, []);
 
 
   // ==========================================
@@ -437,9 +467,11 @@ function BusinessOnboarding() {
     const validFiles = selectedFiles.filter(
       (file) => file.type.startsWith("image/")
     );
+    
 
+    const MAX_WORK_IMAGES =15;
     const remainingSlots =
-      5 - workImages.length;
+      MAX_WORK_IMAGES - workImages.length;
 
     const filesToAdd = validFiles.slice(
       0,
@@ -463,7 +495,7 @@ function BusinessOnboarding() {
       validFiles.length > remainingSlots
     ) {
       setError(
-        "You can add a maximum of 5 work images."
+        "You can add a maximum of 15 work images."
       );
     } else {
       setError("");
@@ -770,9 +802,19 @@ function BusinessOnboarding() {
     ? ["Business Info", "Photos", "Payout", "Services", "Team"]
     : ["Business Info", "Photos", "Payout", "Services"];
 
-  return (
-    <div className="min-h-screen bg-[#F5F5F4] px-4 py-8 text-[#202124] sm:px-6 sm:py-12">
-
+    if (checkingExisting) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-[#F5F5F4]">
+          <div className="text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[#E7E4E1] border-t-[#242424]" />
+            <p className="mt-4 text-sm font-medium text-gray-500">Loading...</p>
+          </div>
+        </div>
+      );
+    }
+  
+    return (
+      <div className="min-h-screen bg-[#F5F5F4] px-4 py-8 text-[#202124] sm:px-6 sm:py-12">
       <div className="mx-auto max-w-3xl">
 
         {/* ======================================
@@ -1297,13 +1339,13 @@ className={`${inputClass} cursor-pointer`}
                     </h2>
 
                     <p className="mt-1 text-sm text-[#777472]">
-                      Add up to 5 photos of your best work.
+                      Add up to 15 photos of your best work.
                     </p>
 
                   </div>
 
                   <span className="text-xs font-semibold text-[#999]">
-                    {workImages.length}/5
+                    {workImages.length}/15
                   </span>
 
                 </div>
@@ -1339,7 +1381,7 @@ className={`${inputClass} cursor-pointer`}
                     )
                   )}
 
-                  {workImages.length < 5 && (
+                  {workImages.length < 15 && (
                     <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[#D4D0CD] bg-[#FAFAF9] transition hover:border-[#AAA5A1] hover:bg-white">
 
                       <span className="text-2xl text-[#777]">
