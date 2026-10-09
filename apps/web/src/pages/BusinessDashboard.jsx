@@ -97,11 +97,12 @@ function BusinessDashboard() {
   // ==========================================
 
   const [banks, setBanks] = useState([]);
-
   const [payoutForm, setPayoutForm] = useState({
     bankCode: "",
     accountNumber: "",
+    accountReference: "",
   });
+  const [payoutVerifying, setPayoutVerifying] = useState(false);
   const [resolvedName, setResolvedName] = useState("");
   const [payoutSubmitting, setPayoutSubmitting] = useState(false);
   const [payoutMessage, setPayoutMessage] = useState("");
@@ -619,6 +620,45 @@ function BusinessDashboard() {
 
     setProfileMessage("");
   };
+
+  // ==========================================
+  //  REPLACE GALLERY IMAGE 
+  // ==========================================
+
+  const replaceGalleryImage = (index, file) => {
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setProfileMessage("Please select a valid image.");
+      return;
+    }
+
+    if (index < existingGalleryUrls.length) {
+      // Replacing a saved photo: drop it, queue the new file.
+      const updatedExisting = existingGalleryUrls.filter((_, i) => i !== index);
+      const combinedFiles = [...galleryFiles, file];
+
+      setExistingGalleryUrls(updatedExisting);
+      setGalleryFiles(combinedFiles);
+      setGalleryPreviews([
+        ...updatedExisting.map(getImageUrl),
+        ...combinedFiles.map((f) => URL.createObjectURL(f)),
+      ]);
+    } else {
+      // Replacing a photo that hasn't been saved yet.
+      const newFileIndex = index - existingGalleryUrls.length;
+      const updatedFiles = galleryFiles.map((f, i) => (i === newFileIndex ? file : f));
+
+      setGalleryFiles(updatedFiles);
+      setGalleryPreviews([
+        ...existingGalleryUrls.map(getImageUrl),
+        ...updatedFiles.map((f) => URL.createObjectURL(f)),
+      ]);
+    }
+
+    setProfileMessage("");
+  };
+
   // ==========================================
   // SAVE BUSINESS PROFILE
   // ==========================================
@@ -702,35 +742,67 @@ function BusinessDashboard() {
 
   const handleResolveAccount = async () => {
     setPayoutMessage("");
+    setResolvedName("");
+
+    if (!payoutForm.bankCode) {
+      setPayoutMessage("Please select your bank or M-PESA first.");
+      return;
+    }
+
+    if (!payoutForm.accountNumber.trim()) {
+      setPayoutMessage(`Please enter your ${accountLabel.toLowerCase()}.`);
+      return;
+    }
+
+    if (isPaybill && !payoutForm.accountReference.trim()) {
+      setPayoutMessage("Please enter the account number for your Paybill.");
+      return;
+    }
+
+    setPayoutVerifying(true);
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/payouts/verify-account`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payoutForm),
+      let accountNumber = payoutForm.accountNumber.trim();
+
+      // Personal M-PESA only: Paystack wants 0712345678 format.
+      if (isMpesaSelected) {
+        accountNumber = accountNumber.replace(/\s+/g, "");
+        if (accountNumber.startsWith("+254")) {
+          accountNumber = "0" + accountNumber.slice(4);
+        } else if (accountNumber.startsWith("254")) {
+          accountNumber = "0" + accountNumber.slice(3);
         }
-      );
+      }
+
+      const response = await fetch(`${API_URL}/api/payouts/verify-account`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ...payoutForm, accountNumber }),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
+        throw new Error(data.message || "Could not verify that account.");
+      }
+
+      if (!data.account_name) {
         throw new Error(
-          data.message ||
-            "Could not verify that account."
+          "We couldn't confirm the account holder's name. Please double-check the details and try again."
         );
       }
 
+      setPayoutForm((current) => ({ ...current, accountNumber }));
       setResolvedName(data.account_name);
     } catch (error) {
       setPayoutMessage(error.message);
+    } finally {
+      setPayoutVerifying(false);
     }
   };
-
   // ==========================================
   // SAVE PAYOUT ACCOUNT
   // ==========================================
@@ -757,6 +829,7 @@ function BusinessDashboard() {
             bankCode: payoutForm.bankCode,
             bankName: bank?.name || "",
             accountNumber: payoutForm.accountNumber,
+            accountReference: payoutForm.accountReference,
             accountName: resolvedName,
           }),
         }
@@ -856,6 +929,35 @@ function BusinessDashboard() {
   const confirmedBookings = bookings.filter(
     (b) => b.status === "Confirmed"
   );
+
+  const selectedBankName = (
+    banks.find((b) => b.code === payoutForm.bankCode)?.name || ""
+  ).toUpperCase();
+
+  const isMpesaFamily =
+    selectedBankName.includes("MPESA") || selectedBankName.includes("M-PESA");
+  const isPaybill = isMpesaFamily && selectedBankName.includes("PAYBILL");
+  const isTill =
+    isMpesaFamily &&
+    !isPaybill &&
+    (selectedBankName.includes("TILL") || selectedBankName.includes("BUY GOODS"));
+  const isMpesaSelected = isMpesaFamily && !isPaybill && !isTill;
+
+  const accountLabel = isPaybill
+    ? "Paybill (Business) Number"
+    : isTill
+    ? "Till Number"
+    : isMpesaSelected
+    ? "M-PESA Phone Number"
+    : "Account Number";
+
+  const accountPlaceholder = isPaybill
+    ? "e.g. 888880"
+    : isTill
+    ? "e.g. 5123456"
+    : isMpesaSelected
+    ? "e.g. 0712345678"
+    : "Enter account number";
 
   // ==========================================
   // BOOKING STATUS COLORS
@@ -1894,15 +1996,27 @@ function BusinessDashboard() {
                               className="h-full w-full object-cover"
                             />
 
-                            <button
+<button
                               type="button"
-                              onClick={() =>
-                                removeGalleryImage(index)
-                              }
-                              className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition group-hover:opacity-100"
+                              onClick={() => removeGalleryImage(index)}
+                              aria-label="Remove photo"
+                              className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100"
                             >
                               ×
                             </button>
+
+                            <label className="absolute bottom-2 left-2 cursor-pointer rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold text-[#242424] opacity-100 shadow transition sm:opacity-0 sm:group-hover:opacity-100">
+                              Replace
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  replaceGalleryImage(index, e.target.files?.[0]);
+                                  e.target.value = "";
+                                }}
+                              />
+                            </label>
 
                           </div>
                         )
@@ -2663,6 +2777,7 @@ function BusinessDashboard() {
                           setPayoutForm({
                             bankCode: business.bankCode || "",
                             accountNumber: "",
+                            accountReference: "",
                           });
                           // Deliberately reset, not pre-filled with the old
                           // name — the new details must be re-verified
@@ -2697,12 +2812,15 @@ function BusinessDashboard() {
 
                       <select
                         value={payoutForm.bankCode}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           setPayoutForm({
-                            ...payoutForm,
                             bankCode: e.target.value,
-                          })
-                        }
+                            accountNumber: "",
+                            accountReference: "",
+                          });
+                          setResolvedName("");
+                          setPayoutMessage("");
+                        }}
                         className="w-full cursor-pointer rounded-xl border border-[#D9D5D1] bg-white p-4 text-sm outline-none transition focus:border-[#777]"
                       >
 
@@ -2725,41 +2843,40 @@ function BusinessDashboard() {
 
                     <div>
 
-                      <label className="mb-2 block text-sm font-semibold text-[#242424]">
-                        {banks.find((b) => b.code === payoutForm.bankCode)
-                          ?.name?.toUpperCase()
-                          .includes("MPESA") ||
-                        banks.find((b) => b.code === payoutForm.bankCode)
-                          ?.name?.toUpperCase()
-                          .includes("M-PESA")
-                          ? "M-PESA Phone Number"
-                          : "Account Number"}
-                      </label>
+<label className="mb-2 block text-sm font-semibold text-[#242424]">
+  {banks.find((b) => b.code === payoutForm.bankCode)
+    ?.name?.toUpperCase()
+    .includes("MPESA") ||
+  banks.find((b) => b.code === payoutForm.bankCode)
+    ?.name?.toUpperCase()
+    .includes("M-PESA")
+    ? "M-PESA Phone Number"
+    : "Account Number"}
+</label>
 
-                      <input
-                        type="text"
-                        placeholder={
-                          banks.find((b) => b.code === payoutForm.bankCode)
-                            ?.name?.toUpperCase()
-                            .includes("MPESA") ||
-                          banks.find((b) => b.code === payoutForm.bankCode)
-                            ?.name?.toUpperCase()
-                            .includes("M-PESA")
-                            ? "e.g. 0712345678"
-                            : "Enter account number"
-                        }
-                        value={payoutForm.accountNumber}
-                        onChange={(e) =>
-                          setPayoutForm({
-                            ...payoutForm,
-                            accountNumber: e.target.value,
-                          })
-                        }
-                        className="w-full rounded-xl border border-[#D9D5D1] p-4 text-sm outline-none transition focus:border-[#777]"
-                      />
+<input
+  type="text"
+  placeholder={
+    banks.find((b) => b.code === payoutForm.bankCode)
+      ?.name?.toUpperCase()
+      .includes("MPESA") ||
+    banks.find((b) => b.code === payoutForm.bankCode)
+      ?.name?.toUpperCase()
+      .includes("M-PESA")
+      ? "e.g. 0712345678"
+      : "Enter account number"
+  }
+  value={payoutForm.accountNumber}
+  onChange={(e) =>
+    setPayoutForm({
+      ...payoutForm,
+      accountNumber: e.target.value,
+    })
+  }
+  className="w-full rounded-xl border border-[#D9D5D1] p-4 text-sm outline-none transition focus:border-[#777]"
+/>
 
-                    </div>
-
+</div>
                     <button
                       type="button"
                       onClick={handleResolveAccount}
