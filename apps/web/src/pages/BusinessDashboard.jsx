@@ -2842,47 +2842,48 @@ function BusinessDashboard() {
                     </div>
 
                     <div>
+                      <label className="mb-2 block text-sm font-semibold text-[#242424]">
+                        {accountLabel}
+                      </label>
 
-<label className="mb-2 block text-sm font-semibold text-[#242424]">
-  {banks.find((b) => b.code === payoutForm.bankCode)
-    ?.name?.toUpperCase()
-    .includes("MPESA") ||
-  banks.find((b) => b.code === payoutForm.bankCode)
-    ?.name?.toUpperCase()
-    .includes("M-PESA")
-    ? "M-PESA Phone Number"
-    : "Account Number"}
-</label>
+                      <input
+                        type="text"
+                        placeholder={accountPlaceholder}
+                        value={payoutForm.accountNumber}
+                        onChange={(e) => {
+                          setPayoutForm({ ...payoutForm, accountNumber: e.target.value });
+                          setResolvedName("");
+                        }}
+                        className="w-full rounded-xl border border-[#D9D5D1] p-4 text-sm outline-none transition focus:border-[#777]"
+                      />
+                    </div>
 
-<input
-  type="text"
-  placeholder={
-    banks.find((b) => b.code === payoutForm.bankCode)
-      ?.name?.toUpperCase()
-      .includes("MPESA") ||
-    banks.find((b) => b.code === payoutForm.bankCode)
-      ?.name?.toUpperCase()
-      .includes("M-PESA")
-      ? "e.g. 0712345678"
-      : "Enter account number"
-  }
-  value={payoutForm.accountNumber}
-  onChange={(e) =>
-    setPayoutForm({
-      ...payoutForm,
-      accountNumber: e.target.value,
-    })
-  }
-  className="w-full rounded-xl border border-[#D9D5D1] p-4 text-sm outline-none transition focus:border-[#777]"
-/>
-
-</div>
-                    <button
+                    {isPaybill && (
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-[#242424]">
+                          Account Number
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="The account number for this Paybill"
+                          value={payoutForm.accountReference}
+                          onChange={(e) => {
+                            setPayoutForm({ ...payoutForm, accountReference: e.target.value });
+                            setResolvedName("");
+                          }}
+                          className="w-full rounded-xl border border-[#D9D5D1] p-4 text-sm outline-none transition focus:border-[#777]"
+                        />
+                      </div>
+                    )}
+ 
+ 
+                      <button
                       type="button"
                       onClick={handleResolveAccount}
-                      className="rounded-xl border border-[#242424] px-5 py-3 text-sm font-semibold text-[#242424] transition hover:bg-[#F5F4F2]"
+                      disabled={payoutVerifying}
+                      className="rounded-xl border border-[#242424] px-5 py-3 text-sm font-semibold text-[#242424] transition hover:bg-[#F5F4F2] disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Verify Account
+                      {payoutVerifying ? "Verifying..." : "Verify Account"}
                     </button>
 
                     {resolvedName && (
@@ -2988,7 +2989,7 @@ function BusinessDashboard() {
                         className="h-64 w-full object-cover"
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/30">
-                        <span className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#242424] opacity-0 shadow-lg transition group-hover:opacity-100">
+                        <span className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#242424] opacity-100 shadow-lg transition sm:opacity-0 sm:group-hover:opacity-100">
                           Change Photo
                         </span>
                       </div>
