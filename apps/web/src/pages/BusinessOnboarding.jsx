@@ -131,6 +131,7 @@ function BusinessOnboarding() {
   const [payoutForm, setPayoutForm] = useState({
     bankCode: "",
     accountNumber: "",
+    accountReference: "",
   });
  const [resolvedName, setResolvedName] = useState("");
   const [payoutMessage, setPayoutMessage] = useState("");
@@ -152,13 +153,36 @@ function BusinessOnboarding() {
     fetchBanks();
   }, []);
 
-  const isMpesaSelected =
-    banks.find((b) => b.code === payoutForm.bankCode)
-      ?.name?.toUpperCase()
-      .includes("MPESA") ||
-    banks.find((b) => b.code === payoutForm.bankCode)
-      ?.name?.toUpperCase()
-      .includes("M-PESA");
+  const selectedBankName = (
+    banks.find((b) => b.code === payoutForm.bankCode)?.name || ""
+  ).toUpperCase();
+
+  const isMpesaFamily =
+    selectedBankName.includes("MPESA") || selectedBankName.includes("M-PESA");
+  const isPaybill = isMpesaFamily && selectedBankName.includes("PAYBILL");
+  const isTill =
+    isMpesaFamily &&
+    !isPaybill &&
+    (selectedBankName.includes("TILL") || selectedBankName.includes("BUY GOODS"));
+  // Personal M-PESA wallet only (phone number). Phone normalization
+  // below applies to this case and nothing else.
+  const isMpesaSelected = isMpesaFamily && !isPaybill && !isTill;
+
+  const accountLabel = isPaybill
+    ? "Paybill (Business) Number"
+    : isTill
+    ? "Till Number"
+    : isMpesaSelected
+    ? "M-PESA Phone Number"
+    : "Account Number";
+
+  const accountPlaceholder = isPaybill
+    ? "e.g. 888880"
+    : isTill
+    ? "e.g. 5123456"
+    : isMpesaSelected
+    ? "e.g. 0712345678"
+    : "Enter account number";
       const handleResolveAccount = async () => {
         setPayoutMessage("");
         setResolvedName("");
@@ -169,12 +193,14 @@ function BusinessOnboarding() {
         }
     
         if (!payoutForm.accountNumber.trim()) {
-          setPayoutMessage(
-            isMpesaSelected ? "Please enter your M-PESA phone number." : "Please enter your account number."
-          );
+          setPayoutMessage(`Please enter your ${accountLabel.toLowerCase()}.`);
           return;
         }
-    
+
+        if (isPaybill && !payoutForm.accountReference.trim()) {
+          setPayoutMessage("Please enter the account number for your Paybill.");
+          return;
+        }
         setVerifying(true);
     
         try {
@@ -240,6 +266,7 @@ function BusinessOnboarding() {
           bankCode: payoutForm.bankCode,
           bankName: bank?.name || "",
           accountNumber: payoutForm.accountNumber,
+          accountReference: payoutForm.accountReference,
           accountName: resolvedName,
         }),
       });
@@ -802,19 +829,19 @@ function BusinessOnboarding() {
     ? ["Business Info", "Photos", "Payout", "Services", "Team"]
     : ["Business Info", "Photos", "Payout", "Services"];
 
-    if (checkingExisting) {
-      return (
-        <div className="flex min-h-screen items-center justify-center bg-[#F5F5F4]">
-          <div className="text-center">
-            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[#E7E4E1] border-t-[#242424]" />
-            <p className="mt-4 text-sm font-medium text-gray-500">Loading...</p>
-          </div>
-        </div>
-      );
-    }
-  
+  if (checkingExisting) {
     return (
-      <div className="min-h-screen bg-[#F5F5F4] px-4 py-8 text-[#202124] sm:px-6 sm:py-12">
+      <div className="flex min-h-screen items-center justify-center bg-[#F5F5F4]">
+        <div className="text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[#E7E4E1] border-t-[#242424]" />
+          <p className="mt-4 text-sm font-medium text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#F5F5F4] px-4 py-8 text-[#202124] sm:px-6 sm:py-12">
       <div className="mx-auto max-w-3xl">
 
         {/* ======================================
@@ -1520,9 +1547,15 @@ className={`${inputClass} cursor-pointer`}
 
                   <select
                     value={payoutForm.bankCode}
-                    onChange={(e) =>
-                      setPayoutForm({ ...payoutForm, bankCode: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setPayoutForm({
+                        bankCode: e.target.value,
+                        accountNumber: "",
+                        accountReference: "",
+                      });
+                      setResolvedName("");
+                      setPayoutMessage("");
+                    }}
                     className={`${inputClass} cursor-pointer`}
                   >
                     <option value="">Select your bank or M-PESA</option>
@@ -1536,21 +1569,38 @@ className={`${inputClass} cursor-pointer`}
 
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-[#242424]">
-                    {isMpesaSelected ? "M-PESA Phone Number" : "Account Number"}
+                    {accountLabel}
                   </label>
 
                   <input
                     type="text"
-                    placeholder={
-                      isMpesaSelected ? "e.g. 0712345678" : "Enter account number"
-                    }
+                    placeholder={accountPlaceholder}
                     value={payoutForm.accountNumber}
-                    onChange={(e) =>
-                      setPayoutForm({ ...payoutForm, accountNumber: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setPayoutForm({ ...payoutForm, accountNumber: e.target.value });
+                      setResolvedName("");
+                    }}
                     className={inputClass}
                   />
                 </div>
+
+                {isPaybill && (
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-[#242424]">
+                      Account Number
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="The account number for this Paybill"
+                      value={payoutForm.accountReference}
+                      onChange={(e) => {
+                        setPayoutForm({ ...payoutForm, accountReference: e.target.value });
+                        setResolvedName("");
+                      }}
+                      className={inputClass}
+                    />
+                  </div>
+                )}
 
                 <button
                   type="button"

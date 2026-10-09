@@ -11,25 +11,42 @@ export const getBankList = async (req, res) => {
     }
   };
   
-
+ 
 // Verify a bank account number resolves to a real name before saving
+ // Verify a bank account number resolves to a real name before saving
 export const verifyBankAccount = async (req, res) => {
   try {
-    const { accountNumber, bankCode } = req.body;
+    const { accountNumber, bankCode, accountReference } = req.body;
 
-    const result = await paystackRequest(
-      `/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`
-    );
+    // Reject non-string values (blocks object/NoSQL-style payloads)
+    if (typeof accountNumber !== "string" || typeof bankCode !== "string") {
+      return res.status(400).json({ message: "Invalid account details." });
+    }
+
+    let url =
+      `/bank/resolve?account_number=${encodeURIComponent(accountNumber.trim())}` +
+      `&bank_code=${encodeURIComponent(bankCode.trim())}`;
+
+    // Paybill only: the account number within the business number.
+    // TODO: confirm Paystack's exact param name for this (account_reference is a guess).
+    if (typeof accountReference === "string" && accountReference.trim()) {
+      url += `&account_reference=${encodeURIComponent(accountReference.trim())}`;
+    }
+
+    const result = await paystackRequest(url);
 
     res.status(200).json(result); // { account_number, account_name }
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
-};
- 
+}; 
 export const setupPayoutAccount = async (req, res) => {
   try {
-    const { businessId, bankCode, bankName, accountNumber, accountName } = req.body;
+    const { businessId, bankCode, bankName, accountNumber, accountReference, accountName } = req.body;
+
+    if (typeof accountNumber !== "string" || typeof bankCode !== "string") {
+      return res.status(400).json({ message: "Invalid account details." });
+    }
 
     const business = await Business.findById(businessId);
     if (!business) return res.status(404).json({ message: "Business not found." });
@@ -39,9 +56,17 @@ export const setupPayoutAccount = async (req, res) => {
       return res.status(403).json({ message: "You can only manage your own business's payout account." });
     }
 
+    // Paybill only: the account number within the business number.
+    // TODO: confirm Paystack's exact param name (account_reference is a guess).
+    const referenceField =
+      typeof accountReference === "string" && accountReference.trim()
+        ? { account_reference: accountReference.trim() }
+        : {};
+
+    const hadSubaccount = Boolean(business.paystackSubaccountCode);
     let subaccount;
 
-    if (business.paystackSubaccountCode) {
+    if (hadSubaccount) {
       // Already has one — update it in place, don't create a duplicate.
       subaccount = await paystackRequest(
         `/subaccount/${business.paystackSubaccountCode}`,
@@ -50,6 +75,7 @@ export const setupPayoutAccount = async (req, res) => {
           business_name: business.name,
           settlement_bank: bankCode,
           account_number: accountNumber,
+          ...referenceField,
         }
       );
     } else {
@@ -58,7 +84,8 @@ export const setupPayoutAccount = async (req, res) => {
         business_name: business.name,
         settlement_bank: bankCode,
         account_number: accountNumber,
-        percentage_charge: 0, 
+        percentage_charge: 0,
+        ...referenceField,
       });
     }
 
@@ -71,7 +98,7 @@ export const setupPayoutAccount = async (req, res) => {
     await business.save();
 
     res.status(200).json({
-      message: business.paystackSubaccountCode
+      message: hadSubaccount
         ? "Payout account updated successfully."
         : "Payout account linked successfully.",
       business,
