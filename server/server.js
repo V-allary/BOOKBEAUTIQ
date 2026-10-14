@@ -29,10 +29,21 @@ import savedBusinessRoutes from "./routes/savedBusinessRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";import reportRoutes from "./routes/reportRoutes.js";
 import runSubscriptionCheck from "./jobs/subscriptionCheck.js";
 import platformReviewRoutes from "./routes/platformReviewRoutes.js";
+import reminderRoutes from "./routes/reminderRoutes.js";
+import runBookingReminders from "./jobs/bookingReminders.js";
+
+
 
 
 cron.schedule("0 9 * * *", checkReminders); 
 cron.schedule("0 1 * * *", autoChargeSubscriptions);
+
+
+cron.schedule(
+  "0 8 * * *",
+  () => runBookingReminders().catch((e) => console.error("Booking reminders failed:", e)),
+  { timezone: "Africa/Nairobi" }
+);
 
 
 dotenv.config();
@@ -95,6 +106,7 @@ app.use("/api/users/register", authLimiter);
 
 
 app.use("/api/platform-reviews", platformReviewRoutes);
+app.use("/api/internal", reminderRoutes);
 
 
 // Home Route

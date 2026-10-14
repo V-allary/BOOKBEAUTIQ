@@ -9,6 +9,10 @@ const GRACE_PERIOD_DAYS = 3;
 // past_due (grace period passed) -> suspended (hidden from customers)
 // Paying at any point is handled separately, by verifySubscriptionPayment.
 const runSubscriptionCheck = async () => {
+  if (process.env.SUBSCRIPTION_ENFORCEMENT === "off") {
+    console.log("Subscription check skipped: enforcement is off.");
+    return;
+  }
   const now = new Date();
 
   // ==========================================

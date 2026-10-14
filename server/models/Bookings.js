@@ -110,6 +110,12 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    remindersSent: {
+      type: [String], // e.g. ["3d", "1d", "0d"]
+      default: [],
+    },
+
+    
   },
   { timestamps: true }
 );

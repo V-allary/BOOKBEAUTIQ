@@ -4,6 +4,7 @@ import sendEmail from "./sendEmail.js";
 const EMAIL_SUBJECTS = {
   booking_confirmed: "Your booking is confirmed",
   appointment_reminder: "Reminder: Your appointment is coming up",
+  booking_reminder: "Reminder: upcoming appointments",
   payment_confirmation: "Payment received",
   booking_cancelled: "Your booking was cancelled",
   booking_rescheduled: "Your booking was rescheduled",
@@ -16,6 +17,7 @@ const EMAIL_SUBJECTS = {
   business_approved: "Your business has been approved",
   business_rejected: "Your business listing was not approved",
   subscription_reminder: "Subscription payment reminder",
+  booking_reminder: "Reminder: upcoming appointments",
 };
  
 const notify = async ({ userId, type, title, message, email, link = "", emailHtml }) => {
