@@ -122,6 +122,20 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    verificationType: {
+      type: String,
+      enum: ["licensed", "freelance", null],
+      default: null,
+    },
+    verificationInstagramUrl: {
+      type: String,
+      default: "",
+    },
+    verificationTiktokUrl: {
+      type: String,
+      default: "",
+    },
+
     resetPasswordToken: {
       type: String,
       default: null,
