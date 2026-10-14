@@ -33,6 +33,13 @@ function BusinessDashboard() {
   // Active dashboard section
   const [activeSection, setActiveSection] = useState("overview");
 
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [calendarStaff, setCalendarStaff] = useState("all");
+
   // ==========================================
   // BUSINESS PROFILE STATE
   // ==========================================
@@ -971,6 +978,140 @@ function BusinessDashboard() {
     "No-show": "bg-gray-200 text-gray-700",
   };
 
+  // Bookings store dates like "Sat 17" (no month/year). Work out the real
+  // date: the first day on or after the booking was made that matches.
+  const pad = (n) => String(n).padStart(2, "0");
+  const toKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+  const resolveBookingDate = (label, createdAt) => {
+    const text = String(label || "").trim();
+
+    const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+
+    const m = text.match(/^([A-Za-z]{3})\s+(\d{1,2})$/);
+    if (!m || !createdAt) return null;
+
+    const weekday = m[1].charAt(0).toUpperCase() + m[1].slice(1).toLowerCase();
+    const dayOfMonth = Number(m[2]);
+    const start = new Date(createdAt);
+    start.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i <= 366; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      if (d.getDate() === dayOfMonth && weekDays[d.getDay()] === weekday) return d;
+    }
+    return null;
+  };
+
+  const timeToMinutes = (value) => {
+    const m = String(value || "").trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+    if (!m) return 9999;
+    let h = Number(m[1]);
+    const p = m[3]?.toUpperCase();
+    if (p === "PM" && h < 12) h += 12;
+    if (p === "AM" && h === 12) h = 0;
+    return h * 60 + Number(m[2]);
+  };
+
+  const staffNames = [
+    ...new Set(
+      bookings.map((b) => b.staff).filter((s) => s && s !== "Not specified")
+    ),
+  ];
+
+  const calendarBookings = bookings
+    .filter((b) => b.status !== "Cancelled")
+    .filter((b) => calendarStaff === "all" || b.staff === calendarStaff)
+    .map((b) => {
+      const dateObj = resolveBookingDate(b.date, b.createdAt);
+      return { ...b, dateObj, dateKey: dateObj ? toKey(dateObj) : null };
+    })
+    .filter((b) => b.dateKey)
+    .sort(
+      (a, b) =>
+        a.dateKey.localeCompare(b.dateKey) ||
+        timeToMinutes(a.time) - timeToMinutes(b.time)
+    );
+
+  const bookingsByDay = {};
+  calendarBookings.forEach((b) => {
+    (bookingsByDay[b.dateKey] = bookingsByDay[b.dateKey] || []).push(b);
+  });
+
+  const todayDate = new Date();
+  const todayKey = toKey(todayDate);
+  const tomorrowDate = new Date(todayDate);
+  tomorrowDate.setDate(todayDate.getDate() + 1);
+  const tomorrowKey = toKey(tomorrowDate);
+  const weekEndDate = new Date(todayDate);
+  weekEndDate.setDate(todayDate.getDate() + 7);
+  const weekEndKey = toKey(weekEndDate);
+
+  const comingUp = calendarBookings.filter(
+    (b) => ["Confirmed", "Pending"].includes(b.status) && b.dateKey >= todayKey
+  );
+
+  const comingUpGroups = [
+    { label: "Today", items: comingUp.filter((b) => b.dateKey === todayKey) },
+    { label: "Tomorrow", items: comingUp.filter((b) => b.dateKey === tomorrowKey) },
+    {
+      label: "This week",
+      items: comingUp.filter((b) => b.dateKey > tomorrowKey && b.dateKey <= weekEndKey),
+    },
+    { label: "Later", items: comingUp.filter((b) => b.dateKey > weekEndKey) },
+  ].filter((g) => g.items.length > 0);
+
+  const monthFirst = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
+  const daysInMonth = new Date(
+    calendarMonth.getFullYear(),
+    calendarMonth.getMonth() + 1,
+    0
+  ).getDate();
+  const calendarCells = [
+    ...Array.from({ length: monthFirst.getDay() }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, i) => {
+      const d = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), i + 1);
+      return { day: i + 1, key: toKey(d) };
+    }),
+  ];
+
+  const renderBookingRow = (b, showDate = false) => (
+    <div
+      key={b._id}
+      className="flex flex-col gap-3 rounded-xl border border-[#E5E2DF] p-4 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <div className="min-w-0">
+        <p className="font-semibold text-[#242424]">
+          {b.time} — {b.customerName}
+        </p>
+        <p className="mt-1 text-sm text-gray-500">
+          {b.service}
+          {b.staff && b.staff !== "Not specified" ? ` with ${b.staff}` : ""}
+        </p>
+        <p className="mt-1 text-xs text-gray-400">
+          {showDate && b.dateObj
+            ? `${b.dateObj.toLocaleDateString("en-US", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+              })} · `
+            : ""}
+          {b.customerPhone}
+        </p>
+      </div>
+
+      <span
+        className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${
+          statusColor[b.status] || "bg-gray-100 text-gray-600"
+        }`}
+      >
+        {b.status}
+      </span>
+    </div>
+  );
+
   // ==========================================
   // NAVIGATION
   // ==========================================
@@ -992,10 +1133,16 @@ function BusinessDashboard() {
       id: "profile", label: "Business Profile",
       icon: "◎",
     },
+    
     {
       id: "bookings",
       label: "Bookings",
       icon: "▣",
+    },
+    {
+      id: "calendar",
+      label: "Calendar",
+      icon: "▦",
     },
     {
       id: "messages",
@@ -2506,6 +2653,178 @@ function BusinessDashboard() {
                   </div>
                 )}
 
+              </div>
+
+            </div>
+          )}
+
+          {/* ==================================
+              CALENDAR
+          ================================== */}
+
+{activeSection === "calendar" && (
+            <div className="space-y-6">
+
+              <div className="rounded-2xl border border-[#E5E2DF] bg-white shadow-sm">
+
+                <div className="flex flex-col gap-3 border-b border-[#E5E2DF] px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      aria-label="Previous month"
+                      onClick={() =>
+                        setCalendarMonth(
+                          new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1)
+                        )
+                      }
+                      className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E5E2DF] text-[#242424] transition hover:bg-[#F5F4F2]"
+                    >
+                      ‹
+                    </button>
+
+                    <h2 className="min-w-[150px] text-center font-bold text-[#242424]">
+                      {calendarMonth.toLocaleDateString("en-US", {
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </h2>
+
+                    <button
+                      type="button"
+                      aria-label="Next month"
+                      onClick={() =>
+                        setCalendarMonth(
+                          new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1)
+                        )
+                      }
+                      className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E5E2DF] text-[#242424] transition hover:bg-[#F5F4F2]"
+                    >
+                      ›
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const n = new Date();
+                        setCalendarMonth(new Date(n.getFullYear(), n.getMonth(), 1));
+                        setSelectedDay(toKey(n));
+                      }}
+                      className="ml-1 rounded-xl border border-[#E5E2DF] px-3 py-2 text-xs font-semibold text-[#242424] transition hover:bg-[#F5F4F2]"
+                    >
+                      Today
+                    </button>
+                  </div>
+
+                  {isTeamPlan && staffNames.length > 0 && (
+                    <select
+                      value={calendarStaff}
+                      onChange={(e) => setCalendarStaff(e.target.value)}
+                      className="cursor-pointer rounded-xl border border-[#E5E2DF] bg-white px-3 py-2 text-sm outline-none"
+                    >
+                      <option value="all">All staff</option>
+                      {staffNames.map((name) => (
+                        <option key={name} value={name}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                </div>
+
+                <div className="p-3 sm:p-6">
+
+                  <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                    {weekDays.map((d) => (
+                      <div key={d} className="py-2">
+                        {d}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1">
+                    {calendarCells.map((cell, i) => {
+                      if (!cell) return <div key={`empty-${i}`} />;
+
+                      const count = (bookingsByDay[cell.key] || []).length;
+                      const isToday = cell.key === todayKey;
+                      const isSelected = cell.key === selectedDay;
+
+                      return (
+                        <button
+                          key={cell.key}
+                          type="button"
+                          onClick={() => setSelectedDay(cell.key)}
+                          className={`flex aspect-square flex-col items-center justify-center rounded-xl text-sm font-semibold transition ${
+                            isSelected
+                              ? "bg-[#242424] text-white"
+                              : isToday
+                              ? "border border-[#9D536D] text-[#9D536D]"
+                              : "text-[#242424] hover:bg-[#F5F4F2]"
+                          }`}
+                        >
+                          {cell.day}
+                          {count > 0 && (
+                            <span
+                              className={`mt-0.5 rounded-full px-1.5 text-[10px] font-bold ${
+                                isSelected ? "bg-white text-[#242424]" : "bg-[#F2E8EC] text-[#9D536D]"
+                              }`}
+                            >
+                              {count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                </div>
+
+              </div>
+
+              {selectedDay && (
+                <div className="rounded-2xl border border-[#E5E2DF] bg-white p-5 shadow-sm">
+                  <h2 className="font-bold text-[#242424]">
+                    {new Date(`${selectedDay}T12:00:00`).toLocaleDateString("en-US", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                    })}
+                  </h2>
+
+                  <div className="mt-4 space-y-3">
+                    {(bookingsByDay[selectedDay] || []).length === 0 ? (
+                      <p className="text-sm text-gray-400">No appointments on this day.</p>
+                    ) : (
+                      bookingsByDay[selectedDay].map((b) => renderBookingRow(b))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-2xl border border-[#E5E2DF] bg-white p-5 shadow-sm">
+                <h2 className="font-bold text-[#242424]">Coming up</h2>
+                <p className="mt-1 text-xs text-gray-400">
+                  Your confirmed appointments, soonest first.
+                </p>
+
+                {comingUpGroups.length === 0 ? (
+                  <p className="mt-5 text-sm text-gray-400">No upcoming appointments.</p>
+                ) : (
+                  <div className="mt-5 space-y-6">
+                    {comingUpGroups.map((group) => (
+                      <div key={group.label}>
+                        <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#9D536D]">
+                          {group.label} · {group.items.length}
+                        </p>
+                        <div className="space-y-3">
+                          {group.items.map((b) => renderBookingRow(b, true))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
             </div>
