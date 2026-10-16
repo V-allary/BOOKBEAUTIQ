@@ -112,7 +112,7 @@ function Terms() {
               <p className="mt-3 text-sm leading-7 text-gray-600">
                 Separately from the subscription fee, BookBeautiq takes a
                 one-time commission on a new customer's first-ever booking
-                with a given business (currently 20%, minimum KES 100).
+                with a given business (currently 10%, minimum KES 50).
                 Every subsequent booking from that same customer with that
                 business is commission-free. This commission is deducted
                 automatically from the deposit at the time of payment.

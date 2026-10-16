@@ -128,8 +128,8 @@ export const initializeBookingPayment = async (req, res) => {
     });
     const isFirstTimeDiscovery = !priorBooking;
 
-    const COMMISSION_RATE = 0.20;
-    const MIN_COMMISSION = 100;
+    const COMMISSION_RATE = 0.10;
+    const MIN_COMMISSION = 50;
 
     let commissionAmount = 0;
 
@@ -158,8 +158,13 @@ export const initializeBookingPayment = async (req, res) => {
       commissionAmount = Math.max(rawCommission, MIN_COMMISSION);
       commissionAmount = Math.min(commissionAmount, depositAmount);
 
-      const businessShare = depositAmount - commissionAmount;
-      const businessSharePercent = Math.round((businessShare / depositAmount) * 100);
+      const businessSharePercent = Math.min(
+        100,
+        Math.max(0, Math.round(((depositAmount - commissionAmount) / depositAmount) * 100))
+      );
+
+      commissionAmount =
+        Math.round((depositAmount - (depositAmount * businessSharePercent) / 100) * 100) / 100;
 
       payload.split = {
         type: "percentage",

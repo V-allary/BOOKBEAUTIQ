@@ -71,7 +71,7 @@ function HelpCenter() {
       },
       {
         q: "How do I get paid for bookings?",
-        a: "BookBeautiq never collects or holds your deposit payments. Every deposit goes straight from Paystack to your own linked bank or M-Pesa account the moment a customer pays — there's no settlement delay on our end. On a customer's first-ever booking with your business, BookBeautiq takes a one-time commission (20%, minimum KES 100) for the new-customer discovery, similar to how other booking marketplaces work. Every booking after that from the same customer is commission-free — you keep 100% of the deposit. Add your payout details from the Payouts section of your dashboard to get started; you must link this before your listing can go live.",
+        a: "BookBeautiq never collects or holds your deposit payments. Every deposit goes straight from Paystack to your own linked bank or M-Pesa account the moment a customer pays — there's no settlement delay on our end. On a customer's first-ever booking with your business, BookBeautiq takes a one-time commission (10%, minimum KES 50) for the new-customer discovery, similar to how other booking marketplaces work. Every booking after that from the same customer is commission-free — you keep 100% of the deposit. Add your payout details from the Payouts section of your dashboard to get started; you must link this before your listing can go live.",
       },
 
       {
