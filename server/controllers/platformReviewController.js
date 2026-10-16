@@ -113,7 +113,6 @@ export const submitPlatformReview = async (req, res) => {
 // ==========================================
 // PUBLIC — approved reviews only
 // ==========================================
-
 export const getPublicPlatformReviews = async (req, res) => {
   try {
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 9, 1), 24);
@@ -121,10 +120,16 @@ export const getPublicPlatformReviews = async (req, res) => {
     const reviews = await PlatformReview.find({ status: "approved" })
       .sort({ reviewedAt: -1 })
       .limit(limit)
-      .select("displayName role rating comment reviewedAt")
+      .select("userId displayName role rating comment reviewedAt")
+      .populate("userId", "profileImage")
       .lean();
+ 
+    const safe = reviews.map(({ userId, ...review }) => ({
+      ...review,
+      profileImage: userId?.profileImage || "",
+    }));
 
-    res.status(200).json(reviews);
+    res.status(200).json(safe);
   } catch (error) {
     console.error("Get public platform reviews error:", error);
     res.status(500).json({ message: error.message });
@@ -143,7 +148,7 @@ export const listPlatformReviews = async (req, res) => {
 
     const reviews = await PlatformReview.find({ status })
       .sort({ createdAt: status === "pending" ? 1 : -1 })
-      .populate("userId", "email");
+      .populate("userId", "email profileImage");
 
     const counts = await PlatformReview.aggregate([
       { $group: { _id: "$status", count: { $sum: 1 } } },

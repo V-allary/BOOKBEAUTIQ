@@ -1,3 +1,4 @@
+import ReviewerAvatar from "../components/ReviewerAvatar";
 import { useEffect, useState } from "react";
 import { API_URL } from "../config";
 
@@ -101,9 +102,11 @@ function Testimonials() {
 
                 <div className="mt-7 flex items-center gap-3 border-t border-[#F0ECEF] pt-5">
 
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F7E7EE] text-sm font-bold text-[#B85E83]">
-                    {testimonial.displayName.charAt(0)}
-                  </div>
+                <ReviewerAvatar
+                    name={testimonial.displayName}
+                    src={testimonial.profileImage}
+                    className="h-11 w-11 text-sm"
+                  />
 
                   <div>
                     <h3 className="text-sm font-bold text-[#222]">

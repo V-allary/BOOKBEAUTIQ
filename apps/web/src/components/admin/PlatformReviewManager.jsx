@@ -1,3 +1,4 @@
+import ReviewerAvatar from "../ReviewerAvatar";
 import { useEffect, useState } from "react";
 import { API_URL } from "../../config";
 
@@ -103,11 +104,18 @@ function PlatformReviewManager() {
               className="rounded-2xl border border-[#EAE4EA] bg-white p-5"
             >
               <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="font-bold text-[#242424]">{review.displayName}</p>
-                  <p className="text-xs text-gray-400">
-                    {review.userId?.email} · {review.role === "business" ? "Business owner" : "Customer"}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <ReviewerAvatar
+                    name={review.displayName}
+                    src={review.userId?.profileImage}
+                    className="h-11 w-11 text-sm"
+                  />
+                  <div>
+                    <p className="font-bold text-[#242424]">{review.displayName}</p>
+                    <p className="text-xs text-gray-400">
+                      {review.userId?.email} · {review.role === "business" ? "Business owner" : "Customer"}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex gap-1 text-[#B96882]">
                   {"★".repeat(review.rating)}
