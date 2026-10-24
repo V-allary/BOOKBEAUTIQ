@@ -18,6 +18,7 @@ const EMAIL_SUBJECTS = {
   business_rejected: "Your business listing was not approved",
   subscription_reminder: "Subscription payment reminder",
   booking_reminder: "Reminder: upcoming appointments",
+  referral_reward: "You earned a free month on BookBeautiq",
 };
  
 const notify = async ({ userId, type, title, message, email, link = "", emailHtml }) => {

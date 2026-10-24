@@ -7,6 +7,8 @@ import User from "../models/User.js";
 import escapeHtml from "../utils/escapeHtml.js";
 import Service from "../models/Service.js";
 import mongoose from "mongoose";
+import { activateSubscriptionFromTransaction } from "./subscriptionController.js";
+
 
 
 // ==========================================
@@ -374,13 +376,20 @@ export const paystackWebhook = async (req, res) => {
 
     if (event.event === "charge.success") {
       const reference = event.data.reference;
+      const metadata = event.data.metadata || {};
 
-      const { booking, isNew } = await createBookingFromMetadata(event.data.metadata, reference);
+      if (metadata.type === "subscription") {
+        await activateSubscriptionFromTransaction(event.data, reference);
+      } else if (metadata.businessId && metadata.service && metadata.date && metadata.time) {
+        const { booking, isNew } = await createBookingFromMetadata(metadata, reference);
 
-      if (isNew) {
-        await sendBookingConfirmationNotifications(booking);
+        if (isNew) {
+          await sendBookingConfirmationNotifications(booking);
+        }
       }
+      // Anything else, such as an automatic renewal charge, needs no booking.
     }
+
 
     res.sendStatus(200);
   } catch (error) {

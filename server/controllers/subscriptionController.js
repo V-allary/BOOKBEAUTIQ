@@ -1,5 +1,8 @@
 import paystackRequest from "../utils/paystack.js";
 import Business from "../models/Business.js";
+import mongoose from "mongoose";
+import { applyBankedFreeDays, awardReferralForPayment } from "../utils/referrals.js";
+
 
 const PLAN_PRICES = {
   independent: 1500,
@@ -43,6 +46,77 @@ export const initializeSubscriptionPayment = async (req, res) => {
 };
 
 
+// Shared by the callback page and the Paystack webhook, so a subscription
+// activates even if the owner closes the tab. Safe to run twice for the same
+// payment: the update only applies if this reference hasn't been used yet.
+export const activateSubscriptionFromTransaction = async (transaction, reference) => {
+  const metadata = transaction?.metadata || {};
+
+  if (transaction?.status !== "success" || metadata.type !== "subscription") {
+    return { ok: false, message: "This isn't a subscription payment." };
+  }
+
+  if (!mongoose.isValidObjectId(metadata.businessId)) {
+    return { ok: false, message: "Business not found for this payment." };
+  }
+
+  const business = await Business.findById(metadata.businessId);
+  if (!business) {
+    return { ok: false, message: "Business not found for this payment." };
+  }
+
+  const expectedAmount =
+    (PLAN_PRICES[business.subscriptionPlan] || PLAN_PRICES.independent) * 100;
+
+  if (transaction.currency !== "KES" || Number(transaction.amount) < expectedAmount) {
+    return { ok: false, message: "The amount paid doesn't match the subscription price." };
+  }
+
+  const wantsAutoRenew =
+    metadata.autoRenew === true || metadata.autoRenew === "true";
+
+  const paidUntil = new Date();
+  paidUntil.setDate(paidUntil.getDate() + 30);
+
+  const set = {
+    subscriptionStatus: "active",
+    subscriptionPaidUntil: paidUntil,
+    gracePeriodEndsAt: null,
+    lastReminderSentAt: null,
+    lastSubscriptionReference: reference,
+  };
+
+  const auth = transaction.authorization;
+  if (auth?.reusable && auth?.authorization_code) {
+    set.paystackAuthorizationCode = auth.authorization_code;
+    set.paystackCardLast4 = auth.last4 || "";
+    set.paystackCardBrand = auth.brand || "";
+    set.autoRenew = wantsAutoRenew; // only true if they explicitly opted in
+  } else {
+    set.autoRenew = false;
+  }
+
+  const updated = await Business.findOneAndUpdate(
+    { _id: business._id, lastSubscriptionReference: { $ne: reference } },
+    { $set: set },
+    { new: true }
+  );
+
+  // Already applied (callback and webhook both ran, or a replay).
+  if (!updated) return { ok: true, business, alreadyProcessed: true };
+
+  // Referral steps must never make a paid subscription look failed.
+  try {
+    await applyBankedFreeDays(updated);
+    await awardReferralForPayment(updated);
+  } catch (referralError) {
+    console.error("Referral processing failed:", referralError.message);
+  }
+
+  return { ok: true, business: updated };
+};
+
+
 // Verify subscription payment and reactivate the business
 export const verifySubscriptionPayment = async (req, res) => {
   try {
@@ -54,33 +128,19 @@ export const verifySubscriptionPayment = async (req, res) => {
       return res.status(400).json({ message: "Payment was not successful.", status: transaction.status });
     }
 
-    const businessId = transaction.metadata?.businessId;
-    const wantsAutoRenew = transaction.metadata?.autoRenew === true || transaction.metadata?.autoRenew === "true";
+    const result = await activateSubscriptionFromTransaction(transaction, reference);
 
-    const business = await Business.findById(businessId);
-    if (!business) return res.status(404).json({ message: "Business not found for this payment." });
-
-    const paidUntil = new Date();
-    paidUntil.setDate(paidUntil.getDate() + 30);
-
-    business.subscriptionStatus = "active";
-    business.subscriptionPaidUntil = paidUntil;
-    business.gracePeriodEndsAt = null;
-    business.lastReminderSentAt = null;
-
-    const auth = transaction.authorization;
-    if (auth?.reusable && auth?.authorization_code) {
-      business.paystackAuthorizationCode = auth.authorization_code;
-      business.paystackCardLast4 = auth.last4 || "";
-      business.paystackCardBrand = auth.brand || "";
-      business.autoRenew = wantsAutoRenew; // only true if they explicitly opted in
-    } else {
-      business.autoRenew = false;
+    if (!result.ok) {
+      return res.status(400).json({ message: result.message });
     }
 
-    await business.save();
-
-    res.status(200).json({ message: "Subscription payment verified.", business });
+    // Only what the callback page needs. This route is public, so it must
+    // not return the whole business record.
+    res.status(200).json({
+      message: "Subscription payment verified.",
+      subscriptionStatus: result.business.subscriptionStatus,
+      subscriptionPaidUntil: result.business.subscriptionPaidUntil,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

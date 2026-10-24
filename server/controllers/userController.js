@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import User from "../models/User.js";
 import sendEmail from "../utils/sendEmail.js";
+import { linkReferral } from "../utils/referrals.js";
 
 
 // ==========================================
@@ -18,7 +19,9 @@ export const registerUser = async (req, res) => {
       phone,
       password,
       role,
+      referralCode,
       agreedToTerms,
+      
     } = req.body;
 
     if (agreedToTerms !== true) {
@@ -37,15 +40,28 @@ export const registerUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Never trust the role from the browser. Only "customer" or "business"
+    // can be chosen at sign-up; admin accounts come from the admin script.
+    const safeRole = role === "business" ? "business" : "customer";
+
     const user = await User.create({
       firstName,
       lastName,
       email,
       phone,
       password: hashedPassword,
-      role,
+      role: safeRole,
       agreedToTermsAt: new Date(),
     });
+
+    // A bad or expired code must never block someone from signing up.
+    if (safeRole === "business" && referralCode) {
+      try {
+        await linkReferral(user, referralCode);
+      } catch (referralError) {
+        console.error("Referral link failed:", referralError.message);
+      }
+    }
 
     const token = jwt.sign(
       {

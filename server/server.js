@@ -31,6 +31,9 @@ import runSubscriptionCheck from "./jobs/subscriptionCheck.js";
 import platformReviewRoutes from "./routes/platformReviewRoutes.js";
 import reminderRoutes from "./routes/reminderRoutes.js";
 import runBookingReminders from "./jobs/bookingReminders.js";
+import referralRoutes from "./routes/referralRoutes.js";
+
+
 
 
 
@@ -133,6 +136,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/saved-businesses", savedBusinessRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/referrals", referralRoutes);
 
 
 app.get("/api/protected", authMiddleware, (req, res) => {

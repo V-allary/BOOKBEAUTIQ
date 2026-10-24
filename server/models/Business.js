@@ -184,6 +184,11 @@ const businessSchema = new mongoose.Schema(
       default: false,
     },
 
+    bankedFreeDays: {
+      type: Number,
+      default: 0,  
+    },
+
     paystackAuthorizationCode: {
       type: String,
       default: "",
