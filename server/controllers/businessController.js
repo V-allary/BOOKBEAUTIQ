@@ -393,6 +393,18 @@ export const updateBusiness = async (req, res) => {
  
     delete req.body.slug;
 
+    if (req.user.role !== "admin") {
+      [
+        "subscriptionStatus", "trialEndsAt", "subscriptionPaidUntil",
+        "gracePeriodEndsAt", "lastReminderSentAt", "autoRenew", "bankedFreeDays",
+        "lastSubscriptionReference", "paystackAuthorizationCode", "paystackCardLast4",
+        "paystackCardBrand", "paystackSubaccountCode", "featured", "rating",
+        "avgRating", "reviewCount", "completedBookingsCount", "lastBookingAt",
+        "profileViews",
+      ].forEach((field) => delete req.body[field]);
+    }
+
+
     if (Array.isArray(req.body.gallery) && req.body.gallery.length > 15) {
       return res.status(400).json({
         message: "A business can have a maximum of 15 gallery images.",

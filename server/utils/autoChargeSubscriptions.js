@@ -1,6 +1,7 @@
 import Business from "../models/Business.js";
 import paystackRequest from "./paystack.js";
 import notify from "./notify.js";
+import { applyBankedFreeDays } from "./referrals.js";
 
 const PLAN_PRICES = {
   independent: 1500,
@@ -41,6 +42,15 @@ const autoChargeSubscriptions = async () => {
         business.gracePeriodEndsAt = null;
         business.lastReminderSentAt = null;
         await business.save();
+
+        // Free days earned through referrals while the business was behind
+        // on payments. Kept in its own try/catch so a problem here can never
+        // be mistaken for a failed charge by the catch block below.
+        try {
+          await applyBankedFreeDays(business);
+        } catch (referralError) {
+          console.error("Applying banked free days failed:", referralError.message);
+        }
 
         succeeded++;
 
