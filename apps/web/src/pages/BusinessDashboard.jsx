@@ -6,6 +6,7 @@ import BusinessChatWidget from "../components/BusinessChatWidget";
 import SubscriptionCard from "../components/SubscriptionCard";
 import { API_URL } from "../config";
 import PlatformReviewForm from "../components/PlatformReviewForm";
+import ReferralCard from "../components/ReferralCard";
 
 
 function BusinessDashboard() {
@@ -1864,6 +1865,10 @@ function BusinessDashboard() {
                 </div>
 
               </div>
+
+              <ReferralCard token={token} />
+
+             
 
               {/* Business status */}
 

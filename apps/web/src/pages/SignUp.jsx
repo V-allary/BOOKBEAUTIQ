@@ -1,16 +1,33 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { API_URL } from "../config";
 
 function SignUp() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // A referral link looks like /signup?ref=A7K2XQ. The code is remembered in
+  // the browser, so it survives a refresh or a visit to the Terms page.
+  const [referralCode] = useState(() => {
+    const fromUrl = (searchParams.get("ref") || "").trim().toUpperCase().slice(0, 12);
+    try {
+      if (fromUrl) {
+        localStorage.setItem("bb_ref", fromUrl);
+        return fromUrl;
+      }
+      return localStorage.getItem("bb_ref") || "";
+    } catch {
+      return fromUrl;
+    }
+  });
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
     password: "",
-    role: "customer",
+    role: referralCode ? "business" : "customer",
   });
 
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -45,7 +62,7 @@ function SignUp() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ ...formData, agreedToTerms }),
+          body: JSON.stringify({ ...formData, agreedToTerms, referralCode }),
         }
       );
       const data = await response.json();
@@ -63,6 +80,13 @@ function SignUp() {
         JSON.stringify(data.user)
       );
 
+      // The code has done its job, so it isn't kept for the next sign-up.
+      try {
+        localStorage.removeItem("bb_ref");
+      } catch {
+        /* ignore */
+      }
+
       if (formData.role === "business") {
         navigate("/verify-email");
       } else {
@@ -75,6 +99,7 @@ function SignUp() {
       setLoading(false);
     }
   };
+
   const inputClass =
     "w-full rounded-xl border border-[#E5E2DF] bg-[#FAFAF9] px-4 py-3.5 text-sm text-[#242424] outline-none transition placeholder:text-[#999] focus:border-[#B96882] focus:bg-white focus:ring-4 focus:ring-[#B96882]/10";
 
@@ -129,6 +154,14 @@ function SignUp() {
 
           </div>
 
+          {/* REFERRAL NOTICE */}
+
+          {referralCode && formData.role === "business" && (
+            <div className="mb-6 rounded-xl border border-[#E8D4DC] bg-[#F8EEF2] p-4 text-sm leading-6 text-[#7E4057]">
+              You were invited by another business owner. Welcome to BookBeautiq!
+            </div>
+          )}
+
           {/* ERROR */}
 
           {error && (
@@ -136,7 +169,8 @@ function SignUp() {
               {error}
             </div>
           )}
-    {/* FORM */}
+
+          {/* FORM */}
 
           <form
             onSubmit={handleSubmit}
@@ -218,7 +252,8 @@ function SignUp() {
             </div>
 
             {/* PHONE */}
-   <div>
+
+            <div>
 
               <label
                 htmlFor="phone"
@@ -276,7 +311,6 @@ function SignUp() {
               <p className="mt-2 text-xs text-gray-400">
                 Password must be at least 6 characters.
               </p>
-
 
             </div>
 
@@ -339,9 +373,9 @@ function SignUp() {
               </div>
             )}
 
-           {/* TERMS AGREEMENT */}
+            {/* TERMS AGREEMENT */}
 
-           <label className="flex items-start gap-3 text-sm leading-5 text-gray-600">
+            <label className="flex items-start gap-3 text-sm leading-5 text-gray-600">
               <input
                 type="checkbox"
                 checked={agreedToTerms}
