@@ -4,6 +4,8 @@ import crypto from "crypto";
 import User from "../models/User.js";
 import sendEmail from "../utils/sendEmail.js";
 import { linkReferral } from "../utils/referrals.js";
+import { notifyAdminNewUser } from "../utils/notifyAdminNewUser.js";
+
 
 
 // ==========================================
@@ -62,6 +64,10 @@ export const registerUser = async (req, res) => {
         console.error("Referral link failed:", referralError.message);
       }
     }
+
+    notifyAdminNewUser(user).catch((e) =>
+      console.error("Admin notify failed:", e.message)
+    );
 
     const token = jwt.sign(
       {

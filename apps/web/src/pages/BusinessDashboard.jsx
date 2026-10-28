@@ -1629,7 +1629,7 @@ function BusinessDashboard() {
 
                     </div>
 
-                    <button
+                    <button 
                       type="button"
                       onClick={() =>
                         setActiveSection("bookings")
@@ -1867,9 +1867,6 @@ function BusinessDashboard() {
               </div>
 
               <ReferralCard token={token} />
-
-             
-
               {/* Business status */}
 
               {business.status === "pending" && (
