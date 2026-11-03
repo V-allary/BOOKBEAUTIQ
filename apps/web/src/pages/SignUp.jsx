@@ -333,14 +333,17 @@ function SignUp() {
                 className={`${inputClass} cursor-pointer`}
               >
 
-                <option value="customer">
-                  Customer
-                </option>
 
                 <option value="business">
                   Business Owner
                 </option>
 
+
+                <option value="customer">
+                  Customer
+                </option>
+
+               
               </select>
 
             </div>
