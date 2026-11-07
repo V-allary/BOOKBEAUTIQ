@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { API_URL } from "../config";
+import { getEffectivePrice, getTotals, isOnOffer } from "../utils/servicePricing";
 
 function Checkout() {
   const location = useLocation();
@@ -11,7 +12,7 @@ function Checkout() {
 
   const {
     business,
-    selectedService,
+    selectedServices,
     selectedStaff,
     selectedDate,
     selectedTime,
@@ -59,7 +60,7 @@ function Checkout() {
 
   if (
     !business ||
-    !selectedService ||
+    !selectedServices?.length ||
     !selectedDate ||
     !selectedTime
   ) {
@@ -106,21 +107,16 @@ function Checkout() {
   // DISCOUNT / OFFER CHECK
   // ==========================================
 
-  const now = new Date();
-  const onOffer =
-    selectedService.discountPrice &&
-    (!selectedService.discountStartDate || new Date(selectedService.discountStartDate) <= now) &&
-    (!selectedService.discountEndDate || new Date(selectedService.discountEndDate) >= now);
-
-  const effectivePrice = onOffer ? selectedService.discountPrice : selectedService.price;
+  const totals = getTotals(selectedServices);
+  const totalPrice = totals.price;
+  const totalDuration = totals.duration;
 
   // ==========================================
-  // DEPOSIT — based on the effective (discounted, if active) price
+  // DEPOSIT — 30% of the total (offers already applied).
+  // Display only: the server recalculates this from the database.
   // ==========================================
 
-  const depositAmount = Math.round(
-    effectivePrice * 0.3
-  );
+  const depositAmount = Math.round(totalPrice * 0.3);
 
   // ==========================================
   // HANDLE FORM CHANGES
@@ -172,7 +168,7 @@ function Checkout() {
 
             body: JSON.stringify({
               businessId: business._id,
-              serviceId: selectedService._id,
+              serviceIds: selectedServices.map((s) => s._id),
               staff: selectedStaff?.name || "Not specified",
               date: `${selectedDate.day} ${selectedDate.date}`,
               time: selectedTime,
@@ -294,36 +290,45 @@ function Checkout() {
 
                   </div>
 
-                  <div className="flex items-start justify-between gap-6 py-4">
+                  <div className="py-4">
 
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                          Service
-                        </p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                      {selectedServices.length > 1 ? "Services" : "Service"}
+                    </p>
 
-                        {onOffer && (
-                          <span className="rounded-full bg-[#F2E8EC] px-2.5 py-0.5 text-[10px] font-bold text-[#9D536D]">
-                            {selectedService.discountLabel || "Special Offer"}
+                    <div className="mt-2 space-y-3">
+                      {selectedServices.map((s) => (
+                        <div
+                          key={s._id}
+                          className="flex items-start justify-between gap-6"
+                        >
+                          <div>
+                            <p className="font-semibold text-[#242424]">
+                              {s.name}
+                              {isOnOffer(s) && (
+                                <span className="ml-2 rounded-full bg-[#F2E8EC] px-2.5 py-0.5 text-[10px] font-bold text-[#9D536D]">
+                                  {s.discountLabel || "Special Offer"}
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {s.duration} mins
+                            </p>
+                          </div>
+
+                          <span className="shrink-0 text-right">
+                            {isOnOffer(s) && (
+                              <span className="block text-xs text-gray-400 line-through">
+                                KES {s.price}
+                              </span>
+                            )}
+                            <span className="font-bold text-[#B96882]">
+                              KES {getEffectivePrice(s)}
+                            </span>
                           </span>
-                        )}
-                      </div>
-
-                      <p className="mt-1 font-semibold text-[#242424]">
-                        {selectedService.name}
-                      </p>
+                        </div>
+                      ))}
                     </div>
-
-                    <span className="shrink-0 text-right">
-                      {onOffer && (
-                        <span className="block text-xs text-gray-400 line-through">
-                          KES {selectedService.price}
-                        </span>
-                      )}
-                      <span className="font-bold text-[#B96882]">
-                        KES {effectivePrice}
-                      </span>
-                    </span>
 
                   </div>
 
@@ -512,33 +517,25 @@ function Checkout() {
 
                 <div className="space-y-4">
 
+                  {selectedServices.map((s) => (
+                    <div
+                      key={s._id}
+                      className="flex items-center justify-between gap-4"
+                    >
+                      <span className="text-sm text-gray-500">{s.name}</span>
+                      <span className="text-sm font-semibold text-[#242424]">
+                        KES {getEffectivePrice(s)}
+                      </span>
+                    </div>
+                  ))}
+
                   <div className="flex items-center justify-between gap-4">
-
                     <span className="text-sm text-gray-500">
-                      Service
+                      Total ({totalDuration} mins)
                     </span>
-
-                    <span className="text-right text-sm font-semibold text-[#242424]">
-                      {selectedService.name}
+                    <span className="text-sm font-semibold text-[#242424]">
+                      KES {totalPrice}
                     </span>
-
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4">
-
-                    <span className="text-sm text-gray-500">
-                      Service price
-                    </span>
-
-                    <span className="flex items-center gap-2 text-sm font-semibold text-[#242424]">
-                      {onOffer && (
-                        <span className="text-gray-400 line-through">
-                          KES {selectedService.price}
-                        </span>
-                      )}
-                      KES {effectivePrice}
-                    </span>
-
                   </div>
 
                   <div className="flex items-center justify-between gap-4">

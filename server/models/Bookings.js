@@ -84,9 +84,11 @@ const bookingSchema = new mongoose.Schema(
       default: 60,
     },
 
+    serviceNames: { 
+      type: [String], 
+      default: [] 
+    },
 
-
-    
     paystackReference: {
       type: String,
       default: "",

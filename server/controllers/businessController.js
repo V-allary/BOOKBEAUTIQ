@@ -3,6 +3,7 @@ import Service from "../models/Service.js";
 import User from "../models/User.js";
 import notify from "../utils/notify.js";
 import slugify from "slugify";
+import { normalizeCategories, MAX_CATEGORIES } from "../utils/categories.js";
 
 // Route names that must never be given away as a business slug
 const RESERVED_SLUGS = [
@@ -132,8 +133,11 @@ export const searchBusinesses = async (req, res) => {
 
     // Category filter
     if (category) {
+      const wanted = category.toLowerCase();
       visible = visible.filter(
-        (b) => b.category?.toLowerCase() === category.toLowerCase()
+        (b) =>
+          b.category?.toLowerCase() === wanted ||
+          (b.categories || []).some((c) => c.toLowerCase() === wanted)
       );
     }
 
@@ -153,7 +157,7 @@ export const searchBusinesses = async (req, res) => {
       visible = visible.filter((b) => {
         const matchesBusinessFields =
           regex.test(b.name || "") ||
-          regex.test(b.category || "") ||
+          regex.test([b.category, ...(b.categories || [])].join(" ")) ||
           regex.test(b.description || "");
 
         const matchesService = matchingBusinessIds.has(b._id.toString());
@@ -284,6 +288,15 @@ export const createBusiness = async (req, res) => {
       });
     }
 
+    const cats = normalizeCategories(req.body);
+    if (!cats || cats.length === 0) {
+      return res.status(400).json({
+        message: `Choose at least one category (up to ${MAX_CATEGORIES}).`,
+      });
+    }
+    req.body.categories = cats;
+    req.body.category = cats[0];
+
     const trialEndsAt = new Date();
     trialEndsAt.setDate(trialEndsAt.getDate() + 7);
 
@@ -409,6 +422,17 @@ export const updateBusiness = async (req, res) => {
       return res.status(400).json({
         message: "A business can have a maximum of 15 gallery images.",
       });
+    }
+
+    if ("categories" in req.body || "category" in req.body) {
+      const cats = normalizeCategories(req.body);
+      if (!cats || cats.length === 0) {
+        return res.status(400).json({
+          message: `Choose at least one category (up to ${MAX_CATEGORIES}).`,
+        });
+      }
+      req.body.categories = cats;
+      req.body.category = cats[0];
     }
 
     Object.assign(business, req.body);

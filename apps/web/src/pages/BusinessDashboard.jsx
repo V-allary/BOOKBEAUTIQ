@@ -7,6 +7,7 @@ import SubscriptionCard from "../components/SubscriptionCard";
 import { API_URL } from "../config";
 import PlatformReviewForm from "../components/PlatformReviewForm";
 import ReferralCard from "../components/ReferralCard";
+import CategoryPicker from "../components/CategoryPicker";
 
 
 function BusinessDashboard() {
@@ -46,7 +47,7 @@ function BusinessDashboard() {
   // ==========================================
   const [profileForm, setProfileForm] = useState({
     name: "",
-    category: "",
+    categories: [],
     location: "",
     description: "",
     price: "",
@@ -266,7 +267,10 @@ function BusinessDashboard() {
 
     setProfileForm({
       name: business.name || "",
-      category: business.category || "",
+      categories: (business.categories?.length
+        ? business.categories
+        : [business.category]
+      ).filter(Boolean),
       location: business.location || "",
       description: business.description || "",
       price: business.price || "",
@@ -672,6 +676,11 @@ function BusinessDashboard() {
   // ==========================================
 
   const handleSaveBusinessProfile = async () => {
+    if (profileForm.categories.length === 0) {
+      setProfileMessage("Please choose at least one category.");
+      return;
+    }
+
     setProfileSaving(true);
     setProfileMessage("");
 
@@ -2242,15 +2251,11 @@ function BusinessDashboard() {
                           Category
                         </label>
 
-                        <input
-                          value={profileForm.category}
-                          onChange={(e) =>
-                            setProfileForm({
-                              ...profileForm,
-                              category: e.target.value,
-                            })
+                        <CategoryPicker
+                          value={profileForm.categories}
+                          onChange={(categories) =>
+                            setProfileForm({ ...profileForm, categories })
                           }
-                          className="w-full rounded-xl border border-[#DDDAD7] bg-[#FAFAF9] p-3.5 text-sm outline-none transition focus:border-[#777]"
                         />
 
                       </div>

@@ -188,6 +188,11 @@ const businessSchema = new mongoose.Schema(
       type: Number,
       default: 0,  
     },
+    lastSubscriptionReference: {
+      type: String,
+      default: "", // the Paystack reference of the last payment applied
+    },
+
 
     paystackAuthorizationCode: {
       type: String,

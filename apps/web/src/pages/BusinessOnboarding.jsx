@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../config";
+import CategoryPicker from "../components/CategoryPicker";
+import { CATEGORIES } from "../constants/categories";
 
 function BusinessOnboarding() {
   const navigate = useNavigate();
@@ -48,7 +50,7 @@ function BusinessOnboarding() {
   // ==========================================
   const [businessData, setBusinessData] = useState({
     name: "",
-    category: "",
+    categories: [],
     location: "",
     description: "",
     price: "",
@@ -378,6 +380,11 @@ function BusinessOnboarding() {
 
   const handleBusinessSubmit = async (e) => {
     e.preventDefault();
+
+    if (businessData.categories.length === 0) {
+      setError("Please choose at least one category.");
+      return;
+    }
 
     setSubmitting(true);
     setError("");
@@ -825,6 +832,11 @@ function BusinessOnboarding() {
   // STEPS
   // ==========================================
 
+  // Services pick from the categories chosen in step 1 (all of them if the
+  // owner resumed setup in a new session).
+  const serviceCategoryOptions =
+    businessData.categories.length > 0 ? businessData.categories : CATEGORIES;
+
   const steps = selectedPlan === "team"
     ? ["Business Info", "Photos", "Payout", "Services", "Team"]
     : ["Business Info", "Photos", "Payout", "Services"];
@@ -1080,31 +1092,17 @@ selectedPlan === plan.id
     required
   />
 
-<select
-    value={businessData.category}
-    onChange={(e) =>
-      setBusinessData({
-        ...businessData,
-        category: e.target.value,
-      })
-    }
-    className={`${inputClass} cursor-pointer`}
-    required
-  >
-    <option value="">Select a category</option>
-    <option value="Hair">Hair</option>
-    <option value="Barber">Barber</option>
-    <option value="Nails">Nails</option>
-    <option value="Makeup">Makeup</option>
-    <option value="Lashes & Brows">Lashes & Brows</option>
-    <option value="Skincare">Skincare</option>
-    <option value="Spa & Wellness">Spa & Wellness</option>
-    <option value="Bridal">Bridal</option>
-    <option value="Laser">Laser</option>
-    <option value="Tattoo & Piercing">Tattoo & Piercing</option>
-    <option value="Teeth Whitening">Teeth Whitening</option>
-    <option value="Waxing">Waxing</option>
-  </select>
+<div>
+    <p className="mb-2 text-sm font-semibold text-[#242424]">
+      Categories
+    </p>
+    <CategoryPicker
+      value={businessData.categories}
+      onChange={(categories) =>
+        setBusinessData({ ...businessData, categories })
+      }
+    />
+  </div>
 
   <input
     placeholder="Location"
@@ -1742,20 +1740,20 @@ className={`${inputClass} cursor-pointer`}
                       className={inputClass}
                     />
 
-                    <input
-                      placeholder="Category"
-                      value={
-                        service.category
-                      }
+                    <select
+                      value={service.category}
                       onChange={(e) =>
-                        updateService(
-                          i,
-                          "category",
-                          e.target.value
-                        )
+                        updateService(i, "category", e.target.value)
                       }
-                      className={inputClass}
-                    />
+                      className={`${inputClass} cursor-pointer`}
+                    >
+                      <option value="">Service category</option>
+                      {serviceCategoryOptions.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
 
                   </div>
                 )

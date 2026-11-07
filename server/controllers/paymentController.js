@@ -9,6 +9,17 @@ import Service from "../models/Service.js";
 import mongoose from "mongoose";
 import { activateSubscriptionFromTransaction } from "./subscriptionController.js";
 
+const MAX_SERVICES_PER_BOOKING = 3;
+
+// "9:00 AM" -> minutes since midnight (NaN if it can't be read)
+const timeToMinutes = (timeStr) => {
+  const [clock, period] = String(timeStr || "").trim().split(" ");
+  let [h, m] = (clock || "").split(":").map(Number);
+  if (period === "PM" && h !== 12) h += 12;
+  if (period === "AM" && h === 12) h = 0;
+  return h * 60 + m;
+};
+
 
 
 // ==========================================
@@ -19,7 +30,7 @@ import { activateSubscriptionFromTransaction } from "./subscriptionController.js
 export const initializeBookingPayment = async (req, res) => {
   try {
     const {
-      businessId, serviceId, staff, date, time,
+      businessId, serviceId, serviceIds, staff, date, time,
       customerName, customerEmail, customerPhone,
     } = req.body;
 
@@ -27,41 +38,69 @@ export const initializeBookingPayment = async (req, res) => {
     const customerId = req.user?.userId || null;
 
     if (
-      !businessId || !serviceId || !date || !time ||
+      !businessId || !date || !time ||
       !customerName || !customerEmail || !customerPhone
     ) {
       return res.status(400).json({ message: "Missing required booking details." });
     }
 
-    if (!mongoose.isValidObjectId(serviceId)) {
+    // Accept the new serviceIds list, or the old single serviceId.
+    const requestedIds = [
+      ...new Set(
+        (Array.isArray(serviceIds) ? serviceIds : serviceId ? [serviceId] : []).map(String)
+      ),
+    ];
+
+    if (requestedIds.length === 0) {
+      return res.status(400).json({ message: "Please choose at least one service." });
+    }
+
+    if (requestedIds.length > MAX_SERVICES_PER_BOOKING) {
+      return res.status(400).json({
+        message: `You can book up to ${MAX_SERVICES_PER_BOOKING} services at a time.`,
+      });
+    }
+
+    if (!requestedIds.every((id) => mongoose.isValidObjectId(id))) {
       return res.status(400).json({ message: "Invalid service." });
     }
 
     // ==========================================
     // PRICE COMES FROM THE DATABASE, NEVER THE BROWSER
-    // Mirrors the same active-discount check Checkout.jsx uses
-    // for display, so the price shown always matches what's charged.
+    // Every chosen service must belong to this business and be active.
+    // Each one uses its own active-discount check, then they are summed.
     // ==========================================
 
-    const serviceDoc = await Service.findOne({
-      _id: serviceId,
+    const serviceDocs = await Service.find({
+      _id: { $in: requestedIds },
       businessId,
       active: true,
     });
 
-    if (!serviceDoc) {
-      return res.status(404).json({ message: "This service is no longer available." });
+    if (serviceDocs.length !== requestedIds.length) {
+      return res.status(404).json({
+        message: "One of the selected services is no longer available.",
+      });
     }
 
-    const now = new Date();
-    const discountActive =
-      serviceDoc.discountPrice != null &&
-      (!serviceDoc.discountStartDate || serviceDoc.discountStartDate <= now) &&
-      (!serviceDoc.discountEndDate || serviceDoc.discountEndDate >= now);
+    const orderedServices = requestedIds.map((id) =>
+      serviceDocs.find((s) => s._id.toString() === id)
+    );
 
-    const effectivePrice = discountActive ? serviceDoc.discountPrice : serviceDoc.price;
-    const depositAmount = Math.round(effectivePrice * 0.3);
-    const service = serviceDoc.name;
+    const now = new Date();
+    const effectivePriceOf = (s) => {
+      const discountActive =
+        s.discountPrice != null &&
+        (!s.discountStartDate || s.discountStartDate <= now) &&
+        (!s.discountEndDate || s.discountEndDate >= now);
+      return discountActive ? s.discountPrice : s.price;
+    };
+
+    const totalPrice = orderedServices.reduce((sum, s) => sum + effectivePriceOf(s), 0);
+    const rawDuration = orderedServices.reduce((sum, s) => sum + (Number(s.duration) || 0), 0);
+    const depositAmount = Math.round(totalPrice * 0.3);
+    const serviceNames = orderedServices.map((s) => s.name);
+    const service = serviceNames.join(" + ");
 
     // ==========================================
     // BLOCK SUSPENDED CUSTOMERS
@@ -100,10 +139,12 @@ export const initializeBookingPayment = async (req, res) => {
     // Abandoned checkouts never create a record at all.
     // ==========================================
 
+    // Total appointment length, respecting the business's minimum.
+    const duration = Math.max(rawDuration || 60, business.minimumAppointmentDuration || 0);
+
     const conflictFilter = {
       businessId,
       date,
-      time,
       status: { $ne: "Cancelled" },
     };
 
@@ -111,7 +152,17 @@ export const initializeBookingPayment = async (req, res) => {
       conflictFilter.staff = staff;
     }
 
-    const conflict = await Booking.findOne(conflictFilter);
+    const sameDayBookings = await Booking.find(conflictFilter).select("time duration");
+
+    const newStart = timeToMinutes(time);
+    const newEnd = newStart + duration;
+
+    const conflict = sameDayBookings.some((b) => {
+      if (b.time === time) return true;
+      const start = timeToMinutes(b.time);
+      const end = start + (b.duration || 60);
+      return newStart < end && newEnd > start;
+    });
 
     if (conflict) {
       return res.status(409).json({
@@ -143,6 +194,8 @@ export const initializeBookingPayment = async (req, res) => {
       metadata: {
         businessId,
         service,
+        serviceNames,
+        duration,
         staff: staff || "Not specified",
         date,
         time,
@@ -213,6 +266,8 @@ const createBookingFromMetadata = async (metadata, reference) => {
     staff: metadata.staff,
     date: metadata.date,
     time: metadata.time,
+    duration: Number(metadata.duration) || 60,
+    serviceNames: Array.isArray(metadata.serviceNames) ? metadata.serviceNames : [metadata.service],
     customerName: metadata.customerName,
     customerEmail: metadata.customerEmail,
     customerPhone: metadata.customerPhone,

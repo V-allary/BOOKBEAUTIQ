@@ -8,6 +8,7 @@ import Footer from "../components/Footer";
 import BookingCard from "../components/booking/BookingCard";
 import BookingSummary from "../components/booking/BookingSummary";
 import { API_URL } from "../config";
+import { getTotals } from "../utils/servicePricing";
 
 function BusinessDetails() {
   const { id, slug } = useParams();
@@ -22,7 +23,7 @@ function BusinessDetails() {
   const [staff, setStaff] = useState([]);
   const [selectorsLoading, setSelectorsLoading] = useState(true);
 
-  const [selectedService, setSelectedService] = useState(null);
+  const [selectedServices, setSelectedServices] = useState([]);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
@@ -133,15 +134,15 @@ function BusinessDetails() {
     const staffRequired = staff.length > 0;
 
     if (
-      !selectedService ||
+      selectedServices.length === 0 ||
       (staffRequired && !selectedStaff) ||
       !selectedDate ||
       !selectedTime
     ) {
       alert(
         staffRequired
-          ? "Please select a service, professional, date, and time."
-          : "Please select a service, date, and time."
+          ? "Please select at least one service, a professional, date, and time."
+          : "Please select at least one service, a date, and time."
       );
 
       return;
@@ -150,7 +151,7 @@ function BusinessDetails() {
     navigate("/checkout", {
       state: {
         business,
-        selectedService,
+        selectedServices,
         selectedStaff,
         selectedDate,
         selectedTime,
@@ -259,6 +260,22 @@ function BusinessDetails() {
 
   const rating = Number(business.avgRating || 0);
 
+  const categoryList = (
+    business.categories?.length ? business.categories : [business.category]
+  ).filter(Boolean);
+
+  // BookingSummary still expects ONE service object, so give it a combined
+  // one: names joined, price = total after offers, duration = total.
+  const totals = getTotals(selectedServices);
+  const summaryService =
+    selectedServices.length === 0
+      ? null
+      : {
+          name: selectedServices.map((s) => s.name).join(" + "),
+          price: totals.price,
+          duration: totals.duration,
+        };
+
   const pageTitle = `${business.name} — ${business.category} in ${business.location} | BookBeautiq`;
   const pageDescription = business.description
     ? business.description.slice(0, 155)
@@ -366,7 +383,7 @@ function BusinessDetails() {
                 </span>
 
                 <span className="text-sm text-gray-500 sm:text-base">
-                  {business.category}
+                  {categoryList.join(" · ")}
                 </span>
 
               </div>
@@ -436,8 +453,8 @@ function BusinessDetails() {
                   </span>
 
                   <span className="font-semibold text-[#242424]">
-                    {business.category}
-                  </span>
+                  {categoryList.join(" · ")}
+                </span>
 
                 </div>
 
@@ -617,8 +634,8 @@ function BusinessDetails() {
                 staff={staff}
 
                 selectorsLoading={selectorsLoading}
-                selectedService={selectedService}
-                setSelectedService={setSelectedService}
+                selectedServices={selectedServices}
+                setSelectedServices={setSelectedServices}
                 selectedStaff={selectedStaff}
                 setSelectedStaff={setSelectedStaff}
                 selectedDate={selectedDate}
@@ -638,7 +655,7 @@ function BusinessDetails() {
               <div className="mt-5 lg:hidden">
 
                 <BookingSummary
-                  selectedService={selectedService}
+                  selectedService={summaryService}
                   selectedStaff={selectedStaff}
                   selectedDate={selectedDate}
                   selectedTime={selectedTime}
@@ -1155,7 +1172,7 @@ function BusinessDetails() {
             <div className="sticky top-24">
 
               <BookingSummary
-                selectedService={selectedService}
+                selectedService={summaryService}
                 selectedStaff={selectedStaff}
                 selectedDate={selectedDate}
                 selectedTime={selectedTime}
